@@ -8,6 +8,7 @@ Receive : "ACK:QTABLE_LOADED\\n"
 Other lines from Pico ("> ...", "# ...") are logged then ignored.
 """
 
+import os
 import re
 import time
 import glob
@@ -16,6 +17,23 @@ import serial
 import serial.tools.list_ports
 
 logger = logging.getLogger(__name__)
+
+# Dedicated logger for raw Pico monitor lines ("> ..." and "# ...")
+# Writes to logs/pico_monitor.log — tail -f this file to watch Pico output
+_pico_log = logging.getLogger("pico_monitor")
+_pico_log.setLevel(logging.DEBUG)
+_pico_log.propagate = False  # don't mix into main aquaculture log
+
+def _setup_pico_monitor_log(log_dir: str) -> None:
+    """Call once at startup to wire up the pico_monitor file handler."""
+    if _pico_log.handlers:
+        return  # already configured
+    os.makedirs(log_dir, exist_ok=True)
+    fh = logging.FileHandler(os.path.join(log_dir, "pico_monitor.log"))
+    fh.setFormatter(logging.Formatter(
+        "[%(asctime)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    ))
+    _pico_log.addHandler(fh)
 
 BAUD_RATE    = 115200
 ACK_TIMEOUT  = 10      # seconds to wait for ACK after sending Q-table
@@ -134,14 +152,15 @@ class SerialBridge:
         if not line:
             return None
 
-        # Log monitor/comment lines from Pico
+        # Monitor/comment lines from Pico -> dedicated pico_monitor.log
         if line.startswith(">") or line.startswith("#"):
-            logger.debug(f"[pico] {line}")
+            _pico_log.debug(line)
             return None
 
-        # Handle ACK lines (logging only — blocking ACK is handled in send_qtable)
+        # ACK lines -> both main log and pico_monitor.log
         if line.startswith("ACK:"):
             logger.info(f"[pico] {line}")
+            _pico_log.debug(line)
             return None
 
         # Parse DATA: line

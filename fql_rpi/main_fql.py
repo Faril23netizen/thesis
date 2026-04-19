@@ -30,7 +30,7 @@ import sys
 import time
 
 from fql_agent import FQLAgent
-from serial_bridge import SerialBridge
+from serial_bridge import SerialBridge, _setup_pico_monitor_log
 from pond_simulator import PondSimulator, ScenarioType, SimConfig
 
 # ── Path configuration ───────────────────────────────────────────────────── #
@@ -96,6 +96,10 @@ def setup_logging() -> logging.Logger:
     eh.setLevel(logging.WARNING)
     eh.setFormatter(fmt)
     logger.addHandler(eh)
+
+    _setup_pico_monitor_log(LOG_DIR)
+    logger.info(f"Pico monitor log: {os.path.join(LOG_DIR, 'pico_monitor.log')}")
+    logger.info("  Run in second terminal: tail -f logs/pico_monitor.log")
 
     return logger
 
