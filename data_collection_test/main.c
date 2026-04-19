@@ -166,15 +166,28 @@ int main(void) {
     uint32_t start_ms   = to_ms_since_boot(get_absolute_time());
     uint32_t record_num = 0;
 
+    /* pH median filter — 3-sample buffer, rejects ADC noise spikes */
+    int32_t ph_buf[3] = {7000, 7000, 7000};
+    uint8_t ph_buf_i  = 0;
+
     while (true) {
         uint32_t loop_start = to_ms_since_boot(get_absolute_time());
 
         /* ── 1. Baca sensor ─────────────────────────────────────────── */
         ds18b20_convert(&ds_dev);
 
-        uint16_t adc_raw  = ph_sensor_read_raw();
-        int32_t  ph_mv    = ph_adc_to_mv(adc_raw);
-        int32_t  ph_x1000 = ph_mv_to_ph(ph_mv, &PH_CAL_DEFAULT);
+        uint16_t adc_raw     = ph_sensor_read_raw();
+        int32_t  ph_mv       = ph_adc_to_mv(adc_raw);
+        int32_t  ph_raw      = ph_mv_to_ph(ph_mv, &PH_CAL_DEFAULT);
+
+        /* Median filter: store sample, sort copy of 3, pick middle */
+        ph_buf[ph_buf_i++ % 3] = ph_raw;
+        int32_t s[3] = {ph_buf[0], ph_buf[1], ph_buf[2]};
+        /* Simple 3-element sort */
+        if (s[0] > s[1]) { int32_t t = s[0]; s[0] = s[1]; s[1] = t; }
+        if (s[1] > s[2]) { int32_t t = s[1]; s[1] = s[2]; s[2] = t; }
+        if (s[0] > s[1]) { int32_t t = s[0]; s[0] = s[1]; s[1] = t; }
+        int32_t ph_x1000 = s[1];  /* median */
 
         /* Tunggu sisa konversi DS18B20 (750 ms total) */
         uint32_t elapsed = to_ms_since_boot(get_absolute_time()) - loop_start;
