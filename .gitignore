@@ -1,0 +1,18 @@
+# Build output Pico
+data_collection_test/build/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Auto-generated data files
+fql_rpi/qtable.json
+fql_rpi/dqn_buffer.json
+fql_rpi/logs/
+
+# Plot output
+data_collection_test/sensor_plot.png
+
+# Raw sensor log (besar)
+data_collection_test/data.csv
