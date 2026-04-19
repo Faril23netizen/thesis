@@ -98,7 +98,8 @@ static void relay_set(uint8_t action) {
 /* ── Serial monitor display (visual, bukan untuk parsing RPi4) ───────────── */
 static void print_monitor(uint32_t num, uint32_t ts_ms,
                            int32_t ph_x1000, int32_t temp_x100,
-                           int32_t nh3_x100000, uint8_t action) {
+                           int32_t nh3_x100000, uint8_t action,
+                           const char *mode) {
     const char *bars[] = {
         "[----]",   /* OFF  */
         "[#---]",   /* LOW  */
@@ -111,7 +112,7 @@ static void print_monitor(uint32_t num, uint32_t ts_ms,
                                                      "   SAFE      ";
 
     printf("> #%04lu | %6.1fs | pH=%ld.%03ld | T=%ld.%02ldC | NH3=%ld.%03ld%% "
-           "| AERATOR %s %s | %s\r\n",
+           "| AERATOR %s %s | %s | [%s]\r\n",
            (unsigned long)num,
            ts_ms / 1000.0f,
            (long)(ph_x1000 / 1000),
@@ -122,7 +123,8 @@ static void print_monitor(uint32_t num, uint32_t ts_ms,
            (long)(nh3_x100000 % 1000),
            bars[action],
            labels[action],
-           status);
+           status,
+           mode);
 }
 
 /* ── main ───────────────────────────────────────────────────────────────── */
@@ -189,18 +191,22 @@ int main(void) {
         int32_t nh3_x100000 = calc_nh3_x100000(ph_x1000, temp_x100);
 
         /* ── 3. Tentukan action ─────────────────────────────────────── */
-        uint8_t action;
-        bool    is_danger = (ph_x1000 < 6000 || ph_x1000 > 9500 || temp_x100 > 3500);
+        uint8_t     action;
+        const char *mode;
+        bool        is_danger = (ph_x1000 < 6000 || ph_x1000 > 9500 || temp_x100 > 3500);
 
         if (is_danger) {
             /* DANGER: Rule-Based paksa HIGH, FQL tidak dipakai */
             action = ACTION_HIGH;
+            mode   = "RB!";   /* Rule-Based forced (danger override) */
         } else if (qt.loaded) {
             /* AMAN + Q-table sudah ada: pakai FQL inference */
             action = fql_select_action(ph_x1000, temp_x100, &qt);
+            mode   = "FQL";   /* Fuzzy Q-Learning inference */
         } else {
             /* AMAN + Q-table belum ada: pakai Rule-Based */
             action = safety_action(ph_x1000, temp_x100);
+            mode   = "RB ";   /* Rule-Based (waiting for Q-table) */
         }
 
         /* ── 4. Eksekusi relay ──────────────────────────────────────── */
@@ -210,7 +216,7 @@ int main(void) {
         uint32_t ts_ms = to_ms_since_boot(get_absolute_time()) - start_ms;
 
         /* ── 5. Monitor line (visual, untuk serial monitor) ─────────── */
-        print_monitor(record_num, ts_ms, ph_x1000, temp_x100, nh3_x100000, action);
+        print_monitor(record_num, ts_ms, ph_x1000, temp_x100, nh3_x100000, action, mode);
 
         /* ── 6. Kirim data ke RPi4 ──────────────────────────────────── */
         /* Format: "DATA:ph_x1000,temp_x100,action\n"

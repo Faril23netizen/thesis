@@ -145,8 +145,14 @@ void check_usb_input(FQL_QTable_t *qt) {
             if (strncmp(_usb_buf, "QTABLE:", 7) == 0) {
                 if (fql_parse_qtable(_usb_buf, qt)) {
                     printf("ACK:QTABLE_LOADED\n");
+                    printf("# ============================================================\r\n");
+                    printf("# *** Q-TABLE RECEIVED — FQL MODE ACTIVE ***\r\n");
+                    printf("# 9 rules x 4 actions loaded from RPi4\r\n");
+                    printf("# Monitor label: [FQL] = FQL inference | [RB ] = Rule-Based\r\n");
+                    printf("# ============================================================\r\n");
                 } else {
                     printf("ACK:QTABLE_ERROR\n");
+                    printf("# [ERROR] Q-table parse failed — staying in Rule-Based mode\r\n");
                 }
             }
 
