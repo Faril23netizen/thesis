@@ -42,6 +42,7 @@ BUFFER_AUTOSAVE     = 500      # simpan buffer setiap N transisi
 FQL_RETRY_INTERVAL  = 30       # detik antar retry kirim Q-table
 LOG_INTERVAL        = 10       # log detail setiap N step
 SUMMARY_INTERVAL    = 100      # log ringkasan setiap N step
+RECONNECT_DELAY     = 2        # detik antar percobaan reconnect
 
 
 # ══════════════════════════════════════════════════════════════════════════ #
