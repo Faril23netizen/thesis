@@ -51,7 +51,7 @@ SUMMARY_INTERVAL       = 100      # summary log every N real steps
 RECONNECT_DELAY        = 2        # seconds between reconnect attempts
 
 # Virtual simulator settings
-VIRTUAL_STEPS_PER_REAL = 5        # virtual steps per real Pico step
+VIRTUAL_STEPS_PER_REAL = 10       # virtual steps per real Pico step
 VIRTUAL_EPISODE_LEN    = 300      # steps before switching to next scenario
 VIRTUAL_PHASE_A_BATCH  = 50       # virtual steps per iteration while waiting
 
@@ -331,6 +331,18 @@ def main():
             logger.info("=" * 65)
             dqn_ready_logged = True
 
+        # ── Convergence progress log (every SUMMARY_INTERVAL real steps) ─── #
+        if real_steps % SUMMARY_INTERVAL == 0:
+            prog = fql.convergence_progress()
+            logger.info(
+                f"  Convergence progress: "
+                f"steps {prog['steps']*100:.0f}% | "
+                f"windows {prog['windows']*100:.0f}% | "
+                f"stability {prog['delta']*100:.0f}% | "
+                f"reward {prog['reward']*100:.0f}%"
+            )
+            logger.info(fql.format_policy_map())
+
         # ── PHASE C: FQL convergence check ───────────────────────────────── #
         if fql.check_convergence() and not fql.converged_sent:
             stats = fql.get_stats()
@@ -340,6 +352,7 @@ def main():
                         f"Real: {real_steps} | "
                         f"Avg Reward: {stats['avg_reward_prev_100']:.4f} ===")
             logger.info("=" * 65)
+            logger.info(fql.format_policy_map())
 
             fql.save_qtable(QTABLE_FILE)
             logger.info(f"Q-table saved to {QTABLE_FILE}")

@@ -250,23 +250,107 @@ class FQLAgent:
 
     # ── Convergence ──────────────────────────────────────────────────────── #
 
+    # Convergence thresholds — deliberately strict so FQL learns long enough
+    CONV_MIN_STEPS   = 5_000   # minimum training steps
+    CONV_MIN_WINDOWS = 8       # consecutive 100-step reward windows needed
+    CONV_MAX_DELTA   = 0.005   # max |avg[-1] - avg[-2]| to declare stable
+    CONV_MIN_REWARD  = 0.15    # final window avg reward must exceed this
+
     def check_convergence(self) -> bool:
         """
-        Converged if ALL conditions are met:
-          1. total_steps >= 500
-          2. at least 2 reward window averages (>= 200 steps)
-          3. |avg[-1] - avg[-2]| < 0.01
+        Converged only when ALL four conditions hold (strict):
+          1. total_steps >= CONV_MIN_STEPS      (enough experience)
+          2. reward windows >= CONV_MIN_WINDOWS  (sustained stability)
+          3. |avg[-1] - avg[-2]| < CONV_MAX_DELTA (reward stable)
+          4. avg_reward[-1] >= CONV_MIN_REWARD   (actually performing well)
         """
         if self.converged:
             return True
-        if self.total_steps < 500:
+        if self.total_steps < self.CONV_MIN_STEPS:
             return False
-        if len(self._avg_reward_history) < 2:
+        hist = self._avg_reward_history
+        if len(hist) < self.CONV_MIN_WINDOWS:
             return False
-        delta = abs(self._avg_reward_history[-1] - self._avg_reward_history[-2])
-        if delta < 0.01:
-            self.converged = True
-        return self.converged
+        if abs(hist[-1] - hist[-2]) >= self.CONV_MAX_DELTA:
+            return False
+        if hist[-1] < self.CONV_MIN_REWARD:
+            return False
+        self.converged = True
+        return True
+
+    def convergence_progress(self) -> dict:
+        """Return how close each convergence condition is (0.0–1.0 = done)."""
+        hist = self._avg_reward_history
+        avg  = hist[-1] if hist else 0.0
+        delta = abs(hist[-1] - hist[-2]) if len(hist) >= 2 else float("inf")
+        return {
+            "steps":      min(self.total_steps / self.CONV_MIN_STEPS,   1.0),
+            "windows":    min(len(hist)         / self.CONV_MIN_WINDOWS, 1.0),
+            "delta":      min(self.CONV_MAX_DELTA / max(delta, 1e-9),    1.0),
+            "reward":     min(max(avg, 0) / self.CONV_MIN_REWARD,        1.0),
+            "converged":  self.converged,
+        }
+
+    # ── Policy evaluation ────────────────────────────────────────────────── #
+
+    # Representative center-point for each fuzzy set
+    _PH_CENTERS = [6.0,  7.25, 8.75]   # Acidic, Normal, Alkaline
+    _T_CENTERS  = [19.5, 27.5, 34.0]   # Cold,   Optimal, Hot
+
+    def evaluate_policy(self) -> list[list[int]]:
+        """
+        Greedy policy for all 9 fuzzy regions (no epsilon).
+        Returns 3x3 list: [row=pH][col=T] -> action index.
+        Row 0=Acidic, 1=Normal, 2=Alkaline
+        Col 0=Cold,   1=Optimal, 2=Hot
+        """
+        policy = []
+        for ph in self._PH_CENTERS:
+            row = []
+            for t in self._T_CENTERS:
+                firing = self.compute_firing_strengths(ph, t)
+                q_vals = self.compute_all_Q_FQL(firing)
+                row.append(q_vals.index(max(q_vals)))
+            policy.append(row)
+        return policy
+
+    def format_policy_map(self) -> str:
+        """
+        Render policy as a readable 3x3 table.
+
+        Expected good policy for aquaculture:
+          Acidic+*   -> HIGH  (CO2 stripping raises pH)
+          Normal+Cold/Opt -> LOW  (ideal, save energy)
+          Normal+Hot  -> MED/HIGH (cool water, NH3 risk)
+          Alkaline+Cold -> LOW  (cold limits NH3 toxicity)
+          Alkaline+Opt  -> MED  (moderate NH3 risk)
+          Alkaline+Hot  -> HIGH (worst NH3 — urgent cooling)
+        """
+        policy = self.evaluate_policy()
+        names  = ["OFF ", "LOW ", "MED ", "HIGH"]
+        ph_lbl = ["Acidic  ", "Normal  ", "Alkaline"]
+        t_lbl  = ["Cold   ", "Optimal", "Hot    "]
+
+        lines = [
+            "=" * 48,
+            "  FQL Policy Map — greedy action per fuzzy region",
+            f"              {t_lbl[0]}  {t_lbl[1]}  {t_lbl[2]}",
+            "  " + "-" * 44,
+        ]
+        for i, ph in enumerate(ph_lbl):
+            acts = "    ".join(names[policy[i][j]] for j in range(3))
+            lines.append(f"  {ph}:  {acts}")
+
+        # Expected reference for comparison
+        lines += [
+            "  " + "-" * 44,
+            "  Expected (domain knowledge):",
+            "  Acidic  :  HIGH    HIGH    HIGH",
+            "  Normal  :  LOW     LOW     HIGH",
+            "  Alkaline:  LOW     MED     HIGH",
+            "=" * 48,
+        ]
+        return "\n".join(lines)
 
     # ── Serialization ────────────────────────────────────────────────────── #
 
