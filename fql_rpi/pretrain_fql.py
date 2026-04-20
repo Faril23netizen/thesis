@@ -146,16 +146,7 @@ def convergence_status(fql: FQLAgent) -> str:
 
 
 def print_qtable(fql: FQLAgent):
-    rule_names = [
-        "Ac+Cold", "Ac+Opt", "Ac+Hot",
-        "No+Cold", "No+Opt", "No+Hot",
-        "Al+Cold", "Al+Opt", "Al+Hot",
-    ]
-    log.info(f"\n{'Rule':<10} {'OFF':>8} {'LOW':>8} {'MED':>8} {'HIGH':>8}")
-    log.info("-" * 46)
-    for r, name in enumerate(rule_names):
-        row = fql.qtable[r]
-        log.info(f"{name:<10} {row[0]:>8.4f} {row[1]:>8.4f} {row[2]:>8.4f} {row[3]:>8.4f}")
+    log.info(fql.format_policy_map())
 
 
 # ══════════════════════════════════════════════════════════════════════════ #

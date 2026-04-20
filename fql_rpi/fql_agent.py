@@ -18,7 +18,9 @@ ACTION_LOW  = 1
 ACTION_MED  = 2
 ACTION_HIGH = 3
 N_ACTIONS   = 4
-N_RULES     = 9
+N_PH_SETS   = 5
+N_T_SETS    = 5
+N_RULES     = N_PH_SETS * N_T_SETS   # 25
 
 # Energy cost per action for reward (normalized 0–1)
 ENERGY_COST = {
@@ -56,27 +58,31 @@ class FuzzyMembership:
     @staticmethod
     def compute_pH_memberships(pH: float) -> dict:
         """
-        Compute membership degrees for pH across 3 fuzzy sets.
-        Returns: {"Acidic": float, "Normal": float, "Alkaline": float}
+        Compute membership degrees for pH across 5 fuzzy sets.
+        Returns: {"VeryAcidic", "Acidic", "Normal", "Alkaline", "VeryAlkaline"}
         """
         t = FuzzyMembership.trapezoidal
         return {
-            "Acidic":   t(pH, 5.5, 5.5, 6.5, 7.0),
-            "Normal":   t(pH, 6.5, 7.0, 7.5, 8.0),
-            "Alkaline": t(pH, 7.5, 8.0, 9.5, 9.5),
+            "VeryAcidic":   t(pH, 5.5, 5.5, 6.0, 6.5),
+            "Acidic":       t(pH, 5.5, 6.0, 6.5, 7.0),
+            "Normal":       t(pH, 6.5, 7.0, 7.5, 8.0),
+            "Alkaline":     t(pH, 7.5, 8.0, 8.5, 9.0),
+            "VeryAlkaline": t(pH, 8.5, 9.0, 9.5, 9.5),
         }
 
     @staticmethod
     def compute_T_memberships(T: float) -> dict:
         """
-        Compute membership degrees for temperature across 3 fuzzy sets.
-        Returns: {"Cold": float, "Optimal": float, "Hot": float}
+        Compute membership degrees for temperature across 5 fuzzy sets.
+        Returns: {"VeryCold", "Cold", "Optimal", "Hot", "VeryHot"}
         """
         t = FuzzyMembership.trapezoidal
         return {
-            "Cold":    t(T, 17.5, 17.5, 20.0, 25.0),
-            "Optimal": t(T, 22.0, 25.0, 30.0, 33.0),
-            "Hot":     t(T, 30.0, 33.0, 35.0, 35.0),
+            "VeryCold": t(T, 17.5, 17.5, 18.0, 20.0),
+            "Cold":     t(T, 18.0, 20.0, 22.0, 25.0),
+            "Optimal":  t(T, 22.0, 25.0, 29.0, 32.0),
+            "Hot":      t(T, 29.0, 32.0, 33.0, 34.5),
+            "VeryHot":  t(T, 33.0, 34.0, 35.0, 35.0),
         }
 
 
@@ -92,18 +98,15 @@ class FQLAgent:
     Learns online from Rule-Based data sent by the Pico.
     """
 
-    # Rule order: (pH_set, T_set) — row-major 3×3
+    # Rule order: (pH_set, T_set) — row-major 5×5
+    # Must match C code: phi[i*5 + j] = mu_ph[i] * mu_t[j]
+    _PH_SETS = ["VeryAcidic", "Acidic", "Normal", "Alkaline", "VeryAlkaline"]
+    _T_SETS  = ["VeryCold", "Cold", "Optimal", "Hot", "VeryHot"]
     _RULE_ORDER = [
-        ("Acidic",   "Cold"),     # Rule 0
-        ("Acidic",   "Optimal"),  # Rule 1
-        ("Acidic",   "Hot"),      # Rule 2
-        ("Normal",   "Cold"),     # Rule 3
-        ("Normal",   "Optimal"),  # Rule 4
-        ("Normal",   "Hot"),      # Rule 5
-        ("Alkaline", "Cold"),     # Rule 6
-        ("Alkaline", "Optimal"),  # Rule 7
-        ("Alkaline", "Hot"),      # Rule 8
-    ]
+        (ph, t)
+        for ph in _PH_SETS
+        for t  in _T_SETS
+    ]  # 25 rules total
 
     def __init__(self,
                  alpha: float = 0.1,
@@ -294,15 +297,15 @@ class FQLAgent:
     # ── Policy evaluation ────────────────────────────────────────────────── #
 
     # Representative center-point for each fuzzy set
-    _PH_CENTERS = [6.0,  7.25, 8.75]   # Acidic, Normal, Alkaline
-    _T_CENTERS  = [19.5, 27.5, 34.0]   # Cold,   Optimal, Hot
+    _PH_CENTERS = [5.75, 6.25, 7.25, 8.25, 9.25]  # VeryAcidic..VeryAlkaline
+    _T_CENTERS  = [17.75, 21.0, 27.0, 32.5, 34.5]  # VeryCold..VeryHot
 
     def evaluate_policy(self) -> list[list[int]]:
         """
-        Greedy policy for all 9 fuzzy regions (no epsilon).
-        Returns 3x3 list: [row=pH][col=T] -> action index.
-        Row 0=Acidic, 1=Normal, 2=Alkaline
-        Col 0=Cold,   1=Optimal, 2=Hot
+        Greedy policy for all 25 fuzzy regions (no epsilon).
+        Returns 5x5 list: [row=pH][col=T] -> action index.
+        Rows 0-4: VeryAcidic / Acidic / Normal / Alkaline / VeryAlkaline
+        Cols 0-4: VeryCold / Cold / Optimal / Hot / VeryHot
         """
         policy = []
         for ph in self._PH_CENTERS:
@@ -316,39 +319,49 @@ class FQLAgent:
 
     def format_policy_map(self) -> str:
         """
-        Render policy as a readable 3x3 table.
+        Render policy as a readable 5x5 table with domain-knowledge reference.
 
         Expected good policy for aquaculture:
-          Acidic+*   -> HIGH  (CO2 stripping raises pH)
-          Normal+Cold/Opt -> LOW  (ideal, save energy)
-          Normal+Hot  -> MED/HIGH (cool water, NH3 risk)
-          Alkaline+Cold -> LOW  (cold limits NH3 toxicity)
-          Alkaline+Opt  -> MED  (moderate NH3 risk)
-          Alkaline+Hot  -> HIGH (worst NH3 — urgent cooling)
+          VeryAcidic  : HIGH everywhere (urgent pH correction)
+          Acidic      : HIGH (raise pH via CO2 stripping)
+          Normal+VCold: LOW  (good conditions, save energy, don't cool more)
+          Normal+Cold : LOW
+          Normal+Opt  : LOW  (ideal, minimal intervention)
+          Normal+Hot  : MED  (some cooling needed)
+          Normal+VHot : HIGH (cool urgently)
+          Alkaline+VCold: LOW (cold keeps NH3 low despite high pH)
+          Alkaline+Cold : LOW
+          Alkaline+Opt  : MED (moderate NH3 risk)
+          Alkaline+Hot  : HIGH (NH3 danger rising)
+          Alkaline+VHot : HIGH
+          VeryAlkaline  : HIGH everywhere (urgent, worst NH3 risk)
         """
         policy = self.evaluate_policy()
         names  = ["OFF ", "LOW ", "MED ", "HIGH"]
-        ph_lbl = ["Acidic  ", "Normal  ", "Alkaline"]
-        t_lbl  = ["Cold   ", "Optimal", "Hot    "]
+        ph_lbl = ["VeryAcid", "Acidic  ", "Normal  ", "Alkaline", "VeryAlk "]
+        t_lbl  = ["VCold", "Cold ", "Opt  ", "Hot  ", "VHot "]
 
-        lines = [
-            "=" * 48,
-            "  FQL Policy Map — greedy action per fuzzy region",
-            f"              {t_lbl[0]}  {t_lbl[1]}  {t_lbl[2]}",
-            "  " + "-" * 44,
+        header = "  " + "  ".join(t_lbl)
+        sep    = "  " + "-" * 42
+        lines  = [
+            "=" * 56,
+            "  FQL Policy Map — greedy action per fuzzy region (5x5)",
+            f"              {header}",
+            sep,
         ]
         for i, ph in enumerate(ph_lbl):
-            acts = "    ".join(names[policy[i][j]] for j in range(3))
+            acts = "  ".join(names[policy[i][j]] for j in range(5))
             lines.append(f"  {ph}:  {acts}")
 
-        # Expected reference for comparison
         lines += [
-            "  " + "-" * 44,
+            sep,
             "  Expected (domain knowledge):",
-            "  Acidic  :  HIGH    HIGH    HIGH",
-            "  Normal  :  LOW     LOW     HIGH",
-            "  Alkaline:  LOW     MED     HIGH",
-            "=" * 48,
+            "  VeryAcid:  HIGH  HIGH  HIGH  HIGH  HIGH",
+            "  Acidic  :  HIGH  HIGH  HIGH  HIGH  HIGH",
+            "  Normal  :  LOW   LOW   LOW   MED   HIGH",
+            "  Alkaline:  LOW   LOW   MED   HIGH  HIGH",
+            "  VeryAlk :  HIGH  HIGH  HIGH  HIGH  HIGH",
+            "=" * 56,
         ]
         return "\n".join(lines)
 
