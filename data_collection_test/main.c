@@ -107,9 +107,15 @@ static void print_monitor(uint32_t num, uint32_t ts_ms,
         "[####]",   /* HIGH */
     };
     const char *labels[] = { "OFF ", "LOW ", "MED ", "HIGH" };
-    const char *status   = (action == ACTION_HIGH) ? "!! DANGER  !!" :
-                           (action == ACTION_MED)  ? "~  WARNING  ~" :
-                                                     "   SAFE      ";
+
+    /* Status based on actual water conditions, not aerator action */
+    const char *status;
+    if (ph_x1000 < 6000 || ph_x1000 > 9500 || temp_x100 > 3500)
+        status = "!! DANGER  !!";
+    else if (ph_x1000 < 6500 || ph_x1000 > 8500 || temp_x100 > 3000)
+        status = "~  WARNING  ~";
+    else
+        status = "   SAFE      ";
 
     printf("> #%04lu | %6.1fs | pH=%ld.%03ld | T=%ld.%02ldC | NH3=%ld.%03ld%% "
            "| AERATOR %s %s | %s | [%s]\r\n",
