@@ -22,6 +22,7 @@ Install as service:
   sudo systemctl start aquaculture
 """
 
+import csv
 import json
 import logging
 import os
@@ -29,17 +30,18 @@ import signal
 import sys
 import time
 
-from fql_agent import FQLAgent
+from fql_agent import FQLAgent, ACTION_OFF, ACTION_LOW, ACTION_MED, ACTION_HIGH
 from serial_bridge import SerialBridge, _setup_pico_monitor_log
 from pond_simulator import PondSimulator, ScenarioType, SimConfig
 
 # ── Path configuration ───────────────────────────────────────────────────── #
-BASE_DIR       = os.path.dirname(os.path.abspath(__file__))
-QTABLE_FILE    = os.path.join(BASE_DIR, "qtable.json")
-BUFFER_FILE    = os.path.join(BASE_DIR, "dqn_buffer.json")
-LOG_DIR        = os.path.join(BASE_DIR, "logs")
-LOG_FILE       = os.path.join(LOG_DIR, "fql.log")
-LOG_ERROR_FILE = os.path.join(LOG_DIR, "fql_error.log")
+BASE_DIR        = os.path.dirname(os.path.abspath(__file__))
+QTABLE_FILE     = os.path.join(BASE_DIR, "qtable.json")
+BUFFER_FILE     = os.path.join(BASE_DIR, "dqn_buffer.json")
+LOG_DIR         = os.path.join(BASE_DIR, "logs")
+LOG_FILE        = os.path.join(LOG_DIR, "fql.log")
+LOG_ERROR_FILE  = os.path.join(LOG_DIR, "fql_error.log")
+COMPARISON_CSV  = os.path.join(LOG_DIR, "comparison.csv")
 
 # ── Constants ────────────────────────────────────────────────────────────── #
 DQN_BUFFER_READY       = 10_000   # transitions before DQN is ready
@@ -196,6 +198,76 @@ class VirtualEnv:
 
 
 # ══════════════════════════════════════════════════════════════════════════ #
+#  Rule-Based shadow (mirrors safety_action() in Pico C code)
+# ══════════════════════════════════════════════════════════════════════════ #
+
+def rule_based_action(pH: float, T: float) -> int:
+    """Exact mirror of safety_action() in main.c — for shadow comparison."""
+    if pH < 6.0 or pH > 9.5 or T > 35.0: return ACTION_HIGH
+    if pH < 6.5 or pH > 8.5 or T > 30.0: return ACTION_MED
+    return ACTION_LOW
+
+def nh3_fraction(pH: float, T: float) -> float:
+    """Fraction of total ammonia in unionized (toxic) NH3 form."""
+    pka = 0.09018 + 2729.92 / (T + 273.15)
+    return 1.0 / (1.0 + 10 ** (pka - pH))
+
+_ACTION_COST = {ACTION_OFF: 0.0, ACTION_LOW: 0.3, ACTION_MED: 0.6, ACTION_HIGH: 1.0}
+
+# ── Comparison CSV writer ────────────────────────────────────────────────── #
+
+_csv_file   = None
+_csv_writer = None
+
+def _init_comparison_csv() -> None:
+    global _csv_file, _csv_writer
+    os.makedirs(LOG_DIR, exist_ok=True)
+    write_header = not os.path.exists(COMPARISON_CSV)
+    _csv_file   = open(COMPARISON_CSV, "a", newline="")
+    _csv_writer = csv.writer(_csv_file)
+    if write_header:
+        _csv_writer.writerow([
+            "timestamp", "real_step",
+            "pH", "T_C", "NH3_pct",
+            "mode",        # RB or FQL
+            "real_action", # action actually sent to relay (from Pico)
+            "rb_action",   # what Rule-Based would have done
+            "fql_action",  # what FQL would have done (greedy)
+            "reward",
+            "rb_reward",   # reward if RB had been used
+            "energy_real", "energy_rb", "energy_fql",
+            "fql_steps", "epsilon",
+        ])
+        _csv_file.flush()
+
+def _log_comparison(real_step: int, pH: float, T: float,
+                    mode: str, real_action: int,
+                    fql: FQLAgent, reward: float,
+                    pH_prev: float, T_prev: float) -> None:
+    if _csv_writer is None:
+        return
+    rb_act  = rule_based_action(pH_prev, T_prev)
+    fql_act = fql.select_action(pH_prev, T_prev) if fql.converged else real_action
+
+    # Compute what reward would have been if RB acted instead
+    rb_reward = fql.compute_reward(pH_prev, T_prev, rb_act, pH, T)
+
+    nh3 = nh3_fraction(pH_prev, T_prev) * 100.0
+
+    _csv_writer.writerow([
+        time.strftime("%Y-%m-%d %H:%M:%S"), real_step,
+        round(pH_prev, 4), round(T_prev, 2), round(nh3, 4),
+        mode, real_action, rb_act, fql_act,
+        round(reward, 5), round(rb_reward, 5),
+        round(_ACTION_COST[real_action], 2),
+        round(_ACTION_COST[rb_act], 2),
+        round(_ACTION_COST[fql_act], 2),
+        fql.total_steps, round(fql.epsilon, 4),
+    ])
+    _csv_file.flush()
+
+
+# ══════════════════════════════════════════════════════════════════════════ #
 #  Graceful shutdown
 # ══════════════════════════════════════════════════════════════════════════ #
 
@@ -214,6 +286,7 @@ signal.signal(signal.SIGTERM, _handle_signal)
 # ══════════════════════════════════════════════════════════════════════════ #
 
 logger = setup_logging()
+_init_comparison_csv()
 
 
 def main():
@@ -308,6 +381,12 @@ def main():
                 prev_action_before
             )
             fql.update(pH_prev, T_prev, action_prev, reward, pH, T)
+
+            # Log comparison: real action vs RB shadow vs FQL greedy
+            mode = "FQL" if fql.converged_sent else "RB"
+            _log_comparison(real_steps, pH, T, mode, action_prev,
+                            fql, reward, pH_prev, T_prev)
+
             append_transition(buffer_dqn,
                               s      = [pH_prev, T_prev],
                               a      = action_prev,
