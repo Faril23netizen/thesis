@@ -23,10 +23,12 @@ N_T_SETS    = 5
 N_RULES     = N_PH_SETS * N_T_SETS   # 25
 
 # Energy cost per action for reward (normalized 0–1)
+# OFF penalized heavily — aerator must not stay off (DO depletion risk)
+# LOW is cheapest valid state — FQL should prefer LOW as baseline
 ENERGY_COST = {
-    ACTION_OFF:  0.0,
-    ACTION_LOW:  0.3,
-    ACTION_MED:  0.6,
+    ACTION_OFF:  0.8,
+    ACTION_LOW:  0.2,
+    ACTION_MED:  0.5,
     ACTION_HIGH: 1.0,
 }
 
