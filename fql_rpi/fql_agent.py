@@ -103,9 +103,11 @@ class FQLAgent:
     _PH_SETS = ["VeryAcidic", "Acidic", "Normal", "Alkaline", "VeryAlkaline"]
     _T_SETS  = ["VeryCold", "Cold", "Optimal", "Hot", "VeryHot"]
     _RULE_ORDER = [
-        (ph, t)
-        for ph in _PH_SETS
-        for t  in _T_SETS
+        ("VeryAcidic", "VeryCold"), ("VeryAcidic", "Cold"), ("VeryAcidic", "Optimal"), ("VeryAcidic", "Hot"), ("VeryAcidic", "VeryHot"),
+        ("Acidic",     "VeryCold"), ("Acidic",     "Cold"), ("Acidic",     "Optimal"), ("Acidic",     "Hot"), ("Acidic",     "VeryHot"),
+        ("Normal",     "VeryCold"), ("Normal",     "Cold"), ("Normal",     "Optimal"), ("Normal",     "Hot"), ("Normal",     "VeryHot"),
+        ("Alkaline",   "VeryCold"), ("Alkaline",   "Cold"), ("Alkaline",   "Optimal"), ("Alkaline",   "Hot"), ("Alkaline",   "VeryHot"),
+        ("VeryAlkaline","VeryCold"),("VeryAlkaline","Cold"), ("VeryAlkaline","Optimal"),("VeryAlkaline","Hot"),("VeryAlkaline","VeryHot"),
     ]  # 25 rules total
 
     def __init__(self,
