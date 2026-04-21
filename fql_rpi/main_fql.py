@@ -48,6 +48,7 @@ DQN_BUFFER_READY       = 10_000   # transitions before DQN is ready
 DQN_BUFFER_MAX         = 50_000   # maximum buffer size (FIFO)
 BUFFER_AUTOSAVE        = 500      # save buffer every N transitions
 FQL_RETRY_INTERVAL     = 30       # seconds between Q-table send retries
+QTABLE_UPDATE_INTERVAL = 500      # re-send improved Q-table every N real steps
 LOG_INTERVAL           = 10       # detailed log every N real steps
 SUMMARY_INTERVAL       = 100      # summary log every N real steps
 RECONNECT_DELAY        = 2        # seconds between reconnect attempts
@@ -304,9 +305,10 @@ def main():
     venv       = VirtualEnv()
     buffer_dqn: list = []
 
-    dqn_ready_logged  = False
-    last_qtable_retry = 0.0
-    real_steps        = 0
+    dqn_ready_logged      = False
+    last_qtable_retry     = 0.0
+    last_qtable_update    = 0      # real_steps count of last Q-table update
+    real_steps            = 0
 
     # ── Load previous state if available ────────────────────────────────── #
     if os.path.exists(QTABLE_FILE):
@@ -454,6 +456,18 @@ def main():
                 fql.converged_sent = True
             else:
                 last_qtable_retry = time.time()
+
+        # ── Periodic Q-table re-send as FQL keeps improving ──────────────── #
+        elif (fql.converged_sent and
+              real_steps - last_qtable_update >= QTABLE_UPDATE_INTERVAL):
+            stats = fql.get_stats()
+            logger.info(f"Sending updated Q-table to Pico "
+                        f"(step={real_steps}, AvgR={stats['avg_reward_prev_100']:+.4f})...")
+            logger.info(fql.format_policy_map())
+            if bridge.send_qtable(fql.get_qtable_string()):
+                fql.save_qtable(QTABLE_FILE)
+                logger.info("Updated Q-table sent and saved.")
+            last_qtable_update = real_steps
 
         # ── Periodic logging ──────────────────────────────────────────────── #
         if real_steps % LOG_INTERVAL == 0:
