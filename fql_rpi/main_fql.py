@@ -54,7 +54,7 @@ SUMMARY_INTERVAL       = 100      # summary log every N real steps
 RECONNECT_DELAY        = 2        # seconds between reconnect attempts
 
 # Virtual simulator settings
-VIRTUAL_STEPS_PER_REAL = 10       # virtual steps per real Pico step
+VIRTUAL_STEPS_PER_REAL = 3        # virtual steps per real Pico step
 VIRTUAL_EPISODE_LEN    = 300      # steps before switching to next scenario
 VIRTUAL_PHASE_A_BATCH  = 50       # virtual steps per iteration while waiting
 
