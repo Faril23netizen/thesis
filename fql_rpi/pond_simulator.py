@@ -71,10 +71,10 @@ class SimConfig:
 #
 _SCENARIO_TABLE = {
     ScenarioType.NORMAL: {
-        "ph_range":   (6.5, 8.5),
-        "temp_range": (22.0, 32.0),
-        "ph_drift":    0.000,
-        "amb_range":  (24.0, 30.0),
+        "ph_range":   (7.0, 8.0),   # true optimal zone — LOW is sufficient here
+        "temp_range": (24.0, 29.0), # comfortable temperature range
+        "ph_drift":   -0.002,       # mild acid drift (CO2 buildup) — realistic
+        "amb_range":  (24.0, 28.0),
         "label":      "Normal",
     },
     ScenarioType.ACID_CRASH: {
