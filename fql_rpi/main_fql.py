@@ -33,6 +33,7 @@ import time
 from fql_agent import FQLAgent, ACTION_OFF, ACTION_LOW, ACTION_MED, ACTION_HIGH
 from serial_bridge import SerialBridge, _setup_pico_monitor_log
 from pond_simulator import PondSimulator, ScenarioType, SimConfig
+from aerator_sim import AeratorSim
 
 # ── Path configuration ───────────────────────────────────────────────────── #
 BASE_DIR        = os.path.dirname(os.path.abspath(__file__))
@@ -52,6 +53,9 @@ QTABLE_UPDATE_INTERVAL = 500      # re-send improved Q-table every N real steps
 LOG_INTERVAL           = 10       # detailed log every N real steps
 SUMMARY_INTERVAL       = 100      # summary log every N real steps
 RECONNECT_DELAY        = 2        # seconds between reconnect attempts
+
+# Aerator simulation — set False when real aerator is connected (prevents double-counting)
+USE_AERATOR_SIM        = True
 
 # Virtual simulator settings
 VIRTUAL_STEPS_PER_REAL = 3        # virtual steps per real Pico step
@@ -304,6 +308,10 @@ def main():
     bridge     = SerialBridge()
     venv       = VirtualEnv()
     buffer_dqn: list = []
+    aerator_sim = AeratorSim() if USE_AERATOR_SIM else None
+    if USE_AERATOR_SIM:
+        logger.info("Aerator sim : ENABLED (typical 5-30W aquaculture pump)")
+        logger.info("             Set USE_AERATOR_SIM=False when real aerator connected")
 
     dqn_ready_logged      = False
     last_qtable_retry     = 0.0
@@ -365,10 +373,17 @@ def main():
             venv.step(fql, buffer_dqn)
             continue
 
-        pH     = data["pH"]
-        T      = data["T"]
-        action = data["action"]
+        pH_real = data["pH"]
+        T_real  = data["T"]
+        action  = data["action"]
         real_steps += 1
+
+        # Apply aerator sim using the action that was running last step
+        action_for_sim = prev_data["action"] if prev_data else ACTION_LOW
+        if aerator_sim is not None:
+            pH, T = aerator_sim.update(pH_real, T_real, action_for_sim)
+        else:
+            pH, T = pH_real, T_real
 
         # ── Real: update FQL from real transition ─────────────────────────── #
         if prev_data is not None:
