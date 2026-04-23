@@ -193,24 +193,21 @@ class FQLAgent:
                        pH_next: float, T_next: float,
                        prev_action: int | None = None) -> float:
         """
-        r = R_safe + 0.4×R_energy(context) + 0.2×R_stability
+        r = R_safe(tiered) - 0.3 × ENERGY_COST[action]
 
-        R_safe   : +1.0 if pH in [6.5, 8.5], -5.0 otherwise
-        R_energy : penalized in safe zone only — danger = free to choose HIGH
-        R_stability: small penalty for switching action unnecessarily
+        R_safe: tiered by pH zone
+          safe    [6.5, 8.5] : +1.0  — LOW wins (lowest energy cost)
+          warning [6.0, 9.5] : -1.0  — MED wins long-term via Bellman backup
+          danger  otherwise  : -5.0  — HIGH wins long-term via Bellman backup
         """
-        # R_safe: binary — simple and stable
-        r_safe = 1.0 if 6.5 <= pH <= 8.5 else -5.0
+        if 6.5 <= pH <= 8.5:
+            r_safe = 1.0
+        elif 6.0 <= pH <= 9.5:
+            r_safe = -1.0
+        else:
+            r_safe = -5.0
 
-        # R_energy: full penalty in safe zone, near-zero in danger
-        # Danger: agent must choose freely based on future Q-values (recovery)
-        energy_scale = 1.0 if 6.5 <= pH <= 8.5 else 0.05
-        r_energy = -ENERGY_COST[action] * energy_scale
-
-        # R_stability: small penalty for unnecessary switching
-        r_stab = -0.5 if (prev_action is not None and action != prev_action) else 0.0
-
-        return r_safe + 0.4 * r_energy + 0.2 * r_stab
+        return r_safe - 0.3 * ENERGY_COST[action]
 
     # ── Q-table update ───────────────────────────────────────────────────── #
 
