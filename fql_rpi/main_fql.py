@@ -55,7 +55,7 @@ SUMMARY_INTERVAL       = 100      # summary log every N real steps
 RECONNECT_DELAY        = 2        # seconds between reconnect attempts
 
 # Aerator simulation — set False when real aerator is connected (prevents double-counting)
-USE_AERATOR_SIM        = True
+USE_AERATOR_SIM        = False  # True only when physical aerator is connected
 
 # Virtual simulator settings
 VIRTUAL_STEPS_PER_REAL = 3        # virtual steps per real Pico step
