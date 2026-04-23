@@ -26,10 +26,10 @@ N_RULES     = N_PH_SETS * N_T_SETS   # 25
 # LOW = 0.0 (free baseline) — FQL naturally prefers LOW for safe conditions
 # OFF penalized for DO depletion risk
 ENERGY_COST = {
-    ACTION_OFF:  0.2,   # mild penalty — OFF is risky if NH3 rises
+    ACTION_OFF:  0.3,   # mild penalty — aerator off = NH3 risk
     ACTION_LOW:  0.0,   # free baseline
-    ACTION_MED:  0.6,
-    ACTION_HIGH: 2.0,   # very expensive — strongly discourages HIGH when safe
+    ACTION_MED:  0.5,
+    ACTION_HIGH: 1.0,
 }
 
 
@@ -193,45 +193,24 @@ class FQLAgent:
                        pH_next: float, T_next: float,
                        prev_action: int | None = None) -> float:
         """
-        r = 1.0×R_safe + 0.6×R_energy(context) + 0.1×R_NH3 + 0.3×R_stability
+        r = R_safe + 0.4×R_energy(context) + 0.2×R_stability
 
-        R_safe    : tiered by pH deviation from [6.5, 8.5]
-        R_energy  : cost scaled down in danger — HIGH is necessary then
-        R_NH3     : -f(NH3) based on next pH and temperature
-        R_stability: -1.0 if action changed, 0.0 if same
+        R_safe   : +1.0 if pH in [6.5, 8.5], -5.0 otherwise
+        R_energy : penalized in safe zone only — danger = free to choose HIGH
+        R_stability: small penalty for switching action unnecessarily
         """
-        # R_safe: tiered — reward optimal zone, penalize proportionally
-        if 7.0 <= pH <= 8.0:
-            r_safe = 1.0          # optimal
-        elif 6.5 <= pH <= 8.5:
-            r_safe = 0.5          # acceptable
-        elif 6.0 <= pH <= 9.0:
-            r_safe = -1.0         # warning
-        else:
-            r_safe = -5.0         # danger
+        # R_safe: binary — simple and stable
+        r_safe = 1.0 if 6.5 <= pH <= 8.5 else -5.0
 
-        # R_energy: only penalize energy in safe zone — danger = use whatever needed
-        is_safe = 6.5 <= pH <= 8.5
-        energy_scale = 1.0 if is_safe else 0.1
+        # R_energy: full penalty in safe zone, near-zero in danger
+        # Danger: agent must choose freely based on future Q-values (recovery)
+        energy_scale = 1.0 if 6.5 <= pH <= 8.5 else 0.05
         r_energy = -ENERGY_COST[action] * energy_scale
 
-        # R_NH3 — computed from next state (s')
-        pka   = 0.09018 + 2729.92 / (T_next + 273.15)
-        f_nh3 = 1.0 / (1.0 + 10 ** (pka - pH_next))
-        r_nh3 = -f_nh3
+        # R_stability: small penalty for unnecessary switching
+        r_stab = -0.5 if (prev_action is not None and action != prev_action) else 0.0
 
-        # R_stability
-        r_stab = -1.0 if (prev_action is not None and action != prev_action) else 0.0
-
-        # R_efficiency: direct bonus for using LOW in safe zone (teaches energy saving)
-        if 7.0 <= pH <= 8.0 and action == ACTION_LOW:
-            r_eff = 0.5   # optimal zone + minimum energy
-        elif 6.5 <= pH <= 8.5 and action == ACTION_LOW:
-            r_eff = 0.2   # acceptable zone + minimum energy
-        else:
-            r_eff = 0.0
-
-        return 1.0 * r_safe + 0.6 * r_energy + 0.1 * r_nh3 + 0.3 * r_stab + r_eff
+        return r_safe + 0.4 * r_energy + 0.2 * r_stab
 
     # ── Q-table update ───────────────────────────────────────────────────── #
 
