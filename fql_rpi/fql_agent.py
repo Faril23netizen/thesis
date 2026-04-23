@@ -207,7 +207,7 @@ class FQLAgent:
         else:
             r_safe = -5.0
 
-        return r_safe - 0.3 * ENERGY_COST[action]
+        return r_safe - 0.6 * ENERGY_COST[action]
 
     # ── Q-table update ───────────────────────────────────────────────────── #
 
