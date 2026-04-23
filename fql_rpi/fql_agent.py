@@ -223,7 +223,15 @@ class FQLAgent:
         # R_stability
         r_stab = -1.0 if (prev_action is not None and action != prev_action) else 0.0
 
-        return 1.0 * r_safe + 0.6 * r_energy + 0.1 * r_nh3 + 0.3 * r_stab
+        # R_efficiency: direct bonus for using LOW in safe zone (teaches energy saving)
+        if 7.0 <= pH <= 8.0 and action == ACTION_LOW:
+            r_eff = 0.5   # optimal zone + minimum energy
+        elif 6.5 <= pH <= 8.5 and action == ACTION_LOW:
+            r_eff = 0.2   # acceptable zone + minimum energy
+        else:
+            r_eff = 0.0
+
+        return 1.0 * r_safe + 0.6 * r_energy + 0.1 * r_nh3 + 0.3 * r_stab + r_eff
 
     # ── Q-table update ───────────────────────────────────────────────────── #
 

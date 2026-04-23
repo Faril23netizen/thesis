@@ -62,12 +62,15 @@ VIRTUAL_STEPS_PER_REAL = 3        # virtual steps per real Pico step
 VIRTUAL_EPISODE_LEN    = 300      # steps before switching to next scenario
 VIRTUAL_PHASE_A_BATCH  = 50       # virtual steps per iteration while waiting
 
-# Scenario rotation order
+# Scenario rotation order — NORMAL gets 4/10 = 40% to teach LOW in safe conditions
 _SCENARIO_ORDER = [
     ScenarioType.NORMAL,
+    ScenarioType.NORMAL,
     ScenarioType.ACID_CRASH,
+    ScenarioType.NORMAL,
     ScenarioType.ALKALINE,
     ScenarioType.COLD_STRESS,
+    ScenarioType.NORMAL,
     ScenarioType.HEAT_STRESS,
     ScenarioType.HIGH_NH3,
     ScenarioType.MULTI_STRESS,
