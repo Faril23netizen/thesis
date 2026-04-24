@@ -321,7 +321,16 @@ def main():
     last_qtable_update    = 0      # real_steps count of last Q-table update
     real_steps            = 0
 
-    # ── Load previous state if available ────────────────────────────────── #
+    # ── Auto pre-train if no Q-table exists ─────────────────────────────── #
+    if not os.path.exists(QTABLE_FILE):
+        logger.info("=" * 65)
+        logger.info("No Q-table found — running auto pre-training first...")
+        logger.info("=" * 65)
+        from pretrain_fql import pretrain
+        pretrain(output_file=QTABLE_FILE)
+        logger.info("Pre-training complete — continuing to main loop...")
+
+    # ── Load Q-table ─────────────────────────────────────────────────────── #
     if os.path.exists(QTABLE_FILE):
         if fql.load_qtable(QTABLE_FILE):
             logger.info(f"Q-table loaded from {QTABLE_FILE} "
