@@ -78,14 +78,14 @@ _SCENARIO_TABLE = {
         "label":      "Normal",
     },
     ScenarioType.ACID_CRASH: {
-        "ph_range":   (5.5, 6.8),
+        "ph_range":   (5.5, 6.5),   # capped at 6.5 — no overlap with Normal fuzzy set
         "temp_range": (22.0, 30.0),
         "ph_drift":   -0.008,
         "amb_range":  (24.0, 28.0),
         "label":      "Acid Crash",
     },
     ScenarioType.ALKALINE: {
-        "ph_range":   (8.2, 9.5),
+        "ph_range":   (8.5, 9.5),   # raised to 8.5 — no overlap with Normal fuzzy set
         "temp_range": (25.0, 32.0),
         "ph_drift":   +0.006,
         "amb_range":  (26.0, 30.0),
