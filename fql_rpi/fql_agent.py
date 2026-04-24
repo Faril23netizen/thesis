@@ -26,8 +26,8 @@ N_RULES     = N_PH_SETS * N_T_SETS   # 25
 # LOW = 0.0 (free baseline) — FQL naturally prefers LOW for safe conditions
 # OFF penalized for DO depletion risk
 ENERGY_COST = {
-    ACTION_OFF:  0.3,   # mild penalty — aerator off = NH3 risk
-    ACTION_LOW:  0.0,   # free baseline
+    ACTION_OFF:  2.0,   # always bad — biological risk (DO depletion)
+    ACTION_LOW:  0.0,   # baseline optimal
     ACTION_MED:  0.5,
     ACTION_HIGH: 1.0,
 }
