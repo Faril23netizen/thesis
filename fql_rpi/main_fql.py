@@ -58,9 +58,9 @@ RECONNECT_DELAY        = 2        # seconds between reconnect attempts
 USE_AERATOR_SIM        = False  # True only when physical aerator is connected
 
 # Virtual simulator settings
-VIRTUAL_STEPS_PER_REAL = 3        # virtual steps per real Pico step
+VIRTUAL_STEPS_PER_REAL = 1000     # virtual steps per real Pico step
 VIRTUAL_EPISODE_LEN    = 300      # steps before switching to next scenario
-VIRTUAL_PHASE_A_BATCH  = 50       # virtual steps per iteration while waiting
+VIRTUAL_PHASE_A_BATCH  = 1000     # virtual steps per iteration while waiting
 
 # Scenario rotation order — NORMAL gets 4/10 = 40% to teach LOW in safe conditions
 _SCENARIO_ORDER = [
