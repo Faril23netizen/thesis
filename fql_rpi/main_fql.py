@@ -478,15 +478,16 @@ def main():
         elif (dqn_model_ready
               and not dqn_active
               and fql_real_elapsed >= FQL_MIN_REAL_STEPS
-              and len(rb_rewards) >= 50
               and len(fql_rewards) >= 50):
-            rb_avg  = float(np.mean(rb_rewards))
             fql_avg = float(np.mean(fql_rewards))
-            if fql_avg > rb_avg:
+            rb_avg  = float(np.mean(rb_rewards)) if len(rb_rewards) >= 50 else None
+            # If RB baseline unavailable (restarted with saved qtable), activate by step count
+            if rb_avg is None or fql_avg > rb_avg:
+                reason = (f"FQL avg={fql_avg:+.4f} > RB avg={rb_avg:+.4f}"
+                          if rb_avg is not None
+                          else f"no RB baseline (restarted), FQL ran {fql_real_elapsed} steps")
                 logger.info("=" * 65)
-                logger.info(f"PHASE E — FQL proven better than RB "
-                            f"(FQL avg={fql_avg:+.4f} > RB avg={rb_avg:+.4f}). "
-                            f"[DQN] now controls Pico.")
+                logger.info(f"PHASE E — [DQN] activating: {reason}")
                 logger.info("=" * 65)
                 dqn_active = True
                 if bridge.send_qtable(dqn.to_qtable_string()):
