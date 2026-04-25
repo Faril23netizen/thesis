@@ -50,6 +50,7 @@ COMPARISON_CSV  = os.path.join(LOG_DIR, "comparison.csv")
 DQN_BUFFER_READY       = 10_000   # transitions before DQN training starts
 DQN_BUFFER_MAX         = 50_000   # maximum buffer size (FIFO)
 DQN_TRAIN_EPOCHS       = 300      # epochs for DQN training
+DQN_RETRAIN_INTERVAL   = 2_000    # retrain DQN every N real steps after first training
 BUFFER_AUTOSAVE        = 500      # save buffer every N transitions
 FQL_RETRY_INTERVAL     = 30       # seconds between Q-table send retries
 QTABLE_UPDATE_INTERVAL = 500      # re-send improved Q-table every N real steps
@@ -324,6 +325,7 @@ def main():
     dqn                   = DQNAgent()
     last_qtable_retry     = 0.0
     last_qtable_update    = 0      # real_steps count of last Q-table update
+    last_dqn_retrain      = 0      # real_steps count of last DQN retraining
     real_steps            = 0
 
     # ── Load Q-table (if previous session exists) ───────────────────────── #
@@ -439,7 +441,8 @@ def main():
                 and not dqn_ready_logged):
             dqn_ready_logged = True
             logger.info("=" * 65)
-            logger.info(f"PHASE D — DQN training: {len(buffer_dqn)} transitions")
+            logger.info(f"PHASE D — DQN training: {len(buffer_dqn)} transitions "
+                        f"(real + virtual)")
             logger.info("=" * 65)
             save_buffer(buffer_dqn, BUFFER_FILE)
             try:
@@ -450,15 +453,41 @@ def main():
                     train_numpy(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
                 if dqn.load(DQN_MODEL_FILE):
                     dqn_trained = True
-                    logger.info("PHASE E — DQN trained. Sending policy to Pico...")
+                    last_dqn_retrain = real_steps
+                    logger.info("=" * 65)
+                    logger.info("PHASE E — [DQN] active. Sending policy to Pico...")
+                    logger.info("=" * 65)
                     if bridge.send_qtable(dqn.to_qtable_string()):
-                        logger.info("DQN Q-table sent to Pico — DQN now controls.")
+                        logger.info("[DQN] Q-table sent to Pico — DQN now controls.")
                     else:
-                        logger.warning("Failed to send DQN Q-table — Pico stays on FQL.")
+                        logger.warning("[DQN] Failed to send Q-table — Pico stays on FQL.")
                 else:
                     logger.warning("DQN model failed to load — staying on FQL.")
             except Exception as e:
                 logger.error(f"DQN training failed: {e} — staying on FQL.")
+
+        # ── PHASE E: Periodic DQN retraining with growing buffer ─────────── #
+        elif (dqn_trained
+              and real_steps - last_dqn_retrain >= DQN_RETRAIN_INTERVAL):
+            logger.info(f"[DQN] Retraining with updated buffer "
+                        f"({len(buffer_dqn)} transitions, "
+                        f"real_step={real_steps})...")
+            save_buffer(buffer_dqn, BUFFER_FILE)
+            try:
+                from train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
+                if TORCH_AVAILABLE:
+                    train_pytorch(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
+                else:
+                    train_numpy(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
+                if dqn.load(DQN_MODEL_FILE):
+                    last_dqn_retrain = real_steps
+                    logger.info("[DQN] Retrained. Sending updated policy to Pico...")
+                    if bridge.send_qtable(dqn.to_qtable_string()):
+                        logger.info("[DQN] Updated Q-table sent to Pico.")
+                    else:
+                        logger.warning("[DQN] Failed to send updated Q-table.")
+            except Exception as e:
+                logger.error(f"[DQN] Retraining failed: {e}")
 
         # ── Convergence progress log (every SUMMARY_INTERVAL real steps) ─── #
         if real_steps % SUMMARY_INTERVAL == 0:
@@ -520,8 +549,9 @@ def main():
         # ── Periodic logging ──────────────────────────────────────────────── #
         if real_steps % LOG_INTERVAL == 0:
             stats = fql.get_stats()
+            _mode_label = "DQN" if dqn_trained else ("FQL" if fql.converged_sent else "RB")
             logger.info(
-                f"[R:{real_steps:5d} V:{fql.total_steps:6d}] "
+                f"[{_mode_label}][R:{real_steps:5d} V:{fql.total_steps:6d}] "
                 f"pH:{pH:.3f} T:{T:.1f}C "
                 f"Action:{action} "
                 f"eps:{stats['epsilon']:.3f} "
@@ -532,9 +562,10 @@ def main():
 
         if real_steps % SUMMARY_INTERVAL == 0:
             stats = fql.get_stats()
+            _mode_label = "DQN" if dqn_trained else ("FQL" if fql.converged_sent else "RB")
             logger.info("-" * 65)
             logger.info(
-                f"Real steps: {real_steps} | "
+                f"[{_mode_label}] Real steps: {real_steps} | "
                 f"Total (real+virtual): {stats['total_steps']} | "
                 f"Avg Reward: {stats['avg_reward_prev_100']:+.4f} | "
                 f"Delta: {abs(stats['avg_reward_prev_100'] - stats['avg_reward_prev2']):.4f} | "
