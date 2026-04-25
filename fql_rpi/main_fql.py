@@ -34,19 +34,22 @@ from fql_agent import FQLAgent, ACTION_OFF, ACTION_LOW, ACTION_MED, ACTION_HIGH
 from serial_bridge import SerialBridge, _setup_pico_monitor_log
 from pond_simulator import PondSimulator, ScenarioType, SimConfig
 from aerator_sim import AeratorSim
+from dqn_agent import DQNAgent
 
 # ── Path configuration ───────────────────────────────────────────────────── #
 BASE_DIR        = os.path.dirname(os.path.abspath(__file__))
 QTABLE_FILE     = os.path.join(BASE_DIR, "qtable.json")
 BUFFER_FILE     = os.path.join(BASE_DIR, "dqn_buffer.json")
+DQN_MODEL_FILE  = os.path.join(BASE_DIR, "dqn_model.pt")
 LOG_DIR         = os.path.join(BASE_DIR, "logs")
 LOG_FILE        = os.path.join(LOG_DIR, "fql.log")
 LOG_ERROR_FILE  = os.path.join(LOG_DIR, "fql_error.log")
 COMPARISON_CSV  = os.path.join(LOG_DIR, "comparison.csv")
 
 # ── Constants ────────────────────────────────────────────────────────────── #
-DQN_BUFFER_READY       = 10_000   # transitions before DQN is ready
+DQN_BUFFER_READY       = 10_000   # transitions before DQN training starts
 DQN_BUFFER_MAX         = 50_000   # maximum buffer size (FIFO)
+DQN_TRAIN_EPOCHS       = 300      # epochs for DQN training
 BUFFER_AUTOSAVE        = 500      # save buffer every N transitions
 FQL_RETRY_INTERVAL     = 30       # seconds between Q-table send retries
 QTABLE_UPDATE_INTERVAL = 500      # re-send improved Q-table every N real steps
@@ -317,6 +320,8 @@ def main():
         logger.info("             Set USE_AERATOR_SIM=False when real aerator connected")
 
     dqn_ready_logged      = False
+    dqn_trained           = False
+    dqn                   = DQNAgent()
     last_qtable_retry     = 0.0
     last_qtable_update    = 0      # real_steps count of last Q-table update
     real_steps            = 0
@@ -403,7 +408,12 @@ def main():
             fql.update(pH_prev, T_prev, action_prev, reward, pH, T)
 
             # Log comparison: real action vs RB shadow vs FQL greedy
-            mode = "FQL" if fql.converged_sent else "RB"
+            if dqn_trained:
+                mode = "DQN"
+            elif fql.converged_sent:
+                mode = "FQL"
+            else:
+                mode = "RB"
             _log_comparison(real_steps, pH, T, mode, action_prev,
                             fql, reward, pH_prev, T_prev)
 
@@ -422,13 +432,33 @@ def main():
             save_buffer(buffer_dqn, BUFFER_FILE)
             logger.debug(f"DQN buffer auto-saved: {len(buffer_dqn)} transitions")
 
-        # ── PHASE D: DQN buffer ready ─────────────────────────────────────── #
-        if len(buffer_dqn) >= DQN_BUFFER_READY and not dqn_ready_logged:
-            logger.info("=" * 65)
-            logger.info(f"=== DQN BUFFER READY: {len(buffer_dqn)} transitions ===")
-            logger.info("=== Ready for DQN training ===")
-            logger.info("=" * 65)
+        # ── PHASE D: DQN training (once buffer is ready + FQL converged) ───── #
+        if (len(buffer_dqn) >= DQN_BUFFER_READY
+                and fql.converged_sent
+                and not dqn_trained
+                and not dqn_ready_logged):
             dqn_ready_logged = True
+            logger.info("=" * 65)
+            logger.info(f"PHASE D — DQN training: {len(buffer_dqn)} transitions")
+            logger.info("=" * 65)
+            save_buffer(buffer_dqn, BUFFER_FILE)
+            try:
+                from train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
+                if TORCH_AVAILABLE:
+                    train_pytorch(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
+                else:
+                    train_numpy(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
+                if dqn.load(DQN_MODEL_FILE):
+                    dqn_trained = True
+                    logger.info("PHASE E — DQN trained. Sending policy to Pico...")
+                    if bridge.send_qtable(dqn.to_qtable_string()):
+                        logger.info("DQN Q-table sent to Pico — DQN now controls.")
+                    else:
+                        logger.warning("Failed to send DQN Q-table — Pico stays on FQL.")
+                else:
+                    logger.warning("DQN model failed to load — staying on FQL.")
+            except Exception as e:
+                logger.error(f"DQN training failed: {e} — staying on FQL.")
 
         # ── Convergence progress log (every SUMMARY_INTERVAL real steps) ─── #
         if real_steps % SUMMARY_INTERVAL == 0:
