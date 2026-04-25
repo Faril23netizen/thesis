@@ -51,6 +51,7 @@ DQN_BUFFER_READY       = 10_000   # transitions before DQN training starts
 DQN_BUFFER_MAX         = 50_000   # maximum buffer size (FIFO)
 DQN_TRAIN_EPOCHS       = 300      # epochs for DQN training
 DQN_RETRAIN_INTERVAL   = 2_000    # retrain DQN every N real steps after first training
+FQL_MIN_REAL_STEPS     = 1_000    # minimum real steps in FQL phase before DQN can start
 BUFFER_AUTOSAVE        = 500      # save buffer every N transitions
 FQL_RETRY_INTERVAL     = 30       # seconds between Q-table send retries
 QTABLE_UPDATE_INTERVAL = 500      # re-send improved Q-table every N real steps
@@ -326,6 +327,7 @@ def main():
     last_qtable_retry     = 0.0
     last_qtable_update    = 0      # real_steps count of last Q-table update
     last_dqn_retrain      = 0      # real_steps count of last DQN retraining
+    fql_mode_start        = None   # real_steps when FQL mode first activated
     real_steps            = 0
 
     # ── Load Q-table (if previous session exists) ───────────────────────── #
@@ -435,8 +437,10 @@ def main():
             logger.debug(f"DQN buffer auto-saved: {len(buffer_dqn)} transitions")
 
         # ── PHASE D: DQN training (once buffer is ready + FQL converged) ───── #
+        fql_real_elapsed = (real_steps - fql_mode_start) if fql_mode_start else 0
         if (len(buffer_dqn) >= DQN_BUFFER_READY
                 and fql.converged_sent
+                and fql_real_elapsed >= FQL_MIN_REAL_STEPS
                 and not dqn_trained
                 and not dqn_ready_logged):
             dqn_ready_logged = True
@@ -519,6 +523,9 @@ def main():
             if bridge.send_qtable(qtable_str):
                 logger.info("Q-table successfully sent to Pico WH")
                 fql.converged_sent = True
+                fql_mode_start = real_steps
+                logger.info(f"[FQL] Phase started at real_step={real_steps}. "
+                            f"DQN unlocks after {FQL_MIN_REAL_STEPS} more real steps.")
             else:
                 logger.warning(f"FAILED to send Q-table — retry in {FQL_RETRY_INTERVAL}s")
                 last_qtable_retry = time.time()
@@ -531,6 +538,9 @@ def main():
             if bridge.send_qtable(qtable_str):
                 logger.info("Q-table successfully sent to Pico WH (retry)")
                 fql.converged_sent = True
+                fql_mode_start = real_steps
+                logger.info(f"[FQL] Phase started at real_step={real_steps}. "
+                            f"DQN unlocks after {FQL_MIN_REAL_STEPS} more real steps.")
             else:
                 last_qtable_retry = time.time()
 
@@ -572,6 +582,12 @@ def main():
                 f"Converged: {stats['converged']} | "
                 f"DQN Buffer: {len(buffer_dqn)}"
             )
+            if fql.converged_sent and not dqn_trained:
+                remaining = max(0, FQL_MIN_REAL_STEPS - fql_real_elapsed)
+                logger.info(
+                    f"[FQL] Steps in FQL phase: {fql_real_elapsed} / {FQL_MIN_REAL_STEPS} "
+                    f"| DQN unlocks in {remaining} more real steps"
+                )
             logger.info("-" * 65)
 
         # Store current data for next iteration
