@@ -610,7 +610,7 @@ def main():
                 f"Converged: {stats['converged']} | "
                 f"DQN Buffer: {len(buffer_dqn)}"
             )
-            if fql.converged_sent and not dqn_trained:
+            if fql.converged_sent and not dqn_active:
                 remaining = max(0, FQL_MIN_REAL_STEPS - fql_real_elapsed)
                 logger.info(
                     f"[FQL] Steps in FQL phase: {fql_real_elapsed} / {FQL_MIN_REAL_STEPS} "
