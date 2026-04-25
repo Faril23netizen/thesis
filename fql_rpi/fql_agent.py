@@ -23,11 +23,10 @@ N_T_SETS    = 5
 N_RULES     = N_PH_SETS * N_T_SETS   # 25
 
 # Energy cost per action for reward
-# LOW = 0.0 (free baseline) — FQL naturally prefers LOW for safe conditions
-# OFF penalized for DO depletion risk
+# OFF is effectively banned — aerator must always run for DO safety
 ENERGY_COST = {
-    ACTION_OFF:  2.0,   # always bad — biological risk (DO depletion)
-    ACTION_LOW:  0.0,   # baseline optimal
+    ACTION_OFF:  100.0, # banned — DO depletion risk, FQL will never choose this
+    ACTION_LOW:  0.0,   # baseline optimal in safe conditions
     ACTION_MED:  0.5,
     ACTION_HIGH: 1.0,
 }
