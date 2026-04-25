@@ -197,10 +197,21 @@ class PondSimulator:
         Returns next (pH, temperature).
         """
         # ── pH update ────────────────────────────────────────────────────── #
-        ph_rise  = self.cfg.aeration_ph_rise[action]
+        ph_rise   = self.cfg.aeration_ph_rise[action]
         buffering = self.cfg.buffering_rate * (self.cfg.ph_equilibrium - self.ph)
         ph_noise  = random.gauss(0.0, self.cfg.ph_noise_std)
-        self.ph  += ph_rise + buffering + self._ph_drift + ph_noise
+        # Drift fades as pH approaches neutral (7.5) — prevents extreme scenarios
+        # from contaminating Q-values in the Normal/safe zone.
+        # Acid drift (negative) scales down as pH rises above 6.5 toward 7.5.
+        # Alkaline drift (positive) scales down as pH falls below 8.5 toward 7.5.
+        if self._ph_drift < 0:
+            drift_scale = min(1.0, max(0.0, 7.5 - self.ph))
+        elif self._ph_drift > 0:
+            drift_scale = min(1.0, max(0.0, self.ph - 7.5))
+        else:
+            drift_scale = 0.0
+        effective_drift = self._ph_drift * drift_scale
+        self.ph  += ph_rise + buffering + effective_drift + ph_noise
         self.ph   = max(self.cfg.ph_min, min(self.cfg.ph_max, self.ph))
 
         # ── Temperature update ───────────────────────────────────────────── #
