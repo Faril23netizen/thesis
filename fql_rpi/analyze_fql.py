@@ -33,10 +33,25 @@ ACTION_COST  = [0.0, 0.3, 0.6, 1.0]
 
 def load_csv(path: str) -> dict:
     rows = []
+    skipped = 0
     with open(path, newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
+            try:
+                ph  = float(row["pH"])
+                t   = float(row["T_C"])
+                nh3 = float(row["NH3_pct"])
+                # Filter sensor artifacts and reconnection spikes
+                if not (5.5 <= ph <= 9.5 and 17.5 <= t <= 35.0 and 0 <= nh3 <= 100):
+                    skipped += 1
+                    continue
+            except (ValueError, KeyError):
+                skipped += 1
+                continue
             rows.append(row)
+
+    if skipped > 0:
+        print(f"  Filtered {skipped} outlier rows (sensor artifacts/reconnections)")
 
     if not rows:
         print(f"[ERROR] No data in {path}")
