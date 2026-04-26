@@ -123,8 +123,11 @@ class FQLAgent:
         self.eps_min   = eps_min
         self.eps_decay = eps_decay
 
-        # Q-table: 9×4, initialized to 0.0
-        self.qtable = [[0.0] * N_ACTIONS for _ in range(N_RULES)]
+        # Q-table: 25×4. OFF initialized to -100 so it is never chosen greedily
+        # even if other Q-values go negative during training.
+        self.qtable = [[-100.0 if a == ACTION_OFF else 0.0
+                        for a in range(N_ACTIONS)]
+                       for _ in range(N_RULES)]
 
         self.total_steps      = 0
         self.converged        = False
