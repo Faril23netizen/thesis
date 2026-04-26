@@ -1,0 +1,448 @@
+"""
+Simulation-Based Controller Comparison
+=======================================
+Thesis : Edge-Intelligent Aquaculture Aerator Control
+         Using Progressive Hybrid FQL-DQN with N3IWF LES
+Student: Faril Pirwanhadi (M14128104)
+
+Evaluates RB, FQL, and DQN controllers in the SAME virtual environment
+(identical scenarios, identical random seeds) for a fair comparison.
+
+No real Pico or serial connection needed — purely simulation.
+
+Usage:
+  uv run python3 simulate_compare.py
+  uv run python3 simulate_compare.py --episodes 30 --steps 300 --save results/
+"""
+
+import argparse
+import math
+import os
+import random
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+
+from pond_simulator import PondSimulator, ScenarioType, SimConfig
+from fql_agent     import FQLAgent, ACTION_OFF, ACTION_LOW, ACTION_MED, ACTION_HIGH
+from dqn_agent     import DQNAgent
+
+BASE_DIR       = os.path.dirname(os.path.abspath(__file__))
+QTABLE_FILE    = os.path.join(BASE_DIR, "qtable.json")
+DQN_MODEL_FILE = os.path.join(BASE_DIR, "dqn_model.pt")
+
+ACTION_NAMES = ["OFF", "LOW", "MED", "HIGH"]
+ACTION_COST  = {ACTION_OFF: 0.0, ACTION_LOW: 0.3, ACTION_MED: 0.6, ACTION_HIGH: 1.0}
+
+
+# ── Rule-based controller (mirrors Pico firmware) ────────────────────────── #
+
+def rule_based_action(pH: float, T: float) -> int:
+    if pH < 6.0 or pH > 9.5 or T > 35.0: return ACTION_HIGH
+    if pH < 6.5 or pH > 8.5 or T > 30.0: return ACTION_MED
+    return ACTION_LOW
+
+
+# ── NH3 fraction ─────────────────────────────────────────────────────────── #
+
+def nh3_fraction(pH: float, T: float) -> float:
+    pka = 0.09018 + 2729.92 / (T + 273.15)
+    return 1.0 / (1.0 + 10 ** (pka - pH))
+
+
+# ── Reward function (same as fql_agent.py) ────────────────────────────────── #
+
+def compute_reward(pH: float, T: float, action: int,
+                   pH_next: float, T_next: float) -> float:
+    ENERGY_COST = {ACTION_OFF: 100.0, ACTION_LOW: 0.0, ACTION_MED: 0.5, ACTION_HIGH: 1.0}
+
+    nh3   = nh3_fraction(pH, T)
+    nh3_n = nh3_fraction(pH_next, T_next)
+
+    ph_safe  = 6.5 <= pH_next <= 8.5
+    t_safe   = T_next <= 30.0
+    nh3_safe = nh3_n < 0.03
+
+    if ph_safe and t_safe:
+        tiered = 1.0
+    elif (6.0 <= pH_next <= 9.0) and T_next <= 32.0:
+        tiered = 0.3
+    else:
+        tiered = -1.0
+
+    r_safe   = tiered - 0.3 * ENERGY_COST[action]
+    nh3_pen  = -5.0 * max(0.0, nh3_n - 0.02)
+    nh3_imp  = 2.0  * max(0.0, nh3 - nh3_n)
+
+    return r_safe + nh3_pen + nh3_imp
+
+
+# ── Single episode evaluation ─────────────────────────────────────────────── #
+
+def run_episode(controller, sim: PondSimulator, scenario: ScenarioType,
+                steps: int, seed: int) -> dict:
+    """
+    Run one episode and return metrics dict.
+    controller: callable (pH, T) -> action int
+    """
+    random.seed(seed)
+
+    ph, temp = sim.reset(scenario)
+
+    rewards, nh3s, energies, actions_taken = [], [], [], []
+
+    for _ in range(steps):
+        action         = controller(ph, temp)
+        ph_next, t_next = sim.step(action)
+
+        r = compute_reward(ph, temp, action, ph_next, t_next)
+
+        rewards.append(r)
+        nh3s.append(nh3_fraction(ph, temp) * 100.0)
+        energies.append(ACTION_COST[action])
+        actions_taken.append(action)
+
+        ph, temp = ph_next, t_next
+
+    ph_arr = np.array([sim.ph])   # final pH — use step-by-step for full trace
+    # Re-run to collect pH trace (already done above, collect inline next pass)
+    # Use rewards/nh3 collected above
+    n = len(rewards)
+    return {
+        "avg_reward":    float(np.mean(rewards)),
+        "avg_nh3":       float(np.mean(nh3s)),
+        "avg_energy":    float(np.mean(energies)),
+        "total_energy":  float(np.sum(energies)),
+        "action_dist":   [actions_taken.count(a) / n * 100 for a in range(4)],
+        "n":             n,
+    }
+
+
+def run_episode_full(controller, sim: PondSimulator, scenario: ScenarioType,
+                     steps: int, seed: int) -> dict:
+    """Run episode and return full time series for plotting."""
+    random.seed(seed)
+    ph, temp = sim.reset(scenario)
+
+    phs, temps, nh3s, rewards, energies, actions_taken = [], [], [], [], [], []
+
+    for _ in range(steps):
+        action          = controller(ph, temp)
+        ph_next, t_next = sim.step(action)
+        r = compute_reward(ph, temp, action, ph_next, t_next)
+
+        phs.append(ph); temps.append(temp)
+        nh3s.append(nh3_fraction(ph, temp) * 100.0)
+        rewards.append(r)
+        energies.append(ACTION_COST[action])
+        actions_taken.append(action)
+
+        ph, temp = ph_next, t_next
+
+    n = len(rewards)
+    ph_arr = np.array(phs)
+    return {
+        "pH":           np.array(phs),
+        "T":            np.array(temps),
+        "NH3":          np.array(nh3s),
+        "reward":       np.array(rewards),
+        "energy":       np.array(energies),
+        "actions":      actions_taken,
+        "avg_reward":   float(np.mean(rewards)),
+        "avg_nh3":      float(np.mean(nh3s)),
+        "avg_energy":   float(np.mean(energies)),
+        "ph_safe_pct":  float(((ph_arr >= 6.5) & (ph_arr <= 8.5)).mean() * 100),
+        "action_dist":  [actions_taken.count(a) / n * 100 for a in range(4)],
+        "n":            n,
+    }
+
+
+# ── Aggregate over multiple episodes ──────────────────────────────────────── #
+
+def evaluate(controller, sim: PondSimulator, scenarios: list,
+             episodes: int, steps: int, base_seed: int = 42) -> dict:
+    """Run multiple episodes across all scenarios, return aggregated metrics."""
+    all_rewards, all_nh3, all_energy, all_actions = [], [], [], []
+    all_ph_safe = []
+
+    for ep in range(episodes):
+        for scen in scenarios:
+            seed = base_seed + ep * 100 + scen.value
+            res  = run_episode_full(controller, sim, scen, steps, seed)
+            all_rewards.append(res["avg_reward"])
+            all_nh3.append(res["avg_nh3"])
+            all_energy.append(res["avg_energy"])
+            all_ph_safe.append(res["ph_safe_pct"])
+            all_actions.extend(res["actions"])
+
+    n_total = len(all_actions)
+    return {
+        "avg_reward":   float(np.mean(all_rewards)),
+        "std_reward":   float(np.std(all_rewards)),
+        "avg_nh3":      float(np.mean(all_nh3)),
+        "avg_energy":   float(np.mean(all_energy)),
+        "ph_safe_pct":  float(np.mean(all_ph_safe)),
+        "action_dist":  [all_actions.count(a) / n_total * 100 for a in range(4)],
+        "n_episodes":   episodes * len(scenarios),
+    }
+
+
+# ── Time-series for plotting (one representative episode per scenario) ─────── #
+
+def collect_timeseries(controller, sim: PondSimulator, scenario: ScenarioType,
+                       steps: int, seed: int = 42) -> dict:
+    return run_episode_full(controller, sim, scenario, steps, seed)
+
+
+# ── Print summary table ───────────────────────────────────────────────────── #
+
+def print_summary(results: dict) -> None:
+    controllers = list(results.keys())
+    print("\n" + "=" * 65)
+    print("  SIMULATION COMPARISON  (same virtual environment)")
+    print("=" * 65)
+
+    for name, m in results.items():
+        print(f"\n  ── {name} ({m['n_episodes']} episodes) ──")
+        print(f"    Avg reward      : {m['avg_reward']:+.4f} ± {m['std_reward']:.4f}")
+        print(f"    Avg NH3%%        : {m['avg_nh3']:.3f}%%")
+        print(f"    Avg energy/step : {m['avg_energy']:.3f}")
+        print(f"    %% time SAFE pH  : {m['ph_safe_pct']:.1f}%%")
+        print(f"    Action dist     : " +
+              "  ".join(f"{ACTION_NAMES[a]}={m['action_dist'][a]:.1f}%%" for a in range(4)))
+
+    # Pairwise deltas
+    names = controllers
+    if len(names) >= 2:
+        rb  = results.get("Rule-Based")
+        fql = results.get("FQL")
+        dqn = results.get("DQN")
+
+        def delta(a, b, key):
+            return a[key] - b[key]
+
+        if rb and fql:
+            print(f"\n  ── FQL vs RB ──")
+            print(f"    Reward : {fql['avg_reward']:+.4f} vs {rb['avg_reward']:+.4f}  →  Δ={delta(fql,rb,'avg_reward'):+.4f}")
+            print(f"    Energy : {fql['avg_energy']:.3f} vs {rb['avg_energy']:.3f}  →  Δ={delta(fql,rb,'avg_energy'):+.3f}")
+            print(f"    NH3%%   : {fql['avg_nh3']:.3f} vs {rb['avg_nh3']:.3f}  →  Δ={delta(fql,rb,'avg_nh3'):+.3f}")
+
+        if rb and dqn:
+            print(f"\n  ── DQN vs RB ──")
+            print(f"    Reward : {dqn['avg_reward']:+.4f} vs {rb['avg_reward']:+.4f}  →  Δ={delta(dqn,rb,'avg_reward'):+.4f}")
+            print(f"    Energy : {dqn['avg_energy']:.3f} vs {rb['avg_energy']:.3f}  →  Δ={delta(dqn,rb,'avg_energy'):+.3f}")
+            print(f"    NH3%%   : {dqn['avg_nh3']:.3f} vs {rb['avg_nh3']:.3f}  →  Δ={delta(dqn,rb,'avg_nh3'):+.3f}")
+
+        if fql and dqn:
+            print(f"\n  ── DQN vs FQL ──")
+            print(f"    Reward : {dqn['avg_reward']:+.4f} vs {fql['avg_reward']:+.4f}  →  Δ={delta(dqn,fql,'avg_reward'):+.4f}")
+            print(f"    Energy : {dqn['avg_energy']:.3f} vs {fql['avg_energy']:.3f}  →  Δ={delta(dqn,fql,'avg_energy'):+.3f}")
+            print(f"    NH3%%   : {dqn['avg_nh3']:.3f} vs {fql['avg_nh3']:.3f}  →  Δ={delta(dqn,fql,'avg_nh3'):+.3f}")
+
+    print("=" * 65 + "\n")
+
+
+# ── Plots ─────────────────────────────────────────────────────────────────── #
+
+def rolling(arr, w=20):
+    return np.convolve(arr, np.ones(w) / w, mode="same")
+
+
+def plot_comparison(ts_results: dict, save_dir: str | None = None) -> None:
+    """
+    ts_results: {controller_name: {scenario_label: timeseries_dict}}
+    """
+    colors = {"Rule-Based": "#e74c3c", "FQL": "#27ae60", "DQN": "#2980b9"}
+    scenarios = list(next(iter(ts_results.values())).keys())
+
+    n_scen = len(scenarios)
+    fig = plt.figure(figsize=(18, 4 * n_scen))
+    fig.suptitle("Simulation Comparison: RB vs FQL vs DQN\n(identical virtual environment)",
+                 fontsize=13, fontweight="bold")
+
+    gs = gridspec.GridSpec(n_scen, 3, figure=fig, hspace=0.5, wspace=0.35)
+
+    for row, scen_label in enumerate(scenarios):
+        # pH
+        ax = fig.add_subplot(gs[row, 0])
+        for name, scen_data in ts_results.items():
+            d = scen_data[scen_label]
+            ax.plot(d["pH"], color=colors[name], linewidth=0.8, alpha=0.85, label=name)
+        ax.axhline(6.5, color="red", linestyle=":", linewidth=0.7)
+        ax.axhline(8.5, color="red", linestyle=":", linewidth=0.7)
+        ax.fill_between(range(len(d["pH"])), 6.5, 8.5, alpha=0.05, color="green")
+        ax.set_title(f"{scen_label} — pH"); ax.set_ylabel("pH"); ax.grid(True, alpha=0.3)
+        if row == 0: ax.legend(fontsize=7)
+
+        # NH3
+        ax = fig.add_subplot(gs[row, 1])
+        for name, scen_data in ts_results.items():
+            d = scen_data[scen_label]
+            ax.plot(d["NH3"], color=colors[name], linewidth=0.8, alpha=0.85, label=name)
+        ax.set_title(f"{scen_label} — NH3 (%)"); ax.set_ylabel("NH3 %"); ax.grid(True, alpha=0.3)
+
+        # Cumulative reward
+        ax = fig.add_subplot(gs[row, 2])
+        for name, scen_data in ts_results.items():
+            d = scen_data[scen_label]
+            ax.plot(np.cumsum(d["reward"]), color=colors[name], linewidth=0.8,
+                    alpha=0.85, label=name)
+        ax.set_title(f"{scen_label} — Cumulative Reward")
+        ax.set_ylabel("Cum. Reward"); ax.grid(True, alpha=0.3)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+        path = os.path.join(save_dir, "simulation_comparison.png")
+        plt.savefig(path, dpi=150, bbox_inches="tight")
+        print(f"Plot saved: {path}")
+    plt.show()
+
+
+def plot_bar_summary(results: dict, save_dir: str | None = None) -> None:
+    """Bar chart summary: reward, energy, NH3, pH safe across all controllers."""
+    names   = list(results.keys())
+    colors  = ["#e74c3c", "#27ae60", "#2980b9"]
+    metrics = {
+        "Avg Reward":      [results[n]["avg_reward"]   for n in names],
+        "Avg Energy/step": [results[n]["avg_energy"]   for n in names],
+        "Avg NH3 %":       [results[n]["avg_nh3"]      for n in names],
+        "pH Safe %":       [results[n]["ph_safe_pct"]  for n in names],
+    }
+
+    fig, axes = plt.subplots(1, 4, figsize=(16, 5))
+    fig.suptitle("Simulation Summary: RB vs FQL vs DQN",
+                 fontsize=13, fontweight="bold")
+
+    for ax, (title, vals) in zip(axes, metrics.items()):
+        bars = ax.bar(names, vals, color=colors[:len(names)], alpha=0.85, edgecolor="white")
+        ax.set_title(title); ax.set_ylabel(title); ax.grid(True, alpha=0.3, axis="y")
+        for bar, val in zip(bars, vals):
+            ax.text(bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + abs(bar.get_height()) * 0.02,
+                    f"{val:.3f}", ha="center", va="bottom", fontsize=9)
+
+    # Action distribution
+    fig2, ax2 = plt.subplots(figsize=(10, 5))
+    x = np.arange(4)
+    w = 0.25
+    for i, name in enumerate(names):
+        offset = (i - len(names) / 2 + 0.5) * w
+        ax2.bar(x + offset, results[name]["action_dist"], w,
+                label=name, color=colors[i], alpha=0.85)
+    ax2.set_xticks(x); ax2.set_xticklabels(ACTION_NAMES)
+    ax2.set_ylabel("Usage (%)"); ax2.set_title("Action Distribution")
+    ax2.legend(); ax2.grid(True, alpha=0.3, axis="y")
+    fig2.suptitle("Action Distribution: RB vs FQL vs DQN", fontweight="bold")
+
+    plt.tight_layout()
+
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+        p1 = os.path.join(save_dir, "sim_metrics_bar.png")
+        p2 = os.path.join(save_dir, "sim_action_dist.png")
+        fig.savefig(p1, dpi=150, bbox_inches="tight")
+        fig2.savefig(p2, dpi=150, bbox_inches="tight")
+        print(f"Plots saved: {p1}, {p2}")
+    plt.show()
+
+
+# ══════════════════════════════════════════════════════════════════════════ #
+#  Entry point
+# ══════════════════════════════════════════════════════════════════════════ #
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Simulate RB vs FQL vs DQN comparison")
+    parser.add_argument("--episodes", type=int, default=20,
+                        help="Episodes per scenario (default 20)")
+    parser.add_argument("--steps",    type=int, default=300,
+                        help="Steps per episode (default 300)")
+    parser.add_argument("--seed",     type=int, default=42,
+                        help="Base random seed")
+    parser.add_argument("--save",     default=None,
+                        help="Directory to save plots (e.g. results/)")
+    parser.add_argument("--scenarios", nargs="+",
+                        choices=["all", "normal", "acid", "alkaline",
+                                 "cold", "heat", "nh3", "multi"],
+                        default=["all"],
+                        help="Scenarios to test")
+    args = parser.parse_args()
+
+    # ── Scenario selection ───────────────────────────────────────────────── #
+    _SCEN_MAP = {
+        "normal":   ScenarioType.NORMAL,
+        "acid":     ScenarioType.ACID_CRASH,
+        "alkaline": ScenarioType.ALKALINE,
+        "cold":     ScenarioType.COLD_STRESS,
+        "heat":     ScenarioType.HEAT_STRESS,
+        "nh3":      ScenarioType.HIGH_NH3,
+        "multi":    ScenarioType.MULTI_STRESS,
+    }
+    if "all" in args.scenarios:
+        scenarios = list(ScenarioType)
+    else:
+        scenarios = [_SCEN_MAP[s] for s in args.scenarios]
+
+    print("=" * 65)
+    print("  Simulation-Based Controller Evaluation")
+    print(f"  Episodes : {args.episodes} per scenario × {len(scenarios)} scenarios")
+    print(f"  Steps    : {args.steps} per episode")
+    print(f"  Scenarios: {[PondSimulator.label(s) for s in scenarios]}")
+    print("=" * 65)
+
+    # ── Load controllers ──────────────────────────────────────────────────── #
+    sim = PondSimulator(SimConfig())
+
+    # Rule-Based
+    rb_controller = rule_based_action
+    print("  [RB]  Rule-Based controller loaded.")
+
+    # FQL — load trained Q-table, set epsilon=0 (greedy)
+    fql = FQLAgent()
+    if os.path.exists(QTABLE_FILE) and fql.load_qtable(QTABLE_FILE):
+        fql.epsilon = 0.0   # greedy evaluation — no exploration
+        fql_controller = lambda ph, t: fql.select_action(ph, t)
+        print(f"  [FQL] Q-table loaded: {QTABLE_FILE}  (ε=0, greedy)")
+    else:
+        print(f"  [FQL] WARNING: {QTABLE_FILE} not found — using untrained FQL.")
+        fql.epsilon = 0.0
+        fql_controller = lambda ph, t: fql.select_action(ph, t)
+
+    # DQN
+    dqn = DQNAgent()
+    if dqn.load(DQN_MODEL_FILE):
+        dqn_controller = lambda ph, t: dqn.select_action(ph, t)
+        print(f"  [DQN] Model loaded: {DQN_MODEL_FILE}")
+    else:
+        print(f"  [DQN] WARNING: {DQN_MODEL_FILE} not found — DQN skipped.")
+        dqn_controller = None
+
+    controllers = {"Rule-Based": rb_controller, "FQL": fql_controller}
+    if dqn_controller:
+        controllers["DQN"] = dqn_controller
+
+    print()
+
+    # ── Aggregate evaluation ──────────────────────────────────────────────── #
+    results = {}
+    for name, ctrl in controllers.items():
+        print(f"  Evaluating {name}...")
+        results[name] = evaluate(ctrl, sim, scenarios,
+                                 args.episodes, args.steps, args.seed)
+    print()
+
+    print_summary(results)
+
+    # ── Time-series plots — one representative episode per scenario ────────── #
+    ts_results = {name: {} for name in controllers}
+    for scen in scenarios:
+        label = PondSimulator.label(scen)
+        for name, ctrl in controllers.items():
+            ts_results[name][label] = collect_timeseries(
+                ctrl, sim, scen, args.steps, seed=args.seed
+            )
+
+    plot_comparison(ts_results, save_dir=args.save)
+    plot_bar_summary(results,   save_dir=args.save)
