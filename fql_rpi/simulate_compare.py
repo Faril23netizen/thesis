@@ -506,45 +506,275 @@ def plot_bar_summary(results: dict, save_dir: str | None = None) -> None:
     plt.show()
 
 
+# ── Per-scenario evaluation ───────────────────────────────────────────────── #
+
+def evaluate_per_scenario(controllers, sim, scenarios, episodes=20,
+                          steps=300, seed=42):
+    """Returns {ctrl_name: {scenario_label: metrics_dict}}"""
+    results = {}
+    for name, ctrl in controllers.items():
+        results[name] = {}
+        for scen in scenarios:
+            rews, nh3s, engs, safes, acts = [], [], [], [], []
+            for ep in range(episodes):
+                s = seed + ep * 100 + scen.value
+                res = run_episode_full(ctrl, sim, scen, steps, s)
+                rews.append(res["avg_reward"])
+                nh3s.append(res["avg_nh3"])
+                engs.append(res["avg_energy"])
+                safes.append(res["ph_safe_pct"])
+                acts.extend(res["actions"])
+            n = len(acts)
+            results[name][PondSimulator.label(scen)] = {
+                "avg_reward": np.mean(rews), "std_reward": np.std(rews),
+                "rewards": rews,
+                "avg_nh3": np.mean(nh3s), "avg_energy": np.mean(engs),
+                "ph_safe_pct": np.mean(safes),
+                "action_dist": [acts.count(a)/n*100 for a in range(4)],
+            }
+    return results
+
+
+# ── CSV & LaTeX exports ───────────────────────────────────────────────────── #
+
+def export_csv(per_scen, path):
+    import csv
+    with open(path, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Scenario","Controller","Avg Reward","Std Reward",
+                     "Avg NH3 %","Avg Energy","pH Safe %",
+                     "OFF %","LOW %","MED %","HIGH %"])
+        for ctrl in per_scen:
+            for scen, m in per_scen[ctrl].items():
+                w.writerow([scen, ctrl,
+                    f"{m['avg_reward']:.4f}", f"{m['std_reward']:.4f}",
+                    f"{m['avg_nh3']:.3f}", f"{m['avg_energy']:.3f}",
+                    f"{m['ph_safe_pct']:.1f}",
+                    *[f"{m['action_dist'][a]:.1f}" for a in range(4)]])
+    print(f"  CSV saved: {path}")
+
+
+def export_latex_table(agg, path):
+    with open(path, "w") as f:
+        f.write("\\begin{table}[h]\n\\centering\n")
+        f.write("\\caption{Simulation Comparison Results}\n\\label{tab:sim}\n")
+        f.write("\\begin{tabular}{lcccc}\n\\hline\n")
+        f.write("Controller & Avg Reward & Energy/step & NH3 (\\%) & pH Safe (\\%) \\\\\n\\hline\n")
+        for name, m in agg.items():
+            f.write(f"{name} & {m['avg_reward']:+.4f} $\\pm$ {m['std_reward']:.4f} "
+                    f"& {m['avg_energy']:.3f} & {m['avg_nh3']:.3f} "
+                    f"& {m['ph_safe_pct']:.1f} \\\\\n")
+        f.write("\\hline\n\\end{tabular}\n\\end{table}\n")
+    print(f"  LaTeX saved: {path}")
+
+
+# ── Boxplot ───────────────────────────────────────────────────────────────── #
+
+def plot_boxplot(per_scen, save_dir):
+    _C = {"Rule-Based": "#e74c3c", "FQL": "#27ae60", "DQN": "#2980b9"}
+    ctrls = list(per_scen.keys())
+    scens = list(list(per_scen.values())[0].keys())
+    fig, axes = plt.subplots(1, len(scens), figsize=(3.5*len(scens), 5), sharey=True)
+    fig.suptitle("Reward Distribution per Scenario", fontsize=14, fontweight="bold")
+    for i, scen in enumerate(scens):
+        ax = axes[i]
+        data = [per_scen[c][scen]["rewards"] for c in ctrls]
+        bp = ax.boxplot(data, labels=ctrls, patch_artist=True, widths=0.6)
+        for patch, c in zip(bp["boxes"], ctrls):
+            patch.set_facecolor(_C[c]); patch.set_alpha(0.7)
+        ax.set_title(scen, fontsize=8); ax.grid(True, alpha=0.3, axis="y")
+        ax.axhline(0, color="gray", ls="--", lw=0.5)
+        if i == 0: ax.set_ylabel("Avg Reward")
+    plt.tight_layout()
+    p = os.path.join(save_dir, "boxplot_reward.png")
+    fig.savefig(p, dpi=150, bbox_inches="tight"); plt.close(fig)
+    print(f"  Plot: {p}")
+
+
+# ── Per-scenario grouped bars ─────────────────────────────────────────────── #
+
+def plot_per_scenario_bars(per_scen, save_dir):
+    _C = {"Rule-Based": "#e74c3c", "FQL": "#27ae60", "DQN": "#2980b9"}
+    ctrls = list(per_scen.keys())
+    scens = list(list(per_scen.values())[0].keys())
+    metrics = [("Avg Reward","avg_reward"),("pH Safe %","ph_safe_pct"),
+               ("Avg Energy","avg_energy"),("NH3 %","avg_nh3")]
+    fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+    fig.suptitle("Per-Scenario Performance", fontsize=14, fontweight="bold")
+    for ax, (title, key) in zip(axes.flat, metrics):
+        x = np.arange(len(scens)); w = 0.25
+        for j, c in enumerate(ctrls):
+            vals = [per_scen[c][s][key] for s in scens]
+            ax.bar(x + (j - len(ctrls)/2 + 0.5)*w, vals, w, label=c, color=_C[c], alpha=0.85)
+        ax.set_xticks(x); ax.set_xticklabels(scens, rotation=30, ha="right", fontsize=8)
+        ax.set_title(title); ax.legend(fontsize=8); ax.grid(True, alpha=0.3, axis="y")
+    plt.tight_layout()
+    p = os.path.join(save_dir, "per_scenario_bars.png")
+    fig.savefig(p, dpi=150, bbox_inches="tight"); plt.close(fig)
+    print(f"  Plot: {p}")
+
+
+# ── Radar chart ───────────────────────────────────────────────────────────── #
+
+def plot_radar(agg, save_dir):
+    _C = {"Rule-Based": "#e74c3c", "FQL": "#27ae60", "DQN": "#2980b9"}
+    ctrls = list(agg.keys())
+    labels = ["Reward","Energy\nEfficiency","NH3\nReduction","pH Safety"]
+    raw = {}
+    for c in ctrls:
+        m = agg[c]
+        raw[c] = [m["avg_reward"], 1.0-m["avg_energy"],
+                  1.0-m["avg_nh3"]/100, m["ph_safe_pct"]/100]
+    n = len(labels)
+    mins = [min(raw[c][i] for c in ctrls) for i in range(n)]
+    maxs = [max(raw[c][i] for c in ctrls) for i in range(n)]
+    scaled = {}
+    for c in ctrls:
+        scaled[c] = [(raw[c][i]-mins[i])/(maxs[i]-mins[i])
+                     if maxs[i]-mins[i] > 0 else 0.5 for i in range(n)]
+    angles = np.linspace(0, 2*np.pi, n, endpoint=False).tolist() + [0]
+    fig, ax = plt.subplots(figsize=(7, 7), subplot_kw=dict(polar=True))
+    ax.set_title("Multi-Metric Radar", fontsize=13, fontweight="bold", pad=20)
+    for c in ctrls:
+        vals = scaled[c] + scaled[c][:1]
+        ax.plot(angles, vals, "o-", lw=2, label=c, color=_C[c])
+        ax.fill(angles, vals, alpha=0.15, color=_C[c])
+    ax.set_xticks(angles[:-1]); ax.set_xticklabels(labels, fontsize=10)
+    ax.set_ylim(0, 1.1); ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1))
+    p = os.path.join(save_dir, "radar_comparison.png")
+    fig.savefig(p, dpi=150, bbox_inches="tight"); plt.close(fig)
+    print(f"  Plot: {p}")
+
+
+# ── Zone distribution ─────────────────────────────────────────────────────── #
+
+def _classify_zone(ph, t):
+    if 6.5 <= ph <= 8.5 and t <= 30.0: return "SAFE"
+    elif ph < 6.0 or ph > 9.5 or t > 34.0 or t < 18.0: return "DANGER"
+    return "WARNING"
+
+def plot_zone_dist(controllers, sim, scenarios, save_dir,
+                   episodes=20, steps=300, seed=42):
+    zone_data = {}
+    for name, ctrl in controllers.items():
+        zones = {"SAFE": 0, "WARNING": 0, "DANGER": 0}; total = 0
+        for ep in range(episodes):
+            for scen in scenarios:
+                res = run_episode_full(ctrl, sim, scen, steps,
+                                       seed + ep*100 + scen.value)
+                for ph, t in zip(res["pH"], res["T"]):
+                    zones[_classify_zone(ph, t)] += 1; total += 1
+        zone_data[name] = {k: v/total*100 for k, v in zones.items()}
+
+    ctrls = list(zone_data.keys())
+    zcolors = {"SAFE": "#2ecc71", "WARNING": "#f39c12", "DANGER": "#e74c3c"}
+    fig, ax = plt.subplots(figsize=(8, 5))
+    fig.suptitle("Time in Each Zone (%)", fontsize=13, fontweight="bold")
+    x = np.arange(len(ctrls)); bottom = np.zeros(len(ctrls))
+    for z in ["SAFE", "WARNING", "DANGER"]:
+        vals = [zone_data[c][z] for c in ctrls]
+        ax.bar(x, vals, bottom=bottom, label=z, color=zcolors[z], alpha=0.85)
+        for i, v in enumerate(vals):
+            if v > 3:
+                ax.text(i, bottom[i]+v/2, f"{v:.1f}%", ha="center",
+                        va="center", fontsize=10, fontweight="bold")
+        bottom += vals
+    ax.set_xticks(x); ax.set_xticklabels(ctrls); ax.set_ylabel("%"); ax.legend()
+    p = os.path.join(save_dir, "zone_distribution.png")
+    fig.savefig(p, dpi=150, bbox_inches="tight"); plt.close(fig)
+    print(f"  Plot: {p}")
+
+
+# ── Policy map heatmap ────────────────────────────────────────────────────── #
+
+def plot_policy_maps(controllers, save_dir):
+    from matplotlib.colors import ListedColormap, BoundaryNorm
+    from matplotlib.patches import Patch
+    ph_r = np.linspace(5.0, 10.0, 50); t_r = np.linspace(16.0, 36.0, 40)
+    cmap = ListedColormap(["#3498db", "#f39c12", "#e74c3c"])
+    norm = BoundaryNorm([0.5, 1.5, 2.5, 3.5], cmap.N)
+    ctrls = list(controllers.keys())
+    fig, axes = plt.subplots(1, len(ctrls), figsize=(6*len(ctrls), 5))
+    fig.suptitle("Policy Map — Action at (pH, T)", fontsize=14, fontweight="bold")
+    if len(ctrls) == 1: axes = [axes]
+    for ax, name in zip(axes, ctrls):
+        grid = np.zeros((len(t_r), len(ph_r)))
+        for i, t in enumerate(t_r):
+            for j, ph in enumerate(ph_r):
+                grid[i, j] = controllers[name](ph, t)
+        ax.imshow(grid, aspect="auto", origin="lower",
+                  extent=[5.0, 10.0, 16.0, 36.0], cmap=cmap, norm=norm,
+                  interpolation="nearest")
+        ax.axvline(6.5, color="white", ls="--", lw=1.2, alpha=0.8)
+        ax.axvline(8.5, color="white", ls="--", lw=1.2, alpha=0.8)
+        ax.axhline(30.0, color="white", ls="--", lw=1.2, alpha=0.8)
+        ax.set_xlabel("pH"); ax.set_ylabel("Temp (°C)"); ax.set_title(name)
+    legend_el = [Patch(facecolor="#3498db", label="LOW"),
+                 Patch(facecolor="#f39c12", label="MED"),
+                 Patch(facecolor="#e74c3c", label="HIGH")]
+    fig.legend(handles=legend_el, loc="lower center", ncol=3, fontsize=10)
+    plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+    p = os.path.join(save_dir, "policy_map_heatmap.png")
+    fig.savefig(p, dpi=150, bbox_inches="tight"); plt.close(fig)
+    print(f"  Plot: {p}")
+
+
+# ── Action timeline ───────────────────────────────────────────────────────── #
+
+def plot_action_timeline(controllers, sim, save_dir, steps=300, seed=42):
+    key_scens = [ScenarioType.NORMAL, ScenarioType.ACID_CRASH,
+                 ScenarioType.ALKALINE, ScenarioType.HIGH_NH3]
+    act_c = {0:"#95a5a6", 1:"#3498db", 2:"#f39c12", 3:"#e74c3c"}
+    ctrls = list(controllers.keys())
+    fig, axes = plt.subplots(len(key_scens), len(ctrls),
+                             figsize=(5*len(ctrls), 2.5*len(key_scens)), sharex=True)
+    fig.suptitle("Action Timeline per Step", fontsize=13, fontweight="bold")
+    for row, scen in enumerate(key_scens):
+        for col, name in enumerate(ctrls):
+            ax = axes[row][col]
+            res = run_episode_full(controllers[name], sim, scen, steps, seed)
+            for i, a in enumerate(res["actions"]):
+                ax.bar(i, 1, color=act_c[a], width=1.0)
+            ax.set_yticks([])
+            if row == 0: ax.set_title(name, fontsize=10)
+            if col == 0: ax.set_ylabel(PondSimulator.label(scen), fontsize=8)
+            ax.set_xlim(0, steps)
+    from matplotlib.patches import Patch
+    leg = [Patch(facecolor=act_c[a], label=ACTION_NAMES[a]) for a in [1,2,3]]
+    fig.legend(handles=leg, loc="lower center", ncol=3, fontsize=9)
+    plt.tight_layout(rect=[0, 0.04, 1, 0.96])
+    p = os.path.join(save_dir, "action_timeline.png")
+    fig.savefig(p, dpi=150, bbox_inches="tight"); plt.close(fig)
+    print(f"  Plot: {p}")
+
+
 # ══════════════════════════════════════════════════════════════════════════ #
 #  Entry point
 # ══════════════════════════════════════════════════════════════════════════ #
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Simulate RB vs FQL vs DQN comparison")
-    parser.add_argument("--episodes", type=int, default=20,
-                        help="Episodes per scenario (default 20)")
-    parser.add_argument("--steps",    type=int, default=300,
-                        help="Steps per episode (default 300)")
-    parser.add_argument("--seed",     type=int, default=42,
-                        help="Base random seed")
-    parser.add_argument("--save",     default=None,
-                        help="Directory to save plots (e.g. results/)")
+    parser.add_argument("--episodes", type=int, default=20)
+    parser.add_argument("--steps",    type=int, default=300)
+    parser.add_argument("--seed",     type=int, default=42)
     parser.add_argument("--scenarios", nargs="+",
-                        choices=["all", "normal", "acid", "alkaline",
-                                 "cold", "heat", "nh3", "multi"],
-                        default=["all"],
-                        help="Scenarios to test")
-    parser.add_argument("--pretrain-steps", type=int, default=80_000,
-                        help="Virtual steps to pretrain FQL if no Q-table found (default 80000)")
-    parser.add_argument("--retrain-dqn", action="store_true",
-                        help="Force retrain DQN from virtual simulator")
+                        choices=["all","normal","acid","alkaline","cold","heat","nh3","multi"],
+                        default=["all"])
+    parser.add_argument("--pretrain-steps", type=int, default=80_000)
+    parser.add_argument("--retrain-dqn", action="store_true")
     args = parser.parse_args()
 
-    # ── Scenario selection ───────────────────────────────────────────────── #
     _SCEN_MAP = {
-        "normal":   ScenarioType.NORMAL,
-        "acid":     ScenarioType.ACID_CRASH,
-        "alkaline": ScenarioType.ALKALINE,
-        "cold":     ScenarioType.COLD_STRESS,
-        "heat":     ScenarioType.HEAT_STRESS,
-        "nh3":      ScenarioType.HIGH_NH3,
-        "multi":    ScenarioType.MULTI_STRESS,
+        "normal": ScenarioType.NORMAL, "acid": ScenarioType.ACID_CRASH,
+        "alkaline": ScenarioType.ALKALINE, "cold": ScenarioType.COLD_STRESS,
+        "heat": ScenarioType.HEAT_STRESS, "nh3": ScenarioType.HIGH_NH3,
+        "multi": ScenarioType.MULTI_STRESS,
     }
-    if "all" in args.scenarios:
-        scenarios = list(ScenarioType)
-    else:
-        scenarios = [_SCEN_MAP[s] for s in args.scenarios]
+    scenarios = list(ScenarioType) if "all" in args.scenarios else \
+                [_SCEN_MAP[s] for s in args.scenarios]
+
+    SAVE_DIR = os.path.join(BASE_DIR, "results", "simulation")
+    os.makedirs(SAVE_DIR, exist_ok=True)
 
     print("=" * 65)
     print("  Simulation-Based Controller Evaluation")
@@ -553,24 +783,20 @@ if __name__ == "__main__":
     print(f"  Scenarios: {[PondSimulator.label(s) for s in scenarios]}")
     print("=" * 65)
 
-    # ── Load controllers ──────────────────────────────────────────────────── #
+    # ── Load controllers ──
     sim = PondSimulator(SimConfig())
-
-    # Rule-Based
     rb_controller = rule_based_action
     print("  [RB]  Rule-Based controller loaded.")
 
-    # FQL — load trained Q-table or pretrain from scratch
     fql = FQLAgent()
     if os.path.exists(QTABLE_FILE) and fql.load_qtable(QTABLE_FILE):
         fql.epsilon = 0.0
         print(f"  [FQL] Q-table loaded: {QTABLE_FILE}  (ε=0, greedy)")
     else:
-        print(f"  [FQL] No Q-table found — pretraining from virtual simulator...")
+        print("  [FQL] No Q-table found — pretraining from virtual simulator...")
         pretrain_fql(fql, sim, steps=args.pretrain_steps)
     fql_controller = lambda ph, t: fql.select_action(ph, t)
 
-    # DQN — retrain from virtual simulator for fair comparison with new reward
     DQN_VIRTUAL_FILE = os.path.join(BASE_DIR, "dqn_model_virtual.pt")
     dqn = None
     if not args.retrain_dqn and os.path.exists(DQN_VIRTUAL_FILE):
@@ -589,27 +815,44 @@ if __name__ == "__main__":
     controllers = {"Rule-Based": rb_controller, "FQL": fql_controller}
     if dqn_controller:
         controllers["DQN"] = dqn_controller
-
     print()
 
-    # ── Aggregate evaluation ──────────────────────────────────────────────── #
+    # ── Aggregate evaluation ──
     results = {}
     for name, ctrl in controllers.items():
         print(f"  Evaluating {name}...")
         results[name] = evaluate(ctrl, sim, scenarios,
                                  args.episodes, args.steps, args.seed)
     print()
-
     print_summary(results)
 
-    # ── Time-series plots — one representative episode per scenario ────────── #
+    # ── Per-scenario evaluation ──
+    print("  Running per-scenario evaluation...")
+    per_scen = evaluate_per_scenario(controllers, sim, scenarios,
+                                     args.episodes, args.steps, args.seed)
+
+    # ── Time-series ──
     ts_results = {name: {} for name in controllers}
     for scen in scenarios:
         label = PondSimulator.label(scen)
         for name, ctrl in controllers.items():
             ts_results[name][label] = collect_timeseries(
-                ctrl, sim, scen, args.steps, seed=args.seed
-            )
+                ctrl, sim, scen, args.steps, seed=args.seed)
 
-    plot_comparison(ts_results, save_dir=args.save)
-    plot_bar_summary(results,   save_dir=args.save)
+    # ── Generate ALL plots & tables ──
+    print(f"\n  Saving all outputs to {SAVE_DIR}/\n")
+    plot_comparison(ts_results, save_dir=SAVE_DIR)
+    plot_bar_summary(results, save_dir=SAVE_DIR)
+    export_csv(per_scen, os.path.join(SAVE_DIR, "per_scenario_results.csv"))
+    export_latex_table(results, os.path.join(SAVE_DIR, "latex_table.tex"))
+    plot_boxplot(per_scen, SAVE_DIR)
+    plot_per_scenario_bars(per_scen, SAVE_DIR)
+    plot_radar(results, SAVE_DIR)
+    print("  Computing zone distributions...")
+    plot_zone_dist(controllers, sim, scenarios, SAVE_DIR,
+                   args.episodes, args.steps, args.seed)
+    plot_policy_maps(controllers, SAVE_DIR)
+    plot_action_timeline(controllers, sim, SAVE_DIR, args.steps, args.seed)
+
+    print(f"\n  ✅ All outputs saved to: {SAVE_DIR}/")
+    print("=" * 65)

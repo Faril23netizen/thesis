@@ -3,13 +3,13 @@ Description=Aquaculture FQL-DQN Controller
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /home/pi/aquaculture/main_fql.py
-WorkingDirectory=/home/pi/aquaculture
+ExecStart=/usr/bin/python3 /home/ubuntu/thesis/fql_rpi/main_fql.py
+WorkingDirectory=/home/ubuntu/thesis/fql_rpi
 Restart=always
 RestartSec=5
-User=pi
-StandardOutput=append:/home/pi/aquaculture/logs/fql.log
-StandardError=append:/home/pi/aquaculture/logs/fql_error.log
+User=ubuntu
+StandardOutput=append:/home/ubuntu/thesis/fql_rpi/logs/fql.log
+StandardError=append:/home/ubuntu/thesis/fql_rpi/logs/fql_error.log
 
 [Install]
 WantedBy=multi-user.target

@@ -79,7 +79,7 @@ def plot(data: dict, save_path: str | None = None):
     fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
     fig.suptitle(
         "Aquaculture Sensor Data — RP2040 Pico",
-        fontsize=12, fontweight="bold"
+ 
     )
 
     # ── Panel 1: pH ──────────────────────────────────────────────────────── #
