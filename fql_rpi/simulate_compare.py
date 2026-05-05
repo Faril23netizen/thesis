@@ -162,12 +162,13 @@ def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 150_000) -> Non
 
 def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
                        n_steps: int = 100_000) -> list:
-    """Collect transitions using pure random policy so DQN learns from reward signal alone.
+    """Collect transitions using FQL's learned policy with exploration.
 
-    Oversamples stress/danger scenarios 3:1 vs NORMAL so DQN sees enough
-    DANGER→SAFE transitions to learn when MED/HIGH is worth the energy.
+    Using FQL's policy (ε=0.15 exploration) instead of pure random gives DQN
+    high-quality demonstrations of WHEN to use MED/HIGH.  Q-learning is
+    off-policy, so learning from FQL data is perfectly valid and lets the
+    neural network discover improvements via Bellman optimality.
     """
-    # 1 NORMAL per 3 stress — ensures DQN sees plenty of danger transitions
     _BUFFER_SCENARIOS = [
         ScenarioType.NORMAL,
         ScenarioType.ACID_CRASH, ScenarioType.ALKALINE, ScenarioType.HEAT_STRESS,
@@ -177,12 +178,17 @@ def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
         ScenarioType.ACID_CRASH, ScenarioType.COLD_STRESS, ScenarioType.HIGH_NH3,
     ]
     _VALID = [ACTION_LOW, ACTION_MED, ACTION_HIGH]
+    EXPLORE_EPS = 0.15  # 15% random exploration for coverage
 
     buffer = []
     scen_idx, steps_left = 0, 0
     ph, temp = 7.5, 27.0
 
-    print(f"  Collecting DQN buffer ({n_steps:,} steps, random policy, danger-heavy)...")
+    # Temporarily set FQL epsilon for exploration during collection
+    old_eps = fql.epsilon
+    fql.epsilon = EXPLORE_EPS
+
+    print(f"  Collecting DQN buffer ({n_steps:,} steps, FQL policy ε={EXPLORE_EPS})...")
     for i in range(n_steps):
         if steps_left <= 0:
             sc = _BUFFER_SCENARIOS[scen_idx % len(_BUFFER_SCENARIOS)]
@@ -190,7 +196,7 @@ def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
             steps_left = 200
             scen_idx += 1
 
-        action = random.choice(_VALID)           # pure random — no FQL bias
+        action = fql.select_action(ph, temp)  # FQL policy with exploration
         ph_next, t_next = sim.step(action)
         r = compute_reward(ph, temp, action, ph_next, t_next)
 
@@ -202,6 +208,7 @@ def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
         if (i + 1) % 10_000 == 0:
             print(f"    buffer {i+1:,}/{n_steps:,}")
 
+    fql.epsilon = old_eps  # restore FQL epsilon
     return buffer
 
 
