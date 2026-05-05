@@ -129,22 +129,26 @@ class FQLAgent:
         self.eps_min   = eps_min
         self.eps_decay = eps_decay
 
-        # Q-table: 25×4. Initialized with domain knowledge per pH fuzzy set.
-        # OFF = -100 always (banned). Other actions seeded by expected policy:
-        #   VeryAcidic / VeryAlkaline → HIGH best
-        #   Acidic / Alkaline         → MED best
-        #   Normal                    → LOW best
-        # This gives FQL a correct starting point so dangerous-state learning
-        # is not overwhelmed by safe-state LOW accumulation.
-        _PH_INIT = [
-            [-100.0, -1.0,  1.0,  2.0],  # VeryAcidic   → HIGH
-            [-100.0, -0.5,  2.0,  0.5],  # Acidic        → MED
-            [-100.0,  2.0,  0.5, -1.0],  # Normal        → LOW (strongly)
-            [-100.0, -0.5,  2.0,  0.5],  # Alkaline      → MED
-            [-100.0, -1.0,  1.0,  2.0],  # VeryAlkaline  → HIGH
-        ]
+        # Q-table: 25×4. Initialized per (pH, T) fuzzy-rule zone.
+        # Each of the 25 rules maps to SAFE/WARNING/DANGER based on its center.
+        # pH centers: 5.75, 6.25, 7.25, 8.25, 9.25
+        # T  centers: 17.75, 21.0, 27.0, 32.5, 34.5
+        # SAFE    (6.5≤pH≤8.5 AND T≤30): LOW best  → [OFF=-100, LOW=+1, MED= 0, HIGH=-0.5]
+        # DANGER  (pH<6 | pH>9.5 | T>34 | T<18):   → [OFF=-100, LOW=-1, MED= 0, HIGH=+1]
+        # WARNING (else):                  MED best  → [OFF=-100, LOW=-0.3, MED=+1, HIGH=0]
+        _PH_C = [5.75, 6.25, 7.25, 8.25, 9.25]
+        _T_C  = [17.75, 21.0, 27.0, 32.5, 34.5]
+
+        def _zone_q(ph, t):
+            if 6.5 <= ph <= 8.5 and t <= 30.0:
+                return [-100.0,  1.0,  0.0, -0.5]   # SAFE    → LOW
+            elif ph < 6.0 or ph > 9.5 or t > 34.0 or t < 18.0:
+                return [-100.0, -1.0,  0.0,  1.0]   # DANGER  → HIGH
+            else:
+                return [-100.0, -0.3,  1.0,  0.0]   # WARNING → MED
+
         self.qtable = [
-            list(_PH_INIT[r // N_T_SETS])
+            _zone_q(_PH_C[r // N_T_SETS], _T_C[r % N_T_SETS])
             for r in range(N_RULES)
         ]
 
@@ -229,22 +233,17 @@ class FQLAgent:
           WARN  [-100.0, -0.5,  1.0,  0.5]   urgency over efficiency
           DANGER[-100.0, -1.0,  0.0,  1.0]   HIGH is only right action
         """
-        nh3_pct   = _nh3_fraction(pH, T) * 100.0
-        ph_danger = pH < 6.0 or pH > 9.5
-        ph_warn   = pH < 6.5 or pH > 8.5
-        t_danger  = T > 34.0 or T < 18.0
-        t_warn    = T > 30.0 or T < 20.0
-        nh3_danger = nh3_pct > 15.0
-        nh3_warn   = nh3_pct > 5.0
-
-        if ph_danger or t_danger or nh3_danger:
-            table = [-100.0, -1.0,  0.0,  1.0]
-        elif ph_warn or t_warn or nh3_warn:
-            table = [-100.0, -0.5,  1.0,  0.5]
+        # SAFE zone: energy efficiency → LOW best (original approach)
+        # DANGER zone: action urgency → HIGH best
+        # WARNING zone: mild MED preference
+        if 6.5 <= pH <= 8.5 and T <= 30.0:
+            return 1.0 - 0.6 * ENERGY_COST[action]  # LOW=1.0, MED=0.7, HIGH=0.4
+        elif pH < 6.0 or pH > 9.5 or T > 34.0 or T < 18.0:
+            table = [-100.0, -1.0,  0.5,  1.0]      # HIGH=1.0, MED=0.5, LOW=-1.0
+            return table[action]
         else:
-            table = [-100.0,  1.0,  0.3, -0.3]
-
-        return table[action]
+            table = [-100.0, -0.3,  0.3,  0.0]      # MED=0.3, HIGH=0.0, LOW=-0.3
+            return table[action]
 
     # ── Q-table update ───────────────────────────────────────────────────── #
 
