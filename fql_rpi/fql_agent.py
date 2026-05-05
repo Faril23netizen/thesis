@@ -196,17 +196,19 @@ class FQLAgent:
 
     # ── Action selection ─────────────────────────────────────────────────── #
 
+    # Actions available for selection — OFF is permanently excluded
+    _VALID_ACTIONS = [ACTION_LOW, ACTION_MED, ACTION_HIGH]
+
     def select_action(self, pH: float, T: float) -> int:
         """
-        Epsilon-greedy action selection.
-        During Rule-Based learning phase, output is not sent to Pico —
-        used only for internal FQL update.
+        Epsilon-greedy action selection. OFF is never selected or updated —
+        aerator must always run for dissolved oxygen safety.
         """
         if random.random() < self.epsilon:
-            return random.randint(0, N_ACTIONS - 1)
+            return random.choice(self._VALID_ACTIONS)
         firing = self.compute_firing_strengths(pH, T)
         q_vals = self.compute_all_Q_FQL(firing)
-        return q_vals.index(max(q_vals))
+        return max(self._VALID_ACTIONS, key=lambda a: q_vals[a])
 
     # ── Reward function ──────────────────────────────────────────────────── #
 
@@ -256,6 +258,9 @@ class FQLAgent:
 
         Returns: TD_error
         """
+        if action == ACTION_OFF:
+            return 0.0  # OFF is forbidden — never update its Q-values
+
         firing      = self.compute_firing_strengths(pH, T)
         q_now       = self.compute_Q_FQL(firing, action)
 
