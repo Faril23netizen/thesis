@@ -56,16 +56,15 @@ def nh3_fraction(pH: float, T: float) -> float:
 def compute_reward(pH: float, T: float, action: int,
                    pH_next: float, T_next: float) -> float:
     """
-    Hybrid zone-based reward. Must stay in sync with FQLAgent.compute_reward.
-
-    SAFE   (6.5≤pH≤8.5, T≤30): energy-efficiency gradient (LOW=1.0, MED=0.7, HIGH=0.4)
-    DANGER (pH<6.0|>9.5, T>34|<18): lookup — HIGH=1.0, MED=0.5, LOW=-1.0
-    WARNING (all else):            lookup — MED=0.3, HIGH=0.0, LOW=-0.3
+    Imitation/Zone-based reward function.
+    Forces the agent to use HIGH in Danger, MED in Warning, and LOW in Safe.
     """
+    if action == ACTION_OFF:
+        return -100.0
+
     if 6.5 <= pH <= 8.5 and T <= 30.0:
-        # OFF is completely banned (cost 100.0), LOW is baseline optimal
-        ENERGY_COST = {ACTION_OFF: 100.0, ACTION_LOW: 0.0, ACTION_MED: 0.5, ACTION_HIGH: 1.0}
-        return 1.0 - 0.6 * ENERGY_COST[action]   # LOW=1.0, MED=0.7, HIGH=0.4
+        energy = {ACTION_LOW: 0.0, ACTION_MED: 0.5, ACTION_HIGH: 1.0}.get(action, 0.0)
+        return 1.0 - 0.6 * energy   # LOW=1.0, MED=0.7, HIGH=0.4
     elif pH < 6.0 or pH > 9.5 or T > 34.0 or T < 18.0:
         table = [-100.0, -1.0,  0.5,  1.0]        # HIGH=1.0, MED=0.5, LOW=-1.0
         return table[action]
@@ -83,18 +82,14 @@ def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 30_000) -> None
     # 50% NORMAL so FQL strongly associates LOW with safe conditions.
     # Stress scenarios teach MED (WARNING) and HIGH (DANGER).
     # Previously 20% NORMAL caused 25% HIGH bleed-through into safe states.
+    # Balanced scenarios to ensure agents learn DANGER states frequently
     _SCENARIO_ORDER = [
         ScenarioType.NORMAL,
         ScenarioType.ACID_CRASH,
-        ScenarioType.NORMAL,
         ScenarioType.ALKALINE,
-        ScenarioType.NORMAL,
         ScenarioType.HEAT_STRESS,
-        ScenarioType.NORMAL,
         ScenarioType.HIGH_NH3,
-        ScenarioType.NORMAL,
         ScenarioType.COLD_STRESS,
-        ScenarioType.NORMAL,
         ScenarioType.MULTI_STRESS,
     ]
     EPISODE_LEN = 200
@@ -144,13 +139,12 @@ def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
     """
     # 50% NORMAL so SAFE-zone (LOW=1.0) isn't underrepresented vs stress scenarios.
     # Without this, only 1/7 ≈ 14% of buffer is SAFE zone → MED generalises everywhere.
+    # Uniform distribution so DQN learns DANGER heavily
     _BUFFER_SCENARIOS = [
         ScenarioType.NORMAL, ScenarioType.ACID_CRASH,
-        ScenarioType.NORMAL, ScenarioType.ALKALINE,
-        ScenarioType.NORMAL, ScenarioType.HEAT_STRESS,
-        ScenarioType.NORMAL, ScenarioType.COLD_STRESS,
-        ScenarioType.NORMAL, ScenarioType.HIGH_NH3,
-        ScenarioType.NORMAL, ScenarioType.MULTI_STRESS,
+        ScenarioType.ALKALINE, ScenarioType.HEAT_STRESS,
+        ScenarioType.COLD_STRESS, ScenarioType.HIGH_NH3,
+        ScenarioType.MULTI_STRESS,
     ]
     _VALID = [ACTION_LOW, ACTION_MED, ACTION_HIGH]
 

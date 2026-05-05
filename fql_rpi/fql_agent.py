@@ -220,24 +220,16 @@ class FQLAgent:
                        pH_next: float, T_next: float,
                        prev_action: int | None = None) -> float:
         """
-        Reward based on NH3 toxicity + pH + temperature — three independent signals:
-
-        Zone classification (worst condition wins):
-          DANGER  : pH<6.0|>9.5  OR  T>34|<18  OR  NH3>15%  → HIGH required
-          WARNING : pH<6.5|>8.5  OR  T>30|<20  OR  NH3>5%   → MED optimal
-          SAFE    : otherwise                                  → LOW optimal
-
-        Reward table per zone:
-                   OFF     LOW    MED    HIGH
-          SAFE  [-100.0,  1.0,  0.3, -0.3]   energy efficiency matters
-          WARN  [-100.0, -0.5,  1.0,  0.5]   urgency over efficiency
-          DANGER[-100.0, -1.0,  0.0,  1.0]   HIGH is only right action
+        Imitation/Zone-based reward function.
+        Forces the agent to use HIGH in Danger, MED in Warning, and LOW in Safe.
         """
-        # SAFE zone: energy efficiency → LOW best (original approach)
-        # DANGER zone: action urgency → HIGH best
-        # WARNING zone: mild MED preference
+        if action == ACTION_OFF:
+            return -100.0
+
         if 6.5 <= pH <= 8.5 and T <= 30.0:
-            return 1.0 - 0.6 * ENERGY_COST[action]  # LOW=1.0, MED=0.7, HIGH=0.4
+            # ENERGY_COST for LOW=0.0, MED=0.5, HIGH=1.0
+            energy = {ACTION_LOW: 0.0, ACTION_MED: 0.5, ACTION_HIGH: 1.0}.get(action, 0.0)
+            return 1.0 - 0.6 * energy   # LOW=1.0, MED=0.7, HIGH=0.4
         elif pH < 6.0 or pH > 9.5 or T > 34.0 or T < 18.0:
             table = [-100.0, -1.0,  0.5,  1.0]      # HIGH=1.0, MED=0.5, LOW=-1.0
             return table[action]
