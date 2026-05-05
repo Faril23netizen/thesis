@@ -51,31 +51,87 @@ def nh3_fraction(pH: float, T: float) -> float:
     return 1.0 / (1.0 + 10 ** (pka - pH))
 
 
-# ── Reward function (same as fql_agent.py) ────────────────────────────────── #
+# ── Reward function (mirrors fql_agent.py compute_reward) ────────────────── #
 
 def compute_reward(pH: float, T: float, action: int,
                    pH_next: float, T_next: float) -> float:
-    ENERGY_COST = {ACTION_OFF: 100.0, ACTION_LOW: 0.0, ACTION_MED: 0.5, ACTION_HIGH: 1.0}
+    """
+    Zone-based reward using NH3 + pH + temperature.
+    Must stay in sync with FQLAgent.compute_reward in fql_agent.py.
+    """
+    nh3_pct    = nh3_fraction(pH, T) * 100.0
+    ph_danger  = pH < 6.0 or pH > 9.5
+    ph_warn    = pH < 6.5 or pH > 8.5
+    t_danger   = T > 34.0 or T < 18.0
+    t_warn     = T > 30.0 or T < 20.0
+    nh3_danger = nh3_pct > 15.0
+    nh3_warn   = nh3_pct > 5.0
 
-    nh3   = nh3_fraction(pH, T)
-    nh3_n = nh3_fraction(pH_next, T_next)
-
-    ph_safe  = 6.5 <= pH_next <= 8.5
-    t_safe   = T_next <= 30.0
-    nh3_safe = nh3_n < 0.03
-
-    if ph_safe and t_safe:
-        tiered = 1.0
-    elif (6.0 <= pH_next <= 9.0) and T_next <= 32.0:
-        tiered = 0.3
+    if ph_danger or t_danger or nh3_danger:
+        table = [-100.0, -1.0,  0.0,  1.0]
+    elif ph_warn or t_warn or nh3_warn:
+        table = [-100.0, -0.5,  1.0,  0.5]
     else:
-        tiered = -1.0
+        table = [-100.0,  1.0,  0.3, -0.3]
 
-    r_safe   = tiered - 0.3 * ENERGY_COST[action]
-    nh3_pen  = -5.0 * max(0.0, nh3_n - 0.02)
-    nh3_imp  = 2.0  * max(0.0, nh3 - nh3_n)
+    return table[action]
 
-    return r_safe + nh3_pen + nh3_imp
+
+# ── FQL pretrain using virtual simulator ──────────────────────────────────── #
+
+def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 30_000) -> None:
+    """Train FQL from scratch using virtual simulator before evaluation."""
+    from pond_simulator import ScenarioType, SimConfig
+
+    # No NORMAL — expose FQL to dangerous conditions from the start.
+    # Short episodes (100 steps) keep FQL in the dangerous initial phase
+    # rather than letting pH recover and diluting the danger signal.
+    _SCENARIO_ORDER = [
+        ScenarioType.ACID_CRASH,
+        ScenarioType.ALKALINE,
+        ScenarioType.HEAT_STRESS,
+        ScenarioType.HIGH_NH3,
+        ScenarioType.COLD_STRESS,
+        ScenarioType.MULTI_STRESS,
+        ScenarioType.ACID_CRASH,
+        ScenarioType.HEAT_STRESS,
+        ScenarioType.ALKALINE,
+        ScenarioType.MULTI_STRESS,
+    ]
+    EPISODE_LEN = 100  # short episodes — stay in dangerous initial phase
+
+    scen_idx   = 0
+    steps_left = 0
+    ph, temp   = 7.5, 27.0
+    prev_action = None
+
+    print(f"  Pretraining FQL for {steps:,} virtual steps (episode={EPISODE_LEN}, no NORMAL)...")
+    for i in range(steps):
+        if steps_left <= 0:
+            scenario = _SCENARIO_ORDER[scen_idx % len(_SCENARIO_ORDER)]
+            ph, temp = sim.reset(scenario)
+            steps_left = EPISODE_LEN
+            scen_idx += 1
+            prev_action = None
+
+        action      = fql.select_action(ph, temp)
+        ph_next, t_next = sim.step(action)
+        reward      = fql.compute_reward(ph, temp, action, ph_next, t_next, prev_action)
+        fql.update(ph, temp, action, reward, ph_next, t_next)
+
+        prev_action = action
+        ph, temp    = ph_next, t_next
+        steps_left -= 1
+
+        if (i + 1) % 10_000 == 0:
+            stats = fql.get_stats()
+            print(f"    step {i+1:6d} | ε={stats['epsilon']:.3f} | "
+                  f"AvgR={stats['avg_reward_100']:+.3f} | "
+                  f"converged={stats['converged']}")
+
+    fql.epsilon = 0.0  # greedy for evaluation
+    print(f"  Pretrain done. Saving Q-table to {QTABLE_FILE}")
+    fql.save_qtable(QTABLE_FILE)
 
 
 # ── Single episode evaluation ─────────────────────────────────────────────── #
@@ -368,6 +424,8 @@ if __name__ == "__main__":
                                  "cold", "heat", "nh3", "multi"],
                         default=["all"],
                         help="Scenarios to test")
+    parser.add_argument("--pretrain-steps", type=int, default=80_000,
+                        help="Virtual steps to pretrain FQL if no Q-table found (default 80000)")
     args = parser.parse_args()
 
     # ── Scenario selection ───────────────────────────────────────────────── #
@@ -399,16 +457,15 @@ if __name__ == "__main__":
     rb_controller = rule_based_action
     print("  [RB]  Rule-Based controller loaded.")
 
-    # FQL — load trained Q-table, set epsilon=0 (greedy)
+    # FQL — load trained Q-table or pretrain from scratch
     fql = FQLAgent()
     if os.path.exists(QTABLE_FILE) and fql.load_qtable(QTABLE_FILE):
-        fql.epsilon = 0.0   # greedy evaluation — no exploration
-        fql_controller = lambda ph, t: fql.select_action(ph, t)
+        fql.epsilon = 0.0
         print(f"  [FQL] Q-table loaded: {QTABLE_FILE}  (ε=0, greedy)")
     else:
-        print(f"  [FQL] WARNING: {QTABLE_FILE} not found — using untrained FQL.")
-        fql.epsilon = 0.0
-        fql_controller = lambda ph, t: fql.select_action(ph, t)
+        print(f"  [FQL] No Q-table found — pretraining from virtual simulator...")
+        pretrain_fql(fql, sim, steps=args.pretrain_steps)
+    fql_controller = lambda ph, t: fql.select_action(ph, t)
 
     # DQN
     dqn = DQNAgent()

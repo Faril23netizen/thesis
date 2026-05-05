@@ -32,6 +32,12 @@ ENERGY_COST = {
 }
 
 
+def _nh3_fraction(pH: float, T: float) -> float:
+    """Fraction of total ammonia in unionized (toxic) NH3 form (0.0–1.0)."""
+    pka = 0.09018 + 2729.92 / (T + 273.15)
+    return 1.0 / (1.0 + 10 ** (pka - pH))
+
+
 # ═══════════════════════════════════════════════════════════════════════════ #
 #  Fuzzy Membership Functions
 # ═══════════════════════════════════════════════════════════════════════════ #
@@ -123,11 +129,24 @@ class FQLAgent:
         self.eps_min   = eps_min
         self.eps_decay = eps_decay
 
-        # Q-table: 25×4. OFF initialized to -100 so it is never chosen greedily
-        # even if other Q-values go negative during training.
-        self.qtable = [[-100.0 if a == ACTION_OFF else 0.0
-                        for a in range(N_ACTIONS)]
-                       for _ in range(N_RULES)]
+        # Q-table: 25×4. Initialized with domain knowledge per pH fuzzy set.
+        # OFF = -100 always (banned). Other actions seeded by expected policy:
+        #   VeryAcidic / VeryAlkaline → HIGH best
+        #   Acidic / Alkaline         → MED best
+        #   Normal                    → LOW best
+        # This gives FQL a correct starting point so dangerous-state learning
+        # is not overwhelmed by safe-state LOW accumulation.
+        _PH_INIT = [
+            [-100.0, -2.0,  1.0,  3.0],  # VeryAcidic   → HIGH
+            [-100.0, -1.0,  2.0,  1.0],  # Acidic        → MED
+            [-100.0,  3.0,  0.0, -1.0],  # Normal        → LOW
+            [-100.0, -1.0,  2.0,  1.0],  # Alkaline      → MED
+            [-100.0, -2.0,  1.0,  3.0],  # VeryAlkaline  → HIGH
+        ]
+        self.qtable = [
+            list(_PH_INIT[r // N_T_SETS])
+            for r in range(N_RULES)
+        ]
 
         self.total_steps      = 0
         self.converged        = False
@@ -195,21 +214,35 @@ class FQLAgent:
                        pH_next: float, T_next: float,
                        prev_action: int | None = None) -> float:
         """
-        r = R_safe(tiered) - 0.3 × ENERGY_COST[action]
+        Reward based on NH3 toxicity + pH + temperature — three independent signals:
 
-        R_safe: tiered by pH zone
-          safe    [6.5, 8.5] : +1.0  — LOW wins (lowest energy cost)
-          warning [6.0, 9.5] : -1.0  — MED wins long-term via Bellman backup
-          danger  otherwise  : -5.0  — HIGH wins long-term via Bellman backup
+        Zone classification (worst condition wins):
+          DANGER  : pH<6.0|>9.5  OR  T>34|<18  OR  NH3>15%  → HIGH required
+          WARNING : pH<6.5|>8.5  OR  T>30|<20  OR  NH3>5%   → MED optimal
+          SAFE    : otherwise                                  → LOW optimal
+
+        Reward table per zone:
+                   OFF     LOW    MED    HIGH
+          SAFE  [-100.0,  1.0,  0.3, -0.3]   energy efficiency matters
+          WARN  [-100.0, -0.5,  1.0,  0.5]   urgency over efficiency
+          DANGER[-100.0, -1.0,  0.0,  1.0]   HIGH is only right action
         """
-        if 6.5 <= pH <= 8.5:
-            r_safe = 1.0
-        elif 6.0 <= pH <= 9.5:
-            r_safe = -1.0
-        else:
-            r_safe = -5.0
+        nh3_pct   = _nh3_fraction(pH, T) * 100.0
+        ph_danger = pH < 6.0 or pH > 9.5
+        ph_warn   = pH < 6.5 or pH > 8.5
+        t_danger  = T > 34.0 or T < 18.0
+        t_warn    = T > 30.0 or T < 20.0
+        nh3_danger = nh3_pct > 15.0
+        nh3_warn   = nh3_pct > 5.0
 
-        return r_safe - 0.6 * ENERGY_COST[action]
+        if ph_danger or t_danger or nh3_danger:
+            table = [-100.0, -1.0,  0.0,  1.0]
+        elif ph_warn or t_warn or nh3_warn:
+            table = [-100.0, -0.5,  1.0,  0.5]
+        else:
+            table = [-100.0,  1.0,  0.3, -0.3]
+
+        return table[action]
 
     # ── Q-table update ───────────────────────────────────────────────────── #
 
