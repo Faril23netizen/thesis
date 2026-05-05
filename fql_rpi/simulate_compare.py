@@ -184,7 +184,7 @@ def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
 
 
 def train_dqn_virtual(fql: FQLAgent, sim: PondSimulator,
-                      save_path: str, epochs: int = 2000):
+                      save_path: str, epochs: int = 20000):
     """Train DQN from virtual buffer using new reward function."""
     buffer = collect_dqn_buffer(fql, sim, n_steps=50_000)
     print(f"  Training DQN ({epochs} epochs on {len(buffer):,} transitions)...")

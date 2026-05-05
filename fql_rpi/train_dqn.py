@@ -41,11 +41,11 @@ LOG_DIR     = os.path.join(BASE_DIR, "logs")
 # ── Hyperparameters ──────────────────────────────────────────────────────── #
 # GAMMA=0.70 (not 0.95): keeps Q magnitudes bounded ≈ r/(1-γ) ≈ 3.3×reward.
 # With GAMMA=0.95, Q[LOW]_SAFE≈20 dominates gradient across all states (all-LOW).
-GAMMA              = 0.70
+GAMMA              = 0.80
 LR                 = 1e-3
-BATCH_SIZE         = 64
-EPOCHS             = 2000
-TARGET_UPDATE_FREQ = 50     # update target network every N epochs
+BATCH_SIZE         = 256
+EPOCHS             = 20000
+TARGET_UPDATE_FREQ = 200     # update target network every N epochs
 MIN_BUFFER         = 500    # minimum transitions needed to start training
 
 # State normalization bounds
@@ -307,7 +307,8 @@ class DQNNumpy:
 
     def policy(self, ph: float, t: float) -> int:
         x = np.array([normalize(ph, t)], dtype=np.float32)
-        return int(self.predict(x).argmax(axis=1)[0])
+        q = self.predict(x)[0]
+        return int(np.argmax(q[1:])) + 1
 
 
 def train_numpy(buffer: list, epochs: int, model_path: str):
