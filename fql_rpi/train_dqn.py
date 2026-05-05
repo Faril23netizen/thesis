@@ -42,7 +42,7 @@ LOG_DIR     = os.path.join(BASE_DIR, "logs")
 GAMMA              = 0.95
 LR                 = 1e-3
 BATCH_SIZE         = 64
-EPOCHS             = 300
+EPOCHS             = 2000
 TARGET_UPDATE_FREQ = 50     # update target network every N epochs
 MIN_BUFFER         = 500    # minimum transitions needed to start training
 
@@ -147,8 +147,9 @@ def train_pytorch(buffer: list, epochs: int, model_path: str):
         s_next = torch.tensor(next_states[idx])
 
         # Bellman target: y = r + γ × max_a Q_target(s')
+        # Exclude action 0 (OFF) — never in buffer, untrained Q values add noise
         with torch.no_grad():
-            q_next = target_net(s_next).max(dim=1).values
+            q_next = target_net(s_next)[:, 1:].max(dim=1).values
             y      = r + GAMMA * q_next
 
         # Current Q(s, a)
@@ -249,8 +250,8 @@ class DQNNumpy:
         return self._forward(x, target=True)
 
     def train_step(self, s, a, r, s_next):
-        # Bellman target
-        q_next = self.predict_target(s_next).max(axis=1, keepdims=True)
+        # Bellman target — exclude OFF (col 0), never in buffer, noisy Q
+        q_next = self.predict_target(s_next)[:, 1:].max(axis=1, keepdims=True)
         y      = r.reshape(-1, 1) + GAMMA * q_next  # (B,1)
 
         # Forward pass (online)

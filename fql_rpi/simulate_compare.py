@@ -79,22 +79,22 @@ def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 30_000) -> None
     """Train FQL from scratch using virtual simulator before evaluation."""
     from pond_simulator import ScenarioType, SimConfig
 
-    # 30% NORMAL to teach LOW in safe conditions, 70% dangerous to teach MED/HIGH.
-    # Domain-knowledge initialization handles the starting point correctly,
-    # so NORMAL no longer overwhelms dangerous-state learning.
-    # Episode 200 steps — long enough to see pH dynamics, short enough to
-    # not over-represent pH recovery phase.
+    # 50% NORMAL so FQL strongly associates LOW with safe conditions.
+    # Stress scenarios teach MED (WARNING) and HIGH (DANGER).
+    # Previously 20% NORMAL caused 25% HIGH bleed-through into safe states.
     _SCENARIO_ORDER = [
         ScenarioType.NORMAL,
         ScenarioType.ACID_CRASH,
+        ScenarioType.NORMAL,
         ScenarioType.ALKALINE,
         ScenarioType.NORMAL,
         ScenarioType.HEAT_STRESS,
+        ScenarioType.NORMAL,
         ScenarioType.HIGH_NH3,
+        ScenarioType.NORMAL,
         ScenarioType.COLD_STRESS,
+        ScenarioType.NORMAL,
         ScenarioType.MULTI_STRESS,
-        ScenarioType.ACID_CRASH,
-        ScenarioType.HEAT_STRESS,
     ]
     EPISODE_LEN = 200
 
@@ -141,17 +141,26 @@ def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
     Using random policy (not FQL) prevents the DQN from inheriting any FQL bias —
     DQN learns purely from reward shaping across all action/state combinations.
     """
-    _ALL_SCENARIOS = list(ScenarioType)
+    # 50% NORMAL so SAFE-zone (LOW=1.0) isn't underrepresented vs stress scenarios.
+    # Without this, only 1/7 ≈ 14% of buffer is SAFE zone → MED generalises everywhere.
+    _BUFFER_SCENARIOS = [
+        ScenarioType.NORMAL, ScenarioType.ACID_CRASH,
+        ScenarioType.NORMAL, ScenarioType.ALKALINE,
+        ScenarioType.NORMAL, ScenarioType.HEAT_STRESS,
+        ScenarioType.NORMAL, ScenarioType.COLD_STRESS,
+        ScenarioType.NORMAL, ScenarioType.HIGH_NH3,
+        ScenarioType.NORMAL, ScenarioType.MULTI_STRESS,
+    ]
     _VALID = [ACTION_LOW, ACTION_MED, ACTION_HIGH]
 
     buffer = []
     scen_idx, steps_left = 0, 0
     ph, temp = 7.5, 27.0
 
-    print(f"  Collecting DQN buffer ({n_steps:,} steps, pure random policy)...")
+    print(f"  Collecting DQN buffer ({n_steps:,} steps, pure random, 50% NORMAL)...")
     for i in range(n_steps):
         if steps_left <= 0:
-            sc = _ALL_SCENARIOS[scen_idx % len(_ALL_SCENARIOS)]
+            sc = _BUFFER_SCENARIOS[scen_idx % len(_BUFFER_SCENARIOS)]
             ph, temp = sim.reset(sc)
             steps_left = 200
             scen_idx += 1
@@ -172,7 +181,7 @@ def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
 
 
 def train_dqn_virtual(fql: FQLAgent, sim: PondSimulator,
-                      save_path: str, epochs: int = 300):
+                      save_path: str, epochs: int = 2000):
     """Train DQN from virtual buffer using new reward function."""
     buffer = collect_dqn_buffer(fql, sim, n_steps=50_000)
     print(f"  Training DQN ({epochs} epochs on {len(buffer):,} transitions)...")
