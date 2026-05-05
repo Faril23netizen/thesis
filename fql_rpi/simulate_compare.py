@@ -56,21 +56,29 @@ def nh3_fraction(pH: float, T: float) -> float:
 def compute_reward(pH: float, T: float, action: int,
                    pH_next: float, T_next: float) -> float:
     """
-    Imitation/Zone-based reward function.
-    Forces the agent to use HIGH in Danger, MED in Warning, and LOW in Safe.
+    Outcome-based reward function.
+    Rewards physical safety and penalizes energy/toxicity. Allows DQN to beat RB.
     """
-    if action == ACTION_OFF:
-        return -100.0
+    if action == 0: # ACTION_OFF
+        return -10.0
 
-    if 6.5 <= pH <= 8.5 and T <= 30.0:
-        energy = {ACTION_LOW: 0.0, ACTION_MED: 0.5, ACTION_HIGH: 1.0}.get(action, 0.0)
-        return 1.0 - 0.6 * energy   # LOW=1.0, MED=0.7, HIGH=0.4
-    elif pH < 6.0 or pH > 9.5 or T > 34.0 or T < 18.0:
-        table = [-100.0, -1.0,  0.5,  1.0]        # HIGH=1.0, MED=0.5, LOW=-1.0
-        return table[action]
+    # 1. State Quality
+    if 6.5 <= pH_next <= 8.5 and T_next <= 30.0:
+        r_state = 2.0
+    elif pH_next < 6.0 or pH_next > 9.5 or T_next > 34.0 or T_next < 18.0:
+        r_state = -2.0
     else:
-        table = [-100.0, -0.3,  0.3,  0.0]        # MED=0.3, HIGH=0.0, LOW=-0.3
-        return table[action]
+        r_state = 0.0
+
+    # 2. Energy Efficiency (LOW=0.0, MED=0.2, HIGH=0.5)
+    energy = {1: 0.0, 2: 0.2, 3: 0.5}.get(action, 0.0)
+
+    # 3. NH3 Toxicity Penalty
+    pka = 0.09018 + 2729.92 / (T_next + 273.15)
+    nh3_frac = 1.0 / (1.0 + 10 ** (pka - pH_next))
+    r_nh3 = nh3_frac * 5.0
+
+    return r_state - energy - r_nh3
 
 
 # ── FQL pretrain using virtual simulator ──────────────────────────────────── #
