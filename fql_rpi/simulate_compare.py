@@ -108,19 +108,19 @@ def compute_reward(pH: float, T: float, action: int,
 
 # ── FQL pretrain using virtual simulator ──────────────────────────────────── #
 
-def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 150_000) -> None:
+def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 200_000) -> None:
     """Train FQL from scratch using virtual simulator before evaluation."""
     from pond_simulator import ScenarioType, SimConfig
 
-    # 50% NORMAL so FQL strongly associates LOW with safe conditions.
-    # Stress scenarios teach MED (WARNING) and HIGH (DANGER).
-    # Previously 20% NORMAL caused 25% HIGH bleed-through into safe states.
-    # Balanced scenarios to ensure agents learn DANGER states frequently
+    # Alternate NORMAL with stress so FQL learns LOW in safe + MED in stress
     _SCENARIO_ORDER = [
         ScenarioType.NORMAL,
         ScenarioType.ACID_CRASH,
+        ScenarioType.NORMAL,
         ScenarioType.ALKALINE,
+        ScenarioType.NORMAL,
         ScenarioType.HEAT_STRESS,
+        ScenarioType.NORMAL,
         ScenarioType.HIGH_NH3,
         ScenarioType.COLD_STRESS,
         ScenarioType.MULTI_STRESS,
@@ -870,7 +870,7 @@ if __name__ == "__main__":
     parser.add_argument("--scenarios", nargs="+",
                         choices=["all","normal","acid","alkaline","cold","heat","nh3","multi"],
                         default=["all"])
-    parser.add_argument("--pretrain-steps", type=int, default=80_000)
+    parser.add_argument("--pretrain-steps", type=int, default=200_000)
     parser.add_argument("--retrain-dqn", action="store_true")
     args = parser.parse_args()
 
