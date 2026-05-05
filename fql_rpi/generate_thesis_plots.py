@@ -354,6 +354,72 @@ def export_latex_table(agg, path):
 
 
 # ═══════════════════════════════════════════════════════════════════════════ #
+#  10. Policy Map Heatmap — action chosen at each (pH, T) grid point
+# ═══════════════════════════════════════════════════════════════════════════ #
+
+def plot_policy_maps(controllers, save_dir):
+    """
+    Create a side-by-side heatmap for each controller showing the greedy
+    action at every (pH, Temperature) grid point.
+    """
+    from matplotlib.colors import ListedColormap, BoundaryNorm
+    from matplotlib.patches import Patch
+
+    # Fine grid over the state space
+    ph_range  = np.linspace(5.0, 10.0, 50)
+    t_range   = np.linspace(16.0, 36.0, 40)
+
+    act_cmap   = ListedColormap(["#3498db", "#f39c12", "#e74c3c"])  # LOW, MED, HIGH
+    act_norm   = BoundaryNorm([0.5, 1.5, 2.5, 3.5], act_cmap.N)
+    act_labels = {1: "LOW", 2: "MED", 3: "HIGH"}
+
+    ctrls = list(controllers.keys())
+    fig, axes = plt.subplots(1, len(ctrls), figsize=(6 * len(ctrls), 5))
+    fig.suptitle("Policy Map — Greedy Action at Each (pH, Temperature)",
+                 fontsize=14, fontweight="bold")
+
+    if len(ctrls) == 1:
+        axes = [axes]
+
+    for ax, name in zip(axes, ctrls):
+        grid = np.zeros((len(t_range), len(ph_range)))
+        for i, t in enumerate(t_range):
+            for j, ph in enumerate(ph_range):
+                grid[i, j] = controllers[name](ph, t)
+
+        im = ax.imshow(grid, aspect="auto", origin="lower",
+                       extent=[ph_range[0], ph_range[-1], t_range[0], t_range[-1]],
+                       cmap=act_cmap, norm=act_norm, interpolation="nearest")
+
+        # Draw zone boundaries
+        ax.axvline(6.5, color="white", ls="--", lw=1.2, alpha=0.8)
+        ax.axvline(8.5, color="white", ls="--", lw=1.2, alpha=0.8)
+        ax.axvline(6.0, color="white", ls=":",  lw=0.8, alpha=0.6)
+        ax.axvline(9.5, color="white", ls=":",  lw=0.8, alpha=0.6)
+        ax.axhline(30.0, color="white", ls="--", lw=1.2, alpha=0.8)
+        ax.axhline(34.0, color="white", ls=":",  lw=0.8, alpha=0.6)
+
+        ax.set_xlabel("pH", fontsize=11)
+        ax.set_ylabel("Temperature (°C)", fontsize=11)
+        ax.set_title(name, fontsize=12)
+
+    # Shared legend
+    legend_elements = [
+        Patch(facecolor="#3498db", label="LOW"),
+        Patch(facecolor="#f39c12", label="MED"),
+        Patch(facecolor="#e74c3c", label="HIGH"),
+    ]
+    fig.legend(handles=legend_elements, loc="lower center", ncol=3,
+               fontsize=10, frameon=True, bbox_to_anchor=(0.5, -0.02))
+
+    plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+    p = os.path.join(save_dir, "policy_map_heatmap.png")
+    fig.savefig(p, dpi=150, bbox_inches="tight")
+    print(f"  Plot saved: {p}")
+    plt.close(fig)
+
+
+# ═══════════════════════════════════════════════════════════════════════════ #
 #  MAIN
 # ═══════════════════════════════════════════════════════════════════════════ #
 
@@ -422,6 +488,9 @@ if __name__ == "__main__":
     # 8. Action timeline
     plot_action_timeline(controllers, sim, SAVE_DIR)
 
+    # 9. Policy map heatmap
+    plot_policy_maps(controllers, SAVE_DIR)
+
     print("\n" + "=" * 65)
     print(f"  All outputs saved to: {SAVE_DIR}/")
     print("  Files generated:")
@@ -433,4 +502,5 @@ if __name__ == "__main__":
     print("    - zone_distribution.png")
     print("    - temperature_timeseries.png")
     print("    - action_timeline.png")
+    print("    - policy_map_heatmap.png")
     print("=" * 65)
