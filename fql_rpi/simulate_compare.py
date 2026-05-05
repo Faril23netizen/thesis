@@ -53,32 +53,53 @@ def nh3_fraction(pH: float, T: float) -> float:
 
 # ── Reward function (mirrors fql_agent.py compute_reward) ────────────────── #
 
+def _classify_state(pH: float, T: float) -> str:
+    """Classify a state as SAFE, WARNING, or DANGER."""
+    if 6.5 <= pH <= 8.5 and T <= 30.0:
+        return "SAFE"
+    elif pH < 6.0 or pH > 9.5 or T > 34.0 or T < 18.0:
+        return "DANGER"
+    return "WARNING"
+
+
 def compute_reward(pH: float, T: float, action: int,
                    pH_next: float, T_next: float) -> float:
     """
-    Outcome-based reward function.
-    Rewards physical safety and penalizes energy/toxicity. Allows DQN to beat RB.
+    Outcome-based reward with transition bonus.
+
+    Components:
+      1. State quality of next state (+2 SAFE, 0 WARNING, -2 DANGER)
+      2. Transition bonus — rewards actions that improve or maintain safety
+      3. Mild energy penalty (only in SAFE zone where LOW suffices)
+      4. NH3 toxicity penalty
     """
-    if action == 0: # ACTION_OFF
+    if action == 0:  # ACTION_OFF
         return -10.0
 
-    # 1. State Quality
-    if 6.5 <= pH_next <= 8.5 and T_next <= 30.0:
-        r_state = 2.0
-    elif pH_next < 6.0 or pH_next > 9.5 or T_next > 34.0 or T_next < 18.0:
-        r_state = -2.0
+    zone_now  = _classify_state(pH, T)
+    zone_next = _classify_state(pH_next, T_next)
+
+    # 1. State Quality of next state
+    r_state = {"SAFE": 2.0, "WARNING": 0.0, "DANGER": -2.0}[zone_next]
+
+    # 2. Transition bonus — reward improvement, penalise degradation
+    _zone_rank = {"DANGER": 0, "WARNING": 1, "SAFE": 2}
+    improvement = _zone_rank[zone_next] - _zone_rank[zone_now]
+    r_transition = improvement * 1.5  # +1.5 per level improved, -1.5 if degraded
+
+    # 3. Energy penalty — only apply in SAFE→SAFE (no reason to waste energy)
+    #    In WARNING/DANGER, using MED/HIGH is justified → no energy penalty
+    if zone_now == "SAFE" and zone_next == "SAFE":
+        energy = {1: 0.0, 2: 0.3, 3: 0.7}.get(action, 0.0)
     else:
-        r_state = 0.0
+        energy = 0.0  # don't penalise energy when responding to stress
 
-    # 2. Energy Efficiency (LOW=0.0, MED=0.2, HIGH=0.5)
-    energy = {1: 0.0, 2: 0.2, 3: 0.5}.get(action, 0.0)
-
-    # 3. NH3 Toxicity Penalty
+    # 4. NH3 Toxicity Penalty
     pka = 0.09018 + 2729.92 / (T_next + 273.15)
     nh3_frac = 1.0 / (1.0 + 10 ** (pka - pH_next))
     r_nh3 = nh3_frac * 5.0
 
-    return r_state - energy - r_nh3
+    return r_state + r_transition - energy - r_nh3
 
 
 # ── FQL pretrain using virtual simulator ──────────────────────────────────── #
@@ -139,20 +160,20 @@ def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 150_000) -> Non
 # ── DQN virtual training ─────────────────────────────────────────────────── #
 
 def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
-                       n_steps: int = 50_000) -> list:
+                       n_steps: int = 100_000) -> list:
     """Collect transitions using pure random policy so DQN learns from reward signal alone.
 
-    Using random policy (not FQL) prevents the DQN from inheriting any FQL bias —
-    DQN learns purely from reward shaping across all action/state combinations.
+    Oversamples stress/danger scenarios 3:1 vs NORMAL so DQN sees enough
+    DANGER→SAFE transitions to learn when MED/HIGH is worth the energy.
     """
-    # 50% NORMAL so SAFE-zone (LOW=1.0) isn't underrepresented vs stress scenarios.
-    # Without this, only 1/7 ≈ 14% of buffer is SAFE zone → MED generalises everywhere.
-    # Uniform distribution so DQN learns DANGER heavily
+    # 1 NORMAL per 3 stress — ensures DQN sees plenty of danger transitions
     _BUFFER_SCENARIOS = [
-        ScenarioType.NORMAL, ScenarioType.ACID_CRASH,
-        ScenarioType.ALKALINE, ScenarioType.HEAT_STRESS,
-        ScenarioType.COLD_STRESS, ScenarioType.HIGH_NH3,
-        ScenarioType.MULTI_STRESS,
+        ScenarioType.NORMAL,
+        ScenarioType.ACID_CRASH, ScenarioType.ALKALINE, ScenarioType.HEAT_STRESS,
+        ScenarioType.NORMAL,
+        ScenarioType.COLD_STRESS, ScenarioType.HIGH_NH3, ScenarioType.MULTI_STRESS,
+        ScenarioType.NORMAL,
+        ScenarioType.ACID_CRASH, ScenarioType.COLD_STRESS, ScenarioType.HIGH_NH3,
     ]
     _VALID = [ACTION_LOW, ACTION_MED, ACTION_HIGH]
 
@@ -160,7 +181,7 @@ def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
     scen_idx, steps_left = 0, 0
     ph, temp = 7.5, 27.0
 
-    print(f"  Collecting DQN buffer ({n_steps:,} steps, pure random, 50% NORMAL)...")
+    print(f"  Collecting DQN buffer ({n_steps:,} steps, random policy, danger-heavy)...")
     for i in range(n_steps):
         if steps_left <= 0:
             sc = _BUFFER_SCENARIOS[scen_idx % len(_BUFFER_SCENARIOS)]

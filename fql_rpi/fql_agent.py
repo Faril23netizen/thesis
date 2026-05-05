@@ -70,11 +70,11 @@ class FuzzyMembership:
         """
         t = FuzzyMembership.trapezoidal
         return {
-            "VeryAcidic": t(pH, 0.0, 0.0, 5.8, 6.0),
-            "Acidic":     t(pH, 5.9, 6.2, 6.4, 6.6),
-            "Normal":     t(pH, 6.4, 6.8, 8.2, 8.6),
-            "Alkaline":   t(pH, 8.4, 8.8, 9.3, 9.5),
-            "VeryAlkaline": t(pH, 9.4, 9.6, 14.0, 14.0),
+            "VeryAcidic":   t(pH, 5.5, 5.5, 6.0, 6.5),
+            "Acidic":       t(pH, 5.5, 6.0, 6.5, 7.0),
+            "Normal":       t(pH, 6.5, 7.0, 7.5, 8.0),
+            "Alkaline":     t(pH, 7.5, 8.0, 8.5, 9.0),
+            "VeryAlkaline": t(pH, 8.5, 9.0, 9.5, 9.5),
         }
 
     @staticmethod
@@ -85,11 +85,11 @@ class FuzzyMembership:
         """
         t = FuzzyMembership.trapezoidal
         return {
-            "VeryCold": t(T, 0.0, 0.0, 17.5, 18.0),
-            "Cold":     t(T, 17.8, 18.5, 19.5, 20.2),
-            "Optimal":  t(T, 19.8, 22.0, 28.0, 30.5),
-            "Hot":      t(T, 29.5, 31.0, 33.5, 34.2),
-            "VeryHot":  t(T, 33.8, 34.5, 50.0, 50.0),
+            "VeryCold": t(T, 17.5, 17.5, 18.0, 20.0),
+            "Cold":     t(T, 18.0, 20.0, 22.0, 25.0),
+            "Optimal":  t(T, 22.0, 25.0, 29.0, 32.0),
+            "Hot":      t(T, 29.0, 32.0, 33.0, 34.5),
+            "VeryHot":  t(T, 33.0, 34.0, 35.0, 35.0),
         }
 
 
@@ -216,29 +216,47 @@ class FQLAgent:
                        pH_next: float, T_next: float,
                        prev_action: int | None = None) -> float:
         """
-        Outcome-based reward function.
-        Rewards physical safety and penalizes energy/toxicity. Allows DQN to beat RB.
+        Outcome-based reward with transition bonus.
+
+        Components:
+          1. State quality of next state (+2 SAFE, 0 WARNING, -2 DANGER)
+          2. Transition bonus — rewards actions that improve or maintain safety
+          3. Mild energy penalty (only in SAFE zone where LOW suffices)
+          4. NH3 toxicity penalty
         """
         if action == ACTION_OFF:
             return -10.0
 
-        # 1. State Quality
-        if 6.5 <= pH_next <= 8.5 and T_next <= 30.0:
-            r_state = 2.0
-        elif pH_next < 6.0 or pH_next > 9.5 or T_next > 34.0 or T_next < 18.0:
-            r_state = -2.0
+        def _zone(ph, t):
+            if 6.5 <= ph <= 8.5 and t <= 30.0:
+                return "SAFE"
+            elif ph < 6.0 or ph > 9.5 or t > 34.0 or t < 18.0:
+                return "DANGER"
+            return "WARNING"
+
+        zone_now  = _zone(pH, T)
+        zone_next = _zone(pH_next, T_next)
+
+        # 1. State Quality of next state
+        r_state = {"SAFE": 2.0, "WARNING": 0.0, "DANGER": -2.0}[zone_next]
+
+        # 2. Transition bonus — reward improvement, penalise degradation
+        _zone_rank = {"DANGER": 0, "WARNING": 1, "SAFE": 2}
+        improvement = _zone_rank[zone_next] - _zone_rank[zone_now]
+        r_transition = improvement * 1.5
+
+        # 3. Energy penalty — only apply in SAFE→SAFE
+        if zone_now == "SAFE" and zone_next == "SAFE":
+            energy = {ACTION_LOW: 0.0, ACTION_MED: 0.3, ACTION_HIGH: 0.7}.get(action, 0.0)
         else:
-            r_state = 0.0
+            energy = 0.0
 
-        # 2. Energy Efficiency (LOW=0.0, MED=0.2, HIGH=0.5)
-        energy = {ACTION_LOW: 0.0, ACTION_MED: 0.2, ACTION_HIGH: 0.5}.get(action, 0.0)
-
-        # 3. NH3 Toxicity Penalty
+        # 4. NH3 Toxicity Penalty
         pka = 0.09018 + 2729.92 / (T_next + 273.15)
         nh3_frac = 1.0 / (1.0 + 10 ** (pka - pH_next))
         r_nh3 = nh3_frac * 5.0
 
-        return r_state - energy - r_nh3
+        return r_state + r_transition - energy - r_nh3
 
     # ── Q-table update ───────────────────────────────────────────────────── #
 
