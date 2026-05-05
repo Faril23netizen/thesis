@@ -244,7 +244,7 @@ class FQLAgent:
         if zone_now == "SAFE":
             energy = _cost.get(action, 0.0)
         else:
-            energy = _cost.get(action, 0.0) * 0.30
+            energy = _cost.get(action, 0.0) * 0.05
 
         # 3. NH3 Toxicity Penalty
         pka = 0.09018 + 2729.92 / (T_next + 273.15)
