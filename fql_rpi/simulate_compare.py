@@ -83,7 +83,7 @@ def compute_reward(pH: float, T: float, action: int,
 
 # ── FQL pretrain using virtual simulator ──────────────────────────────────── #
 
-def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 30_000) -> None:
+def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 150_000) -> None:
     """Train FQL from scratch using virtual simulator before evaluation."""
     from pond_simulator import ScenarioType, SimConfig
 

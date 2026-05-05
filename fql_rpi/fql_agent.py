@@ -70,11 +70,11 @@ class FuzzyMembership:
         """
         t = FuzzyMembership.trapezoidal
         return {
-            "VeryAcidic":   t(pH, 5.5, 5.5, 6.0, 6.5),
-            "Acidic":       t(pH, 5.5, 6.0, 6.5, 7.0),
-            "Normal":       t(pH, 6.5, 7.0, 7.5, 8.0),
-            "Alkaline":     t(pH, 7.5, 8.0, 8.5, 9.0),
-            "VeryAlkaline": t(pH, 8.5, 9.0, 9.5, 9.5),
+            "VeryAcidic": t(pH, 0.0, 0.0, 5.8, 6.0),
+            "Acidic":     t(pH, 5.9, 6.2, 6.4, 6.6),
+            "Normal":     t(pH, 6.4, 6.8, 8.2, 8.6),
+            "Alkaline":   t(pH, 8.4, 8.8, 9.3, 9.5),
+            "VeryAlkaline": t(pH, 9.4, 9.6, 14.0, 14.0),
         }
 
     @staticmethod
@@ -85,11 +85,11 @@ class FuzzyMembership:
         """
         t = FuzzyMembership.trapezoidal
         return {
-            "VeryCold": t(T, 17.5, 17.5, 18.0, 20.0),
-            "Cold":     t(T, 18.0, 20.0, 22.0, 25.0),
-            "Optimal":  t(T, 22.0, 25.0, 29.0, 32.0),
-            "Hot":      t(T, 29.0, 32.0, 33.0, 34.5),
-            "VeryHot":  t(T, 33.0, 34.0, 35.0, 35.0),
+            "VeryCold": t(T, 0.0, 0.0, 17.5, 18.0),
+            "Cold":     t(T, 17.8, 18.5, 19.5, 20.2),
+            "Optimal":  t(T, 19.8, 22.0, 28.0, 30.5),
+            "Hot":      t(T, 29.5, 31.0, 33.5, 34.2),
+            "VeryHot":  t(T, 33.8, 34.5, 50.0, 50.0),
         }
 
 
