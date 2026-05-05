@@ -140,12 +140,8 @@ class FQLAgent:
         _T_C  = [17.75, 21.0, 27.0, 32.5, 34.5]
 
         def _zone_q(ph, t):
-            if 6.5 <= ph <= 8.5 and t <= 30.0:
-                return [-100.0,  1.0,  0.0, -0.5]   # SAFE    → LOW
-            elif ph < 6.0 or ph > 9.5 or t > 34.0 or t < 18.0:
-                return [-100.0, -1.0,  0.0,  1.0]   # DANGER  → HIGH
-            else:
-                return [-100.0, -0.3,  1.0,  0.0]   # WARNING → MED
+            # Flat initialization so FQL learns purely from outcome reward like DQN
+            return [-10.0, 0.0, 0.0, 0.0]
 
         self.qtable = [
             _zone_q(_PH_C[r // N_T_SETS], _T_C[r % N_T_SETS])
@@ -447,12 +443,12 @@ class FQLAgent:
 
     def get_stats(self) -> dict:
         """Return agent statistics dictionary for logging."""
-        avg_now  = (sum(self._reward_window) / len(self._reward_window)
-                    if self._reward_window else 0.0)
-        avg_prev = (self._avg_reward_history[-1]
-                    if self._avg_reward_history else 0.0)
-        avg_prev2 = (self._avg_reward_history[-2]
-                     if len(self._avg_reward_history) >= 2 else 0.0)
+        avg_now = (self._avg_reward_history[-1]
+                   if self._avg_reward_history else 0.0)
+        avg_prev = (self._avg_reward_history[-2]
+                    if len(self._avg_reward_history) >= 2 else 0.0)
+        avg_prev2 = (self._avg_reward_history[-3]
+                     if len(self._avg_reward_history) >= 3 else 0.0)
         return {
             "total_steps":        self.total_steps,
             "epsilon":            round(self.epsilon, 4),
