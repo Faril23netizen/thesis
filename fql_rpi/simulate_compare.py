@@ -83,22 +83,24 @@ def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 30_000) -> None
     """Train FQL from scratch using virtual simulator before evaluation."""
     from pond_simulator import ScenarioType, SimConfig
 
-    # No NORMAL — expose FQL to dangerous conditions from the start.
-    # Short episodes (100 steps) keep FQL in the dangerous initial phase
-    # rather than letting pH recover and diluting the danger signal.
+    # 30% NORMAL to teach LOW in safe conditions, 70% dangerous to teach MED/HIGH.
+    # Domain-knowledge initialization handles the starting point correctly,
+    # so NORMAL no longer overwhelms dangerous-state learning.
+    # Episode 200 steps — long enough to see pH dynamics, short enough to
+    # not over-represent pH recovery phase.
     _SCENARIO_ORDER = [
+        ScenarioType.NORMAL,
         ScenarioType.ACID_CRASH,
         ScenarioType.ALKALINE,
+        ScenarioType.NORMAL,
         ScenarioType.HEAT_STRESS,
         ScenarioType.HIGH_NH3,
         ScenarioType.COLD_STRESS,
         ScenarioType.MULTI_STRESS,
         ScenarioType.ACID_CRASH,
         ScenarioType.HEAT_STRESS,
-        ScenarioType.ALKALINE,
-        ScenarioType.MULTI_STRESS,
     ]
-    EPISODE_LEN = 100  # short episodes — stay in dangerous initial phase
+    EPISODE_LEN = 200
 
     scen_idx   = 0
     steps_left = 0
