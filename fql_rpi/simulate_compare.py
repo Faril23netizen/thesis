@@ -132,6 +132,8 @@ def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 150_000) -> Non
     ph, temp   = 7.5, 27.0
     prev_action = None
 
+    random.seed(42)
+    np.random.seed(42)
     print(f"  Pretraining FQL for {steps:,} virtual steps (episode={EPISODE_LEN}, no NORMAL)...")
     for i in range(steps):
         if steps_left <= 0:
@@ -191,6 +193,8 @@ def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
     old_eps = fql.epsilon
     fql.epsilon = EXPLORE_EPS
 
+    random.seed(123)
+    np.random.seed(123)
     print(f"  Collecting DQN buffer ({n_steps:,} steps, FQL policy ε={EXPLORE_EPS})...")
     for i in range(n_steps):
         if steps_left <= 0:

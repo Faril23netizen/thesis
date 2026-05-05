@@ -223,6 +223,7 @@ class DQNNumpy:
 
     def __init__(self, lr=LR):
         self.lr = lr
+        np.random.seed(42)  # deterministic weight init
         self.W1 = np.random.randn(2,  64).astype(np.float32) * 0.1
         self.b1 = np.zeros((1, 64),        dtype=np.float32)
         self.W2 = np.random.randn(64, 64).astype(np.float32) * 0.1
