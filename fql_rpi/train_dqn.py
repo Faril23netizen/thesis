@@ -41,8 +41,8 @@ LOG_DIR     = os.path.join(BASE_DIR, "logs")
 # ── Hyperparameters ──────────────────────────────────────────────────────── #
 # GAMMA=0.70 (not 0.95): keeps Q magnitudes bounded ≈ r/(1-γ) ≈ 3.3×reward.
 # With GAMMA=0.95, Q[LOW]_SAFE≈20 dominates gradient across all states (all-LOW).
-GAMMA              = 0.80
-LR                 = 1e-3
+GAMMA              = 0.95
+LR                 = 5e-4
 BATCH_SIZE         = 256
 EPOCHS             = 20000
 TARGET_UPDATE_FREQ = 200     # update target network every N epochs
