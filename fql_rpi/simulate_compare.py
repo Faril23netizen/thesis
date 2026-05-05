@@ -554,6 +554,112 @@ def export_csv(per_scen, path):
     print(f"  CSV saved: {path}")
 
 
+def export_excel(agg, per_scen, path):
+    """Export results to Excel with Summary and Per-Scenario sheets."""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    except ImportError:
+        print("  ⚠ openpyxl not installed, skipping Excel export.")
+        print("    Install with: pip install openpyxl")
+        return
+
+    wb = Workbook()
+
+    # ── Sheet 1: Summary ──
+    ws1 = wb.active
+    ws1.title = "Summary"
+    header_font = Font(bold=True, size=11)
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font_w = Font(bold=True, size=11, color="FFFFFF")
+    thin_border = Border(
+        left=Side(style="thin"), right=Side(style="thin"),
+        top=Side(style="thin"), bottom=Side(style="thin"))
+
+    # Title
+    ws1["A1"] = "Simulation Comparison Results"
+    ws1["A1"].font = Font(bold=True, size=14)
+    ws1.merge_cells("A1:G1")
+
+    # Headers
+    headers = ["Controller", "Avg Reward", "Std Reward", "Avg Energy/step",
+               "NH3 (%)", "pH Safe (%)", "Best Action"]
+    for col, h in enumerate(headers, 1):
+        cell = ws1.cell(row=3, column=col, value=h)
+        cell.font = header_font_w
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+        cell.border = thin_border
+
+    # Data
+    for i, (name, m) in enumerate(agg.items(), 4):
+        ad = m["action_dist"]
+        best = ACTION_NAMES[ad.index(max(ad))]
+        vals = [name, round(m["avg_reward"], 4), round(m["std_reward"], 4),
+                round(m["avg_energy"], 3), round(m["avg_nh3"], 3),
+                round(m["ph_safe_pct"], 1), best]
+        for col, v in enumerate(vals, 1):
+            cell = ws1.cell(row=i, column=col, value=v)
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal="center")
+
+    # Delta row
+    ctrls = list(agg.keys())
+    if "DQN" in agg and "Rule-Based" in agg:
+        r = len(agg) + 5
+        ws1.cell(row=r, column=1, value="DQN vs RB (Δ)").font = Font(bold=True, italic=True)
+        d, rb = agg["DQN"], agg["Rule-Based"]
+        ws1.cell(row=r, column=2, value=round(d["avg_reward"]-rb["avg_reward"], 4))
+        ws1.cell(row=r, column=4, value=round(d["avg_energy"]-rb["avg_energy"], 3))
+        ws1.cell(row=r, column=5, value=round(d["avg_nh3"]-rb["avg_nh3"], 3))
+        ws1.cell(row=r, column=6, value=round(d["ph_safe_pct"]-rb["ph_safe_pct"], 1))
+
+    # Action distribution sub-table
+    r = len(agg) + 7
+    ws1.cell(row=r, column=1, value="Action Distribution (%)").font = Font(bold=True, size=12)
+    for col, h in enumerate(["Controller","OFF","LOW","MED","HIGH"], 1):
+        cell = ws1.cell(row=r+1, column=col, value=h)
+        cell.font = header_font_w; cell.fill = header_fill; cell.border = thin_border
+    for i, (name, m) in enumerate(agg.items(), r+2):
+        ws1.cell(row=i, column=1, value=name).border = thin_border
+        for j, v in enumerate(m["action_dist"]):
+            cell = ws1.cell(row=i, column=j+2, value=round(v, 1))
+            cell.border = thin_border; cell.alignment = Alignment(horizontal="center")
+
+    # Column widths
+    for col in range(1, 8):
+        ws1.column_dimensions[chr(64+col)].width = 18
+
+    # ── Sheet 2: Per-Scenario ──
+    ws2 = wb.create_sheet("Per-Scenario")
+    headers2 = ["Scenario","Controller","Avg Reward","Std Reward",
+                "NH3 (%)","Energy/step","pH Safe (%)",
+                "OFF %","LOW %","MED %","HIGH %"]
+    for col, h in enumerate(headers2, 1):
+        cell = ws2.cell(row=1, column=col, value=h)
+        cell.font = header_font_w; cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center"); cell.border = thin_border
+
+    row = 2
+    for ctrl in per_scen:
+        for scen, m in per_scen[ctrl].items():
+            vals = [scen, ctrl, round(m["avg_reward"],4), round(m["std_reward"],4),
+                    round(m["avg_nh3"],3), round(m["avg_energy"],3),
+                    round(m["ph_safe_pct"],1),
+                    *[round(m["action_dist"][a],1) for a in range(4)]]
+            for col, v in enumerate(vals, 1):
+                cell = ws2.cell(row=row, column=col, value=v)
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="center")
+            row += 1
+
+    for col in range(1, 12):
+        ws2.column_dimensions[chr(64+col) if col < 27 else "A" + chr(64+col-26)].width = 16
+
+    wb.save(path)
+    print(f"  Excel saved: {path}")
+
+
 def export_latex_table(agg, path):
     with open(path, "w") as f:
         f.write("\\begin{table}[h]\n\\centering\n")
@@ -844,6 +950,7 @@ if __name__ == "__main__":
     plot_comparison(ts_results, save_dir=SAVE_DIR)
     plot_bar_summary(results, save_dir=SAVE_DIR)
     export_csv(per_scen, os.path.join(SAVE_DIR, "per_scenario_results.csv"))
+    export_excel(results, per_scen, os.path.join(SAVE_DIR, "simulation_results.xlsx"))
     export_latex_table(results, os.path.join(SAVE_DIR, "latex_table.tex"))
     plot_boxplot(per_scen, SAVE_DIR)
     plot_per_scenario_bars(per_scen, SAVE_DIR)
