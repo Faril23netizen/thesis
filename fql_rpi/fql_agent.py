@@ -216,13 +216,12 @@ class FQLAgent:
                        pH_next: float, T_next: float,
                        prev_action: int | None = None) -> float:
         """
-        Outcome-based reward with transition bonus.
+        Outcome-based reward — zone-conditional energy penalty.
 
         Components:
           1. State quality of next state (+2 SAFE, 0 WARNING, -2 DANGER)
-          2. Transition bonus — rewards actions that improve or maintain safety
-          3. Mild energy penalty (only in SAFE zone where LOW suffices)
-          4. NH3 toxicity penalty
+          2. Energy penalty — full in SAFE, tiny in stress zones
+          3. NH3 toxicity penalty
         """
         if action == ACTION_OFF:
             return -10.0
@@ -240,23 +239,19 @@ class FQLAgent:
         # 1. State Quality of next state
         r_state = {"SAFE": 2.0, "WARNING": 0.0, "DANGER": -2.0}[zone_next]
 
-        # 2. Transition bonus — reward improvement, penalise degradation
-        _zone_rank = {"DANGER": 0, "WARNING": 1, "SAFE": 2}
-        improvement = _zone_rank[zone_next] - _zone_rank[zone_now]
-        r_transition = improvement * 1.5
-
-        # 3. Energy penalty — only apply in SAFE→SAFE
-        if zone_now == "SAFE" and zone_next == "SAFE":
-            energy = {ACTION_LOW: 0.0, ACTION_MED: 0.3, ACTION_HIGH: 0.7}.get(action, 0.0)
+        # 2. Energy penalty — full in SAFE, 5% in stress zones
+        _cost = {ACTION_LOW: 0.0, ACTION_MED: 0.3, ACTION_HIGH: 0.7}
+        if zone_now == "SAFE":
+            energy = _cost.get(action, 0.0)
         else:
-            energy = 0.0
+            energy = _cost.get(action, 0.0) * 0.05
 
-        # 4. NH3 Toxicity Penalty
+        # 3. NH3 Toxicity Penalty
         pka = 0.09018 + 2729.92 / (T_next + 273.15)
         nh3_frac = 1.0 / (1.0 + 10 ** (pka - pH_next))
         r_nh3 = nh3_frac * 5.0
 
-        return r_state + r_transition - energy - r_nh3
+        return r_state - energy - r_nh3
 
     # ── Q-table update ───────────────────────────────────────────────────── #
 

@@ -65,13 +65,17 @@ def _classify_state(pH: float, T: float) -> str:
 def compute_reward(pH: float, T: float, action: int,
                    pH_next: float, T_next: float) -> float:
     """
-    Outcome-based reward with transition bonus.
+    Outcome-based reward — zone-conditional energy penalty.
 
     Components:
       1. State quality of next state (+2 SAFE, 0 WARNING, -2 DANGER)
-      2. Transition bonus — rewards actions that improve or maintain safety
-      3. Mild energy penalty (only in SAFE zone where LOW suffices)
-      4. NH3 toxicity penalty
+      2. Energy penalty — full in SAFE, tiny in WARNING/DANGER so agents
+         aren't punished for using MED/HIGH when needed
+      3. NH3 toxicity penalty
+
+    Key insight: energy penalty near-zero in stress zones lets DQN see
+    that MED/HIGH lead to SAFE faster (via gamma-discounted future reward)
+    without the immediate penalty drowning out the signal.
     """
     if action == 0:  # ACTION_OFF
         return -10.0
@@ -82,24 +86,21 @@ def compute_reward(pH: float, T: float, action: int,
     # 1. State Quality of next state
     r_state = {"SAFE": 2.0, "WARNING": 0.0, "DANGER": -2.0}[zone_next]
 
-    # 2. Transition bonus — reward improvement, penalise degradation
-    _zone_rank = {"DANGER": 0, "WARNING": 1, "SAFE": 2}
-    improvement = _zone_rank[zone_next] - _zone_rank[zone_now]
-    r_transition = improvement * 1.5  # +1.5 per level improved, -1.5 if degraded
-
-    # 3. Energy penalty — only apply in SAFE→SAFE (no reason to waste energy)
-    #    In WARNING/DANGER, using MED/HIGH is justified → no energy penalty
-    if zone_now == "SAFE" and zone_next == "SAFE":
-        energy = {1: 0.0, 2: 0.3, 3: 0.7}.get(action, 0.0)
+    # 2. Energy penalty — full cost in SAFE (where LOW suffices),
+    #    minimal cost in stress zones (so MED/HIGH aren't punished
+    #    for responding to danger, but still slightly prefer LOW)
+    _cost = {1: 0.0, 2: 0.3, 3: 0.7}
+    if zone_now == "SAFE":
+        energy = _cost.get(action, 0.0)
     else:
-        energy = 0.0  # don't penalise energy when responding to stress
+        energy = _cost.get(action, 0.0) * 0.05  # 5% of normal cost
 
-    # 4. NH3 Toxicity Penalty
+    # 3. NH3 Toxicity Penalty
     pka = 0.09018 + 2729.92 / (T_next + 273.15)
     nh3_frac = 1.0 / (1.0 + 10 ** (pka - pH_next))
     r_nh3 = nh3_frac * 5.0
 
-    return r_state + r_transition - energy - r_nh3
+    return r_state - energy - r_nh3
 
 
 # ── FQL pretrain using virtual simulator ──────────────────────────────────── #
@@ -207,7 +208,7 @@ def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
 def train_dqn_virtual(fql: FQLAgent, sim: PondSimulator,
                       save_path: str, epochs: int = 20000):
     """Train DQN from virtual buffer using new reward function."""
-    buffer = collect_dqn_buffer(fql, sim, n_steps=50_000)
+    buffer = collect_dqn_buffer(fql, sim, n_steps=100_000)
     print(f"  Training DQN ({epochs} epochs on {len(buffer):,} transitions)...")
     try:
         from train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
