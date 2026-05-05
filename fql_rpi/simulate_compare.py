@@ -86,14 +86,17 @@ def compute_reward(pH: float, T: float, action: int,
     # 1. State Quality of next state
     r_state = {"SAFE": 2.0, "WARNING": 0.0, "DANGER": -2.0}[zone_next]
 
-    # 2. Energy penalty — full cost in SAFE (where LOW suffices),
-    #    minimal cost in stress zones (so MED/HIGH aren't punished
-    #    for responding to danger, but still slightly prefer LOW)
+    # 2. Energy penalty — graduated by zone severity
+    #    SAFE: full cost (LOW suffices)
+    #    WARNING: 40% cost (MED acceptable, HIGH wasteful)
+    #    DANGER: 5% cost (emergency, any action justified)
     _cost = {1: 0.0, 2: 0.3, 3: 0.7}
     if zone_now == "SAFE":
         energy = _cost.get(action, 0.0)
-    else:
-        energy = _cost.get(action, 0.0) * 0.05  # 5% of normal cost
+    elif zone_now == "WARNING":
+        energy = _cost.get(action, 0.0) * 0.40
+    else:  # DANGER
+        energy = _cost.get(action, 0.0) * 0.05
 
     # 3. NH3 Toxicity Penalty
     pka = 0.09018 + 2729.92 / (T_next + 273.15)

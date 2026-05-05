@@ -239,11 +239,13 @@ class FQLAgent:
         # 1. State Quality of next state
         r_state = {"SAFE": 2.0, "WARNING": 0.0, "DANGER": -2.0}[zone_next]
 
-        # 2. Energy penalty — full in SAFE, 5% in stress zones
+        # 2. Energy penalty — graduated by zone severity
         _cost = {ACTION_LOW: 0.0, ACTION_MED: 0.3, ACTION_HIGH: 0.7}
         if zone_now == "SAFE":
             energy = _cost.get(action, 0.0)
-        else:
+        elif zone_now == "WARNING":
+            energy = _cost.get(action, 0.0) * 0.40
+        else:  # DANGER
             energy = _cost.get(action, 0.0) * 0.05
 
         # 3. NH3 Toxicity Penalty
