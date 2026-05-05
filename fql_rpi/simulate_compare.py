@@ -136,6 +136,61 @@ def pretrain_fql(fql: FQLAgent, sim: PondSimulator, steps: int = 30_000) -> None
     fql.save_qtable(QTABLE_FILE)
 
 
+# ── DQN virtual training ─────────────────────────────────────────────────── #
+
+def collect_dqn_buffer(fql: FQLAgent, sim: PondSimulator,
+                       n_steps: int = 50_000, epsilon: float = 0.3) -> list:
+    """Collect transitions using FQL policy + exploration for DQN training."""
+    _ALL_SCENARIOS = list(ScenarioType)
+    _VALID = [ACTION_LOW, ACTION_MED, ACTION_HIGH]
+
+    buffer = []
+    scen_idx, steps_left = 0, 0
+    ph, temp = 7.5, 27.0
+
+    print(f"  Collecting DQN buffer ({n_steps:,} steps, ε={epsilon})...")
+    for i in range(n_steps):
+        if steps_left <= 0:
+            sc = _ALL_SCENARIOS[scen_idx % len(_ALL_SCENARIOS)]
+            ph, temp = sim.reset(sc)
+            steps_left = 200
+            scen_idx += 1
+
+        action = random.choice(_VALID) if random.random() < epsilon else fql.select_action(ph, temp)
+        ph_next, t_next = sim.step(action)
+        r = compute_reward(ph, temp, action, ph_next, t_next)
+
+        buffer.append({"s": [ph, temp], "a": action,
+                       "r": round(r, 5), "s_next": [ph_next, t_next]})
+        ph, temp = ph_next, t_next
+        steps_left -= 1
+
+        if (i + 1) % 10_000 == 0:
+            print(f"    buffer {i+1:,}/{n_steps:,}")
+
+    return buffer
+
+
+def train_dqn_virtual(fql: FQLAgent, sim: PondSimulator,
+                      save_path: str, epochs: int = 300):
+    """Train DQN from virtual buffer using new reward function."""
+    buffer = collect_dqn_buffer(fql, sim, n_steps=50_000, epsilon=0.3)
+    print(f"  Training DQN ({epochs} epochs on {len(buffer):,} transitions)...")
+    try:
+        from train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
+        if TORCH_AVAILABLE:
+            train_pytorch(buffer, epochs, save_path)
+        else:
+            train_numpy(buffer, epochs, save_path)
+        dqn = DQNAgent()
+        if dqn.load(save_path):
+            print("  [DQN] Trained and loaded.")
+            return dqn
+    except Exception as e:
+        print(f"  [DQN] Training failed: {e}")
+    return None
+
+
 # ── Single episode evaluation ─────────────────────────────────────────────── #
 
 def run_episode(controller, sim: PondSimulator, scenario: ScenarioType,
@@ -428,6 +483,8 @@ if __name__ == "__main__":
                         help="Scenarios to test")
     parser.add_argument("--pretrain-steps", type=int, default=80_000,
                         help="Virtual steps to pretrain FQL if no Q-table found (default 80000)")
+    parser.add_argument("--retrain-dqn", action="store_true",
+                        help="Force retrain DQN from virtual simulator")
     args = parser.parse_args()
 
     # ── Scenario selection ───────────────────────────────────────────────── #
@@ -469,14 +526,21 @@ if __name__ == "__main__":
         pretrain_fql(fql, sim, steps=args.pretrain_steps)
     fql_controller = lambda ph, t: fql.select_action(ph, t)
 
-    # DQN
-    dqn = DQNAgent()
-    if dqn.load(DQN_MODEL_FILE):
-        dqn_controller = lambda ph, t: dqn.select_action(ph, t)
-        print(f"  [DQN] Model loaded: {DQN_MODEL_FILE}")
-    else:
-        print(f"  [DQN] WARNING: {DQN_MODEL_FILE} not found — DQN skipped.")
-        dqn_controller = None
+    # DQN — retrain from virtual simulator for fair comparison with new reward
+    DQN_VIRTUAL_FILE = os.path.join(BASE_DIR, "dqn_model_virtual.pt")
+    dqn = None
+    if not args.retrain_dqn and os.path.exists(DQN_VIRTUAL_FILE):
+        dqn = DQNAgent()
+        if dqn.load(DQN_VIRTUAL_FILE):
+            print(f"  [DQN] Virtual model loaded: {DQN_VIRTUAL_FILE}")
+        else:
+            dqn = None
+    if dqn is None:
+        print("  [DQN] Training from virtual simulator (new reward function)...")
+        dqn = train_dqn_virtual(fql, sim, DQN_VIRTUAL_FILE)
+    dqn_controller = (lambda ph, t: dqn.select_action(ph, t)) if dqn else None
+    if dqn_controller is None:
+        print("  [DQN] Skipped.")
 
     controllers = {"Rule-Based": rb_controller, "FQL": fql_controller}
     if dqn_controller:

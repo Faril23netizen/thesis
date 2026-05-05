@@ -137,11 +137,11 @@ class FQLAgent:
         # This gives FQL a correct starting point so dangerous-state learning
         # is not overwhelmed by safe-state LOW accumulation.
         _PH_INIT = [
-            [-100.0, -2.0,  1.0,  3.0],  # VeryAcidic   → HIGH
-            [-100.0, -1.0,  2.0,  1.0],  # Acidic        → MED
-            [-100.0,  3.0,  0.0, -1.0],  # Normal        → LOW
-            [-100.0, -1.0,  2.0,  1.0],  # Alkaline      → MED
-            [-100.0, -2.0,  1.0,  3.0],  # VeryAlkaline  → HIGH
+            [-100.0, -1.0,  1.0,  2.0],  # VeryAcidic   → HIGH
+            [-100.0, -0.5,  2.0,  0.5],  # Acidic        → MED
+            [-100.0,  2.0,  0.5, -1.0],  # Normal        → LOW (strongly)
+            [-100.0, -0.5,  2.0,  0.5],  # Alkaline      → MED
+            [-100.0, -1.0,  1.0,  2.0],  # VeryAlkaline  → HIGH
         ]
         self.qtable = [
             list(_PH_INIT[r // N_T_SETS])
