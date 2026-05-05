@@ -127,9 +127,10 @@ class DQNAgent:
             return q.tolist()
 
     def select_action(self, ph: float, t: float) -> int:
-        """Greedy action selection."""
+        """Greedy action selection (OFF is banned)."""
         q = self.q_values(ph, t)
-        return int(np.argmax(q))
+        # Aerator must not be OFF (index 0). Only pick from 1 (LOW), 2 (MED), 3 (HIGH)
+        return int(np.argmax(q[1:])) + 1
 
     def to_qtable_string(self) -> str:
         """

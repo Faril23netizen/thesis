@@ -63,7 +63,8 @@ def compute_reward(pH: float, T: float, action: int,
     WARNING (all else):            lookup — MED=0.3, HIGH=0.0, LOW=-0.3
     """
     if 6.5 <= pH <= 8.5 and T <= 30.0:
-        ENERGY_COST = {ACTION_OFF: 0.0, ACTION_LOW: 0.0, ACTION_MED: 0.5, ACTION_HIGH: 1.0}
+        # OFF is completely banned (cost 100.0), LOW is baseline optimal
+        ENERGY_COST = {ACTION_OFF: 100.0, ACTION_LOW: 0.0, ACTION_MED: 0.5, ACTION_HIGH: 1.0}
         return 1.0 - 0.6 * ENERGY_COST[action]   # LOW=1.0, MED=0.7, HIGH=0.4
     elif pH < 6.0 or pH > 9.5 or T > 34.0 or T < 18.0:
         table = [-100.0, -1.0,  0.5,  1.0]        # HIGH=1.0, MED=0.5, LOW=-1.0
