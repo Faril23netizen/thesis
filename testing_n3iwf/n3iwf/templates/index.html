@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aquaculture Edge Dashboard — N3IWF LES</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a; --panel: #111827; --panel2: #1a2235;
+    --border: #1f2d45; --text: #e2e8f0; --muted: #64748b;
+    --blue: #3b82f6; --green: #10b981; --orange: #f59e0b;
+    --red: #ef4444; --purple: #a855f7; --cyan: #06b6d4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px; background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6, #06b6d4); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .logo-text h1 { font-size: 16px; font-weight: 600; }
+  .logo-text p { font-size: 11px; color: var(--muted); }
+  .badges { display: flex; gap: 10px; align-items: center; }
+  .badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-n3iwf { background: rgba(59,130,246,.15); color: var(--blue); border: 1px solid rgba(59,130,246,.3); }
+  .badge-connected { background: rgba(16,185,129,.15); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+  .badge-waiting  { background: rgba(245,158,11,.15); color: var(--orange); border: 1px solid rgba(245,158,11,.3); }
+  #clock { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+
+  main { padding: 16px 20px; }
+
+  /* Top stat cards */
+  .stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .stat-value { font-size: 26px; font-weight: 700; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--muted); }
+  .stat-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-top: 2px; }
+  .safe   { background: rgba(16,185,129,.2); color: var(--green); }
+  .warn   { background: rgba(245,158,11,.2); color: var(--orange); }
+  .danger { background: rgba(239,68,68,.2);  color: var(--red); }
+
+  /* Chart grid */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto auto; gap: 14px; }
+  .chart-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .chart-card.wide { grid-column: span 2; }
+  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .chart-title { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  .chart-current { font-size: 28px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .chart-unit { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .chart-wrap { position: relative; height: 120px; }
+
+  /* Phase indicator */
+  .phase-RB  { color: var(--muted); }
+  .phase-FQL { color: var(--orange); }
+  .phase-DQN { color: var(--blue); }
+  .aerator-OFF  { color: var(--muted); }
+  .aerator-LOW  { color: var(--cyan); }
+  .aerator-MED  { color: var(--orange); }
+  .aerator-HIGH { color: var(--red); }
+
+  /* Bottom bar */
+  .bottom-bar {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 14px;
+  }
+  .bottom-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .bottom-label { font-size: 11px; color: var(--muted); }
+  .bottom-value { font-size: 18px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🐟</div>
+    <div class="logo-text">
+      <h1>Aquaculture Edge Dashboard</h1>
+      <p>Progressive Hybrid FQL-DQN · N3IWF Local Edge Service</p>
+    </div>
+  </div>
+  <div class="badges">
+    <span class="badge badge-n3iwf">N3IWF LES</span>
+    <span class="badge badge-connected" id="conn-badge">● CONNECTED</span>
+    <span id="clock">--:--:--</span>
+  </div>
+</header>
+
+<main>
+  <!-- Top stat cards -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">pH Level</div>
+      <div class="stat-value" id="val-ph" style="color:var(--blue)">--</div>
+      <div class="stat-sub">Optimal: 6.5 – 8.5</div>
+      <span class="stat-badge safe" id="badge-ph">Waiting…</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Temperature</div>
+      <div class="stat-value" id="val-temp" style="color:var(--orange)">--</div>
+      <div class="stat-sub">°C · Optimal: ≤ 30 °C</div>
+      <span class="stat-badge safe" id="badge-temp">Waiting…</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">NH₃ Fraction</div>
+      <div class="stat-value" id="val-nh3" style="color:var(--purple)">--</div>
+      <div class="stat-sub">% · Toxic ammonia</div>
+      <span class="stat-badge safe" id="badge-nh3">Waiting…</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Aerator Action</div>
+      <div class="stat-value aerator-LOW" id="val-action">--</div>
+      <div class="stat-sub">Relay output level</div>
+      <span class="stat-badge safe" id="badge-action">Hardware Relay</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Controller</div>
+      <div class="stat-value phase-RB" id="val-phase">--</div>
+      <div class="stat-sub">RB → FQL → DQN</div>
+      <span class="stat-badge safe" id="badge-phase">Inference on Pico</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Last Reward</div>
+      <div class="stat-value" id="val-reward" style="color:var(--green)">0.000</div>
+      <div class="stat-sub">Composite reward signal</div>
+      <span class="stat-badge safe" id="badge-reward">+/-</span>
+    </div>
+  </div>
+
+  <!-- Chart grid -->
+  <div class="charts-grid">
+
+    <!-- pH Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">🔬 pH Level — Time Series</div>
+          <div class="chart-current" id="chart-val-ph" style="color:var(--blue)">--</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-ph"></canvas></div>
+    </div>
+
+    <!-- Temperature Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">🌡️ Temperature — Time Series</div>
+          <div class="chart-current" id="chart-val-temp" style="color:var(--orange)">-- <span class="chart-unit">°C</span></div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-temp"></canvas></div>
+    </div>
+
+    <!-- NH3 Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">⚠️ NH₃ Concentration</div>
+          <div class="chart-current" id="chart-val-nh3" style="color:var(--purple)">-- <span class="chart-unit">%</span></div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-nh3"></canvas></div>
+    </div>
+
+    <!-- Reward Chart (wide) -->
+    <div class="chart-card wide">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">🏆 Reward Signal — Composite r(t)</div>
+          <div class="chart-current" id="chart-val-reward" style="color:var(--green)">0.000</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-reward"></canvas></div>
+    </div>
+
+    <!-- Aerator Action Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">⚡ Aerator Action</div>
+          <div class="chart-current" id="chart-val-action" style="color:var(--cyan)">--</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-action"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="bottom-bar">
+    <div class="bottom-card">
+      <div>
+        <div class="bottom-label">DQN Replay Buffer</div>
+        <div class="bottom-value" id="val-buffer" style="color:var(--cyan)">0</div>
+      </div>
+      <div style="font-size:24px">📦</div>
+    </div>
+    <div class="bottom-card">
+      <div>
+        <div class="bottom-label">FQL Epsilon (ε)</div>
+        <div class="bottom-value" id="val-eps" style="color:var(--orange)">0.000</div>
+      </div>
+      <div style="font-size:24px">🎲</div>
+    </div>
+    <div class="bottom-card">
+      <div>
+        <div class="bottom-label">Real Control Steps</div>
+        <div class="bottom-value" id="val-steps" style="color:var(--blue)">0</div>
+      </div>
+      <div style="font-size:24px">👣</div>
+    </div>
+    <div class="bottom-card">
+      <div>
+        <div class="bottom-label">N3IWF Tunnel</div>
+        <div class="bottom-value" id="val-tunnel" style="color:var(--green)">LOCAL</div>
+      </div>
+      <div style="font-size:24px">🔒</div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── Chart helpers ────────────────────────────────────────────────
+const MAX_PTS = 60;
+const labels  = Array(MAX_PTS).fill('');
+
+function makeChart(id, color, min, max, fill = false) {
+  const ctx = document.getElementById(id).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [...labels],
+      datasets: [{
+        data: Array(MAX_PTS).fill(null),
+        borderColor: color, borderWidth: 2,
+        pointRadius: 0, tension: 0.4,
+        fill: fill,
+        backgroundColor: fill ? color.replace(')', ',.08)').replace('rgb', 'rgba') : 'transparent',
+      }]
+    },
+    options: {
+      animation: false, responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { display: false },
+        y: {
+          min, max,
+          grid: { color: 'rgba(255,255,255,.05)' },
+          ticks: { color: '#64748b', font: { size: 10 }, maxTicksLimit: 4 }
+        }
+      }
+    }
+  });
+}
+
+// pH: safe zone 6.5-8.5
+const chartPH     = makeChart('chart-ph',     'rgb(59,130,246)',   4.5, 10.5, true);
+const chartTemp   = makeChart('chart-temp',   'rgb(245,158,11)',  15,  40,   true);
+const chartNH3    = makeChart('chart-nh3',    'rgb(168,85,247)',   0,   5,   true);
+const chartReward = makeChart('chart-reward', 'rgb(16,185,129)',  -1.5, 1.5, false);
+const chartAction = makeChart('chart-action', 'rgb(6,182,212)',    0,   3,   false);
+
+// Add safe-zone annotation for reward (0 line)
+chartReward.data.datasets.push({
+  data: Array(MAX_PTS).fill(0),
+  borderColor: 'rgba(255,255,255,.15)', borderWidth: 1,
+  borderDash: [4, 4], pointRadius: 0, fill: false,
+});
+chartReward.update();
+
+function pushPoint(chart, val) {
+  chart.data.datasets[0].data.push(val);
+  chart.data.datasets[0].data.shift();
+  chart.data.labels.push(new Date().toLocaleTimeString());
+  chart.data.labels.shift();
+  chart.update('none');
+}
+
+// ── NH3 calculation ──────────────────────────────────────────────
+function calcNH3(pH, T) {
+  const pKa = 0.09018 + 2729.92 / (T + 273.15);
+  return 100 / (1 + Math.pow(10, pKa - pH));
+}
+
+// ── Clock ────────────────────────────────────────────────────────
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+}, 1000);
+
+// ── Action map ───────────────────────────────────────────────────
+const actionNum = { 'OFF': 0, 'LOW': 1, 'MED': 2, 'HIGH': 3 };
+
+// ── Load history on startup ──────────────────────────────────────
+fetch('/api/history').then(r => r.json()).then(hist => {
+  hist.forEach(d => {
+    if (d.pH && d.T) {
+      pushPoint(chartPH,   d.pH);
+      pushPoint(chartTemp, d.T);
+      pushPoint(chartNH3,  calcNH3(d.pH, d.T));
+    }
+    pushPoint(chartReward, d.reward || 0);
+    pushPoint(chartAction, actionNum[d.action] ?? null);
+  });
+});
+
+// ── Poll /api/state ──────────────────────────────────────────────
+let missCount = 0;
+
+function update() {
+  fetch('/api/state')
+    .then(r => r.json())
+    .then(d => {
+      missCount = 0;
+      document.getElementById('conn-badge').className = 'badge badge-connected';
+      document.getElementById('conn-badge').textContent = '● CONNECTED';
+
+      const pH = d.pH, T = d.T;
+      const hasData = (pH !== null && T !== null);
+
+      // ── Top cards ──
+      document.getElementById('val-ph').textContent    = hasData ? pH.toFixed(2)  : '--';
+      document.getElementById('val-temp').textContent  = hasData ? T.toFixed(1)   : '--';
+      document.getElementById('val-reward').textContent = (d.reward >= 0 ? '+' : '') + d.reward.toFixed(3);
+      document.getElementById('val-eps').textContent   = d.fql_eps.toFixed(3);
+      document.getElementById('val-steps').textContent = d.real_steps.toLocaleString();
+      document.getElementById('val-buffer').textContent = d.buffer_size.toLocaleString();
+
+      // NH3
+      const nh3 = hasData ? calcNH3(pH, T) : null;
+      document.getElementById('val-nh3').textContent = nh3 !== null ? nh3.toFixed(3) : '--';
+
+      // Action
+      const actionEl = document.getElementById('val-action');
+      actionEl.textContent = d.action;
+      actionEl.className = 'stat-value aerator-' + d.action;
+
+      // Phase
+      const phaseEl = document.getElementById('val-phase');
+      phaseEl.textContent = d.phase;
+      phaseEl.className = 'stat-value phase-' + d.phase;
+
+      // ── pH badge ──
+      const phBadge = document.getElementById('badge-ph');
+      if (!hasData) { phBadge.textContent = 'Waiting…'; phBadge.className = 'stat-badge warn'; }
+      else if (pH >= 6.5 && pH <= 8.5) { phBadge.textContent = 'SAFE';   phBadge.className = 'stat-badge safe'; }
+      else if (pH < 6.0 || pH > 9.5)  { phBadge.textContent = 'DANGER'; phBadge.className = 'stat-badge danger'; }
+      else                              { phBadge.textContent = 'WARN';   phBadge.className = 'stat-badge warn'; }
+
+      // ── Temp badge ──
+      const tBadge = document.getElementById('badge-temp');
+      if (!hasData) { tBadge.textContent = 'Waiting…'; tBadge.className = 'stat-badge warn'; }
+      else if (T <= 30)          { tBadge.textContent = 'SAFE';   tBadge.className = 'stat-badge safe'; }
+      else if (T > 35)           { tBadge.textContent = 'DANGER'; tBadge.className = 'stat-badge danger'; }
+      else                        { tBadge.textContent = 'WARN';   tBadge.className = 'stat-badge warn'; }
+
+      // ── NH3 badge ──
+      const nBadge = document.getElementById('badge-nh3');
+      if (nh3 === null)    { nBadge.textContent = 'Waiting…'; nBadge.className = 'stat-badge warn'; }
+      else if (nh3 < 0.02) { nBadge.textContent = 'SAFE';   nBadge.className = 'stat-badge safe'; }
+      else if (nh3 > 0.1)  { nBadge.textContent = 'DANGER'; nBadge.className = 'stat-badge danger'; }
+      else                  { nBadge.textContent = 'WARN';   nBadge.className = 'stat-badge warn'; }
+
+      // ── Reward color ──
+      const rEl = document.getElementById('val-reward');
+      rEl.style.color = d.reward > 0 ? 'var(--green)' : d.reward < 0 ? 'var(--red)' : 'var(--text)';
+
+      // ── Chart current values ──
+      document.getElementById('chart-val-ph').innerHTML   = hasData ? pH.toFixed(2) : '--';
+      document.getElementById('chart-val-temp').innerHTML = hasData ? T.toFixed(1) + ' <span class="chart-unit">°C</span>' : '--';
+      document.getElementById('chart-val-nh3').innerHTML  = nh3 !== null ? nh3.toFixed(3) + ' <span class="chart-unit">%</span>' : '--';
+      document.getElementById('chart-val-reward').textContent = (d.reward >= 0 ? '+' : '') + d.reward.toFixed(3);
+      document.getElementById('chart-val-action').textContent = d.action;
+
+      // ── Push to charts ──
+      if (hasData) {
+        pushPoint(chartPH,   pH);
+        pushPoint(chartTemp, T);
+        pushPoint(chartNH3,  nh3);
+      }
+      pushPoint(chartReward, d.reward);
+      pushPoint(chartAction, actionNum[d.action] ?? null);
+    })
+    .catch(() => {
+      missCount++;
+      if (missCount > 3) {
+        document.getElementById('conn-badge').className = 'badge badge-waiting';
+        document.getElementById('conn-badge').textContent = '○ WAITING';
+      }
+    });
+}
+
+setInterval(update, 1500);
+update();
+</script>
+</body>
+</html>
