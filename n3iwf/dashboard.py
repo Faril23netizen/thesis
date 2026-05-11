@@ -95,11 +95,13 @@ state = {
     "ipsec": False, "ipsec_detail": "--",
     "net_avg_ms": "--", "net_min_ms": "--",
     "net_max_ms": "--", "net_jitter": "--", "net_pdr": "--",
+    "live_rtt_ms": None,   # latest ping RTT to Callbox
     "rb_available": RB_AVAILABLE,
     "fql_available": FQL_AVAILABLE,
     "dqn_available": DQN_AVAILABLE,
 }
 history = deque(maxlen=120)
+latency_history = deque(maxlen=60)   # live ping RTT to Callbox (last 60 samples)
 lock = threading.Lock()
 
 # ── AI Inference ──────────────────────────────────────────────────────────────
@@ -226,6 +228,30 @@ def net_stats_loader():
         except Exception: pass
         time.sleep(30)
 
+# ── Live Ping Thread (N3IWF Real-time Latency) ────────────────────────────────
+def live_ping(target: str = "192.168.100.101", interval: int = 3):
+    """Ping Callbox every `interval` seconds, store RTT in latency_history."""
+    print(f"[PING] Live ping to {target} every {interval}s")
+    while True:
+        rtt = None
+        try:
+            r = subprocess.run(
+                ["ping", "-c", "1", "-W", "2", target],
+                capture_output=True, text=True, timeout=4
+            )
+            if r.returncode == 0:
+                for line in r.stdout.splitlines():
+                    if "time=" in line:
+                        rtt = round(float(line.split("time=")[1].split(" ")[0]), 2)
+                        break
+        except Exception:
+            pass
+        ts = datetime.now().strftime("%H:%M:%S")
+        with lock:
+            state["live_rtt_ms"] = rtt
+            latency_history.append({"ts": ts, "rtt": rtt})
+        time.sleep(interval)
+
 # ── Flask ─────────────────────────────────────────────────────────────────────
 app = Flask(__name__, template_folder='templates')
 
@@ -245,11 +271,16 @@ def get_state():
 def get_history():
     with lock: return jsonify(list(history))
 
+@app.route('/api/latency_history')
+def get_latency_history():
+    with lock: return jsonify(list(latency_history))
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 if __name__ == '__main__':
     threading.Thread(target=tcp_server, daemon=True).start()
     threading.Thread(target=ipsec_monitor, daemon=True).start()
     threading.Thread(target=net_stats_loader, daemon=True).start()
+    threading.Thread(target=live_ping, daemon=True).start()
 
     try: ip = socket.gethostbyname(socket.gethostname())
     except: ip = "0.0.0.0"

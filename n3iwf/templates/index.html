@@ -280,6 +280,10 @@
     <div class="card-title">⏱️ Inference Time Comparison (ms)</div>
     <canvas id="chartInfer"></canvas>
   </div>
+  <div class="chart-box" style="grid-column:1/-1">
+    <div class="card-title">📡 N3IWF Live Latency — RPi5 → Callbox (Ping setiap 3 detik)</div>
+    <canvas id="chartLatency" style="max-height:160px"></canvas>
+  </div>
 </div>
 
 <script>
@@ -335,6 +339,35 @@
     if(chart.data.labels.length > maxPts){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
     chart.update();
   }
+
+  const latencyChart = new Chart(document.getElementById('chartLatency'), {
+    type: 'line',
+    data: { labels: [], datasets: [{
+      label: 'RTT ke Callbox (ms)', data: [],
+      borderColor: '#bc8cff', backgroundColor: '#bc8cff22',
+      fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2
+    }]},
+    options: { animation: false, responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color:'#e6edf3', font:{size:11} } } },
+      scales: {
+        x: { ticks:{color:'#7d8590',maxTicksLimit:10}, grid:{color:'#21262d'} },
+        y: { ticks:{color:'#7d8590'}, grid:{color:'#21262d'},
+             title:{display:true,text:'RTT (ms)',color:'#7d8590'}, min:0 }
+      }
+    }
+  });
+
+  // Poll latency history every 3s
+  async function fetchLatency(){
+    try{
+      const pts = await (await fetch('/api/latency_history')).json();
+      latencyChart.data.labels = pts.map(p=>p.ts);
+      latencyChart.data.datasets[0].data = pts.map(p=>p.rtt);
+      latencyChart.update();
+    } catch(e){}
+  }
+  setInterval(fetchLatency, 3000);
+  fetchLatency();
 
   const ACTION_NUM = {OFF:0, LOW:1, MED:2, HIGH:3};
   let sessionStart=null, prevConn=null, prevPH=null;
