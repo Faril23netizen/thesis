@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Aquaculture Edge AI — N3IWF Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
       --bg:#0d1117; --card:#161b22; --card2:#1c2128; --border:#30363d;
@@ -97,7 +98,11 @@
     .log-entry{padding:2px 0;border-bottom:1px solid #1c2128;}
     .ts{color:var(--green);margin-right:7px;}
 
-    @media(max-width:900px){.grid-main{grid-template-columns:1fr;}}
+    /* Charts */
+    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
+    .chart-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
+    .chart-box canvas{max-height:180px;}
+    @media(max-width:900px){.grid-main{grid-template-columns:1fr;}.chart-grid{grid-template-columns:1fr;}}
   </style>
 </head>
 <body>
@@ -257,7 +262,81 @@
   </div>
 </div>
 
+<!-- ── Charts Section ── -->
+<div class="chart-grid" style="margin-top:16px">
+  <div class="chart-box">
+    <div class="card-title">📈 pH Over Time</div>
+    <canvas id="chartPH"></canvas>
+  </div>
+  <div class="chart-box">
+    <div class="card-title">🌡️ Suhu Over Time</div>
+    <canvas id="chartTemp"></canvas>
+  </div>
+  <div class="chart-box">
+    <div class="card-title">🤖 AI Decision Comparison (Real-time)</div>
+    <canvas id="chartAI"></canvas>
+  </div>
+  <div class="chart-box">
+    <div class="card-title">⏱️ Inference Time Comparison (ms)</div>
+    <canvas id="chartInfer"></canvas>
+  </div>
+</div>
+
 <script>
+  // ── Chart.js Setup ──────────────────────────────────────────────────────
+  const MAX_POINTS = 60;
+  const chartOpts = (label, color, yLabel) => ({
+    type: 'line',
+    data: { labels: [], datasets: [{ label, data: [], borderColor: color,
+      backgroundColor: color+'22', fill: true, tension: 0.4, pointRadius: 2,
+      borderWidth: 2 }] },
+    options: { animation: false, responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color:'#e6edf3', font:{size:11} } } },
+      scales: {
+        x: { ticks:{color:'#7d8590',maxTicksLimit:8}, grid:{color:'#21262d'} },
+        y: { ticks:{color:'#7d8590'}, grid:{color:'#21262d'}, title:{display:true,text:yLabel,color:'#7d8590'} }
+      }
+    }
+  });
+
+  const phChart   = new Chart(document.getElementById('chartPH'),   chartOpts('pH','#58a6ff','pH'));
+  const tmpChart  = new Chart(document.getElementById('chartTemp'),  chartOpts('Suhu (°C)','#e3b341','°C'));
+
+  const aiChart = new Chart(document.getElementById('chartAI'), {
+    type: 'bar',
+    data: { labels: ['Rule-Based','FQL','DQN'],
+      datasets: [{ label: 'Action (0=OFF 1=LOW 2=MED 3=HIGH)',
+        data: [0,0,0], backgroundColor:['#f85149aa','#d29922aa','#3fb950aa'],
+        borderColor:['#f85149','#d29922','#3fb950'], borderWidth:2 }] },
+    options: { animation:false, responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:'#e6edf3'}}},
+      scales:{ x:{ticks:{color:'#7d8590'},grid:{color:'#21262d'}},
+               y:{min:0,max:3,ticks:{color:'#7d8590',stepSize:1,
+                  callback:v=>['OFF','LOW','MED','HIGH'][v]||v},
+                  grid:{color:'#21262d'}} } }
+  });
+
+  const inferChart = new Chart(document.getElementById('chartInfer'), {
+    type: 'bar',
+    data: { labels: ['Rule-Based','FQL','DQN'],
+      datasets:[{ label:'Inference (ms)',
+        data:[0,0,0], backgroundColor:['#f85149aa','#d29922aa','#3fb950aa'],
+        borderColor:['#f85149','#d29922','#3fb950'], borderWidth:2 }] },
+    options:{ animation:false, responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:'#e6edf3'}}},
+      scales:{ x:{ticks:{color:'#7d8590'},grid:{color:'#21262d'}},
+               y:{ticks:{color:'#7d8590'},grid:{color:'#21262d'},
+                  title:{display:true,text:'ms',color:'#7d8590'}} } }
+  });
+
+  function pushChart(chart, label, value, maxPts=MAX_POINTS){
+    chart.data.labels.push(label);
+    chart.data.datasets[0].data.push(value);
+    if(chart.data.labels.length > maxPts){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+    chart.update();
+  }
+
+  const ACTION_NUM = {OFF:0, LOW:1, MED:2, HIGH:3};
   let sessionStart=null, prevConn=null, prevPH=null;
   const log=document.getElementById('log');
 
@@ -345,6 +424,21 @@
       document.getElementById('rb-avail').textContent =d.rb_available ?'✅ Active':'❌ N/A';
       document.getElementById('fql-avail').textContent=d.fql_available?'✅ Active':'❌ No Q-Table';
       document.getElementById('dqn-avail').textContent=d.dqn_available?'✅ Active':'❌ No Model';
+
+      // Update charts
+      if(d.connected && d.pH!=null){
+        const ts = new Date().toLocaleTimeString();
+        pushChart(phChart,  ts, d.pH);
+        pushChart(tmpChart, ts, d.T);
+        aiChart.data.datasets[0].data = [
+          ACTION_NUM[d.rb_action]||0,
+          ACTION_NUM[d.fql_action]||0,
+          ACTION_NUM[d.dqn_action]||0
+        ]; aiChart.update();
+        inferChart.data.datasets[0].data = [
+          d.rb_infer_ms||0, d.fql_infer_ms||0, d.dqn_infer_ms||0
+        ]; inferChart.update();
+      }
 
       // Log
       if(d.connected&&d.pH!=null&&d.pH!==prevPH){
