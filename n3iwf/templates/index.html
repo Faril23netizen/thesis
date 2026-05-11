@@ -30,15 +30,6 @@
     .card-title{font-size:.69rem;font-weight:700;color:var(--muted);text-transform:uppercase;
       letter-spacing:.08em;margin-bottom:13px;}
 
-    /* LED */
-    .led-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:4px 0;}
-    .led{width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#333,#1a1a1a);
-      box-shadow:0 0 0 8px var(--card2);transition:all .15s;}
-    .led.on{background:radial-gradient(circle at 35% 35%,#fffde0,#ffe066,#ffb300);
-      box-shadow:0 0 0 8px var(--card2),0 0 28px 10px rgba(255,200,0,.5);}
-    .led-label{font-size:.95rem;font-weight:700;color:var(--muted);}
-    .led-label.on{color:#ffd700;}
-
     /* Status */
     .status-row{display:flex;flex-direction:column;gap:7px;}
     .status-item{display:flex;align-items:center;justify-content:space-between;
@@ -50,52 +41,59 @@
     .badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
     .g{background:rgba(63,185,80,.15);color:var(--green);}
     .r{background:rgba(248,81,73,.15);color:var(--red);}
-    .b{background:rgba(88,166,255,.15);color:var(--blue);}
-    .y{background:rgba(210,153,34,.15);color:var(--yellow);}
-
-    /* Mode banner */
-    .mode-banner{text-align:center;font-size:.7rem;font-weight:700;padding:4px 10px;
-      border-radius:8px;margin-bottom:10px;}
-    .mode-test{background:rgba(210,153,34,.15);color:var(--yellow);border:1px solid rgba(210,153,34,.3);}
-    .mode-real{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.3);}
 
     /* Sensor */
-    .sensor-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    .sensor-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;}
-    .sensor-val{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:700;}
-    .sensor-unit{font-size:.67rem;color:var(--muted);margin-top:3px;}
+    .sensor-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .sensor-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;
+      padding:18px;text-align:center;}
+    .sensor-val{font-family:'JetBrains Mono',monospace;font-size:2.2rem;font-weight:700;line-height:1;}
+    .sensor-unit{font-size:.68rem;color:var(--muted);margin-top:5px;}
+    .sensor-label{font-size:.7rem;font-weight:600;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+
+    /* pH color coding */
+    .ph-safe{color:var(--green);}
+    .ph-warn{color:var(--yellow);}
+    .ph-danger{color:var(--red);}
+    .temp-ok{color:var(--orange);}
+    .temp-warn{color:var(--yellow);}
+    .temp-danger{color:var(--red);}
 
     /* Progressive AI */
     .prog-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-    .prog-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:13px;
-      text-align:center;transition:border-color .3s,box-shadow .3s;}
-    .prog-box.active{border-color:var(--green);box-shadow:0 0 12px rgba(63,185,80,.2);}
+    .prog-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;
+      padding:14px;text-align:center;transition:border-color .3s,box-shadow .3s;}
+    .prog-box.best{border-color:var(--green);box-shadow:0 0 14px rgba(63,185,80,.2);}
     .prog-algo{font-size:.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
-    .prog-action{font-size:1.3rem;font-weight:800;margin-bottom:3px;}
+    .prog-action{font-size:1.3rem;font-weight:800;margin-bottom:4px;}
     .prog-ms{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);}
-    .prog-status{font-size:.65rem;margin-top:3px;}
+    .prog-avail{font-size:.65rem;margin-top:4px;}
 
     /* Metrics */
     .metrics-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:9px;}
     .metrics-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
     .metric-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:13px;}
-    .metric-val{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;line-height:1;margin-bottom:4px;}
+    .metric-val{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;
+      line-height:1;margin-bottom:4px;}
     .metric-name{font-size:.66rem;color:var(--muted);}
 
     /* Network */
     .net-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
-    .net-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px;text-align:center;}
-    .net-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--blue);margin-bottom:3px;}
+    .net-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;
+      padding:11px;text-align:center;}
+    .net-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;
+      color:var(--blue);margin-bottom:3px;}
     .net-name{font-size:.63rem;color:var(--muted);}
 
     /* IPsec */
     .ipsec-detail{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--muted);
-      background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;
-      word-break:break-all;min-height:42px;margin-top:9px;}
+      background:var(--bg);border:1px solid var(--border);border-radius:8px;
+      padding:10px;word-break:break-all;min-height:42px;margin-top:9px;}
 
     /* Log */
-    .log-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px;
-      height:160px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:.69rem;color:var(--muted);}
+    .log-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;
+      padding:11px;height:160px;overflow-y:auto;
+      font-family:'JetBrains Mono',monospace;font-size:.69rem;color:var(--muted);}
     .log-entry{padding:2px 0;border-bottom:1px solid #1c2128;}
     .ts{color:var(--green);margin-right:7px;}
 
@@ -107,7 +105,7 @@
 <div class="header">
   <div>
     <h1>🐟 Aquaculture Edge AI — N3IWF Monitoring Dashboard</h1>
-    <p>Pico 2W → RPi5 (Rule-Based → FQL → DQN) → IPsec N3IWF → Callbox 5G</p>
+    <p>Sensor pH & Suhu → Pico 2W → RPi5 (RB → FQL → DQN) → IPsec N3IWF → Callbox 5G</p>
   </div>
   <div class="badge-live"><div class="dot"></div>LIVE</div>
 </div>
@@ -117,32 +115,24 @@
   <!-- ── LEFT ── -->
   <div class="col-l">
 
+    <!-- Sensor Readings -->
     <div class="card">
-      <div class="card-title">📡 Pico 2W — Sensor Node</div>
-      <div id="mode-banner" class="mode-banner mode-test">MODE: TEST</div>
-
-      <div id="test-panel">
-        <div class="led-wrap">
-          <div class="led" id="led"></div>
-          <div class="led-label" id="led-label">-- WAITING --</div>
-          <div style="font-family:monospace;font-size:.76rem;color:var(--muted)" id="led-seq">Packet: --</div>
+      <div class="card-title">🌡️ Sensor Readings — Pico 2W</div>
+      <div class="sensor-row">
+        <div class="sensor-box">
+          <div class="sensor-label">pH Level</div>
+          <div class="sensor-val ph-safe" id="s-ph">--</div>
+          <div class="sensor-unit">range aman: 6.5 – 8.5</div>
         </div>
-      </div>
-
-      <div id="real-panel" style="display:none">
-        <div class="sensor-row">
-          <div class="sensor-box">
-            <div class="sensor-val" id="s-ph" style="color:var(--blue)">--</div>
-            <div class="sensor-unit">pH Level</div>
-          </div>
-          <div class="sensor-box">
-            <div class="sensor-val" id="s-temp" style="color:var(--orange)">--</div>
-            <div class="sensor-unit">Suhu (°C)</div>
-          </div>
+        <div class="sensor-box">
+          <div class="sensor-label">Suhu Air</div>
+          <div class="sensor-val temp-ok" id="s-temp">--</div>
+          <div class="sensor-unit">°C &nbsp;|&nbsp; aman: ≤ 30°C</div>
         </div>
       </div>
     </div>
 
+    <!-- Connection Status -->
     <div class="card">
       <div class="card-title">🔌 Connection Status</div>
       <div class="status-row">
@@ -159,7 +149,7 @@
           <span class="sval" id="pico-ip">--</span>
         </div>
         <div class="status-item">
-          <span class="slabel">Last Packet</span>
+          <span class="slabel">Last Data</span>
           <span class="sval" id="last-seen">--</span>
         </div>
         <div class="status-item">
@@ -176,44 +166,48 @@
 
     <!-- Progressive AI -->
     <div class="card">
-      <div class="card-title">🤖 Progressive AI — Inference (Rule-Based → FQL → DQN)</div>
+      <div class="card-title">🤖 Progressive AI Inference — Rule-Based → FQL → DQN</div>
       <div class="prog-grid">
+
         <div class="prog-box" id="rb-box">
           <div class="prog-algo">Phase 1 — Rule-Based</div>
           <div class="prog-action" id="rb-action" style="color:var(--red)">--</div>
           <div class="prog-ms" id="rb-ms">-- ms</div>
-          <div class="prog-status" id="rb-status"></div>
+          <div class="prog-avail" id="rb-avail"></div>
         </div>
+
         <div class="prog-box" id="fql-box">
           <div class="prog-algo">Phase 2 — FQL</div>
           <div class="prog-action" id="fql-action" style="color:var(--yellow)">--</div>
           <div class="prog-ms" id="fql-ms">-- ms</div>
-          <div class="prog-status" id="fql-status"></div>
+          <div class="prog-avail" id="fql-avail"></div>
         </div>
-        <div class="prog-box active" id="dqn-box">
+
+        <div class="prog-box best" id="dqn-box">
           <div class="prog-algo">Phase 3 — DQN ⭐</div>
           <div class="prog-action" id="dqn-action" style="color:var(--green)">--</div>
           <div class="prog-ms" id="dqn-ms">-- ms</div>
-          <div class="prog-status" id="dqn-status"></div>
+          <div class="prog-avail" id="dqn-avail"></div>
         </div>
+
       </div>
     </div>
 
     <!-- Packet Metrics -->
     <div class="card">
-      <div class="card-title">📊 Packet & Session Metrics</div>
+      <div class="card-title">📊 Session Metrics</div>
       <div class="metrics-4">
         <div class="metric-box">
           <div class="metric-val" style="color:var(--blue)" id="m-packets">0</div>
-          <div class="metric-name">Packets Received</div>
+          <div class="metric-name">Total Packets</div>
         </div>
         <div class="metric-box">
-          <div class="metric-val" style="color:var(--green)" id="m-seq">--</div>
-          <div class="metric-name">Seq / pH Now</div>
+          <div class="metric-val" style="color:var(--green)" id="m-ph">--</div>
+          <div class="metric-name">pH Terakhir</div>
         </div>
         <div class="metric-box">
-          <div class="metric-val" style="color:var(--yellow)" id="m-latency">--</div>
-          <div class="metric-name">Avg Pkt Delay (ms)</div>
+          <div class="metric-val" style="color:var(--yellow)" id="m-delay">--</div>
+          <div class="metric-name">Avg Delay (ms)</div>
         </div>
         <div class="metric-box">
           <div class="metric-val" style="color:var(--purple)" id="m-uptime">0s</div>
@@ -224,7 +218,7 @@
 
     <!-- 5G Network -->
     <div class="card">
-      <div class="card-title">📡 5G N3IWF Network Performance</div>
+      <div class="card-title">📡 5G N3IWF Network Performance (IPsec Tunnel)</div>
       <div class="net-grid">
         <div class="net-box"><div class="net-val" id="net-min">--</div><div class="net-name">Min RTT (ms)</div></div>
         <div class="net-box"><div class="net-val" id="net-avg">--</div><div class="net-name">Avg RTT (ms)</div></div>
@@ -235,7 +229,7 @@
       <div class="ipsec-detail" id="ipsec-detail">Checking IPsec tunnel...</div>
     </div>
 
-    <!-- Inference Timing -->
+    <!-- Edge AI Inference Time -->
     <div class="card">
       <div class="card-title">⏱️ Edge AI Inference Time di RPi5</div>
       <div class="metrics-3">
@@ -256,7 +250,7 @@
 
     <!-- Log -->
     <div class="card">
-      <div class="card-title">📋 Live Log</div>
+      <div class="card-title">📋 Live Data Log</div>
       <div class="log-box" id="log"></div>
     </div>
 
@@ -264,49 +258,46 @@
 </div>
 
 <script>
-  let sessionStart=null, prevConn=null, prevSeq=null;
+  let sessionStart=null, prevConn=null, prevPH=null;
   const log=document.getElementById('log');
 
-  function addLog(msg,color){
+  function addLog(msg, color){
     const now=new Date().toLocaleTimeString();
     const d=document.createElement('div'); d.className='log-entry';
     d.innerHTML=`<span class="ts">${now}</span><span style="color:${color||'inherit'}">${msg}</span>`;
     log.prepend(d); if(log.children.length>80) log.removeChild(log.lastChild);
   }
 
+  function phColor(ph){
+    if(ph===null||ph==='--') return '';
+    if(ph>=6.5&&ph<=8.5) return 'ph-safe';
+    if(ph>=6.0&&ph<=9.0) return 'ph-warn';
+    return 'ph-danger';
+  }
+  function tempColor(t){
+    if(t===null||t==='--') return 'temp-ok';
+    if(t<=30) return 'temp-ok';
+    if(t<=34) return 'temp-warn';
+    return 'temp-danger';
+  }
+
   async function fetchState(){
     try{
       const d=await (await fetch('/api/state')).json();
 
-      // Mode
-      const banner=document.getElementById('mode-banner');
-      const tp=document.getElementById('test-panel'), rp=document.getElementById('real-panel');
-      if(d.mode==='REAL'){
-        banner.className='mode-banner mode-real'; banner.textContent='MODE: REAL SENSOR ✅';
-        tp.style.display='none'; rp.style.display='block';
-        document.getElementById('s-ph').textContent  = d.pH!=null ? d.pH.toFixed(2) : '--';
-        document.getElementById('s-temp').textContent= d.T !=null ? d.T.toFixed(1)  : '--';
-        document.getElementById('m-seq').textContent = d.pH!=null ? d.pH.toFixed(2) : '--';
-      } else {
-        banner.className='mode-banner mode-test'; banner.textContent='MODE: LED TEST';
-        tp.style.display='block'; rp.style.display='none';
-        const led=document.getElementById('led'), ll=document.getElementById('led-label');
-        if(d.connected){
-          d.led?(led.classList.add('on'),ll.className='led-label on',ll.textContent='LED ON')
-               :(led.classList.remove('on'),ll.className='led-label',ll.textContent='LED OFF');
-          document.getElementById('led-seq').textContent=`Packet #${d.seq}`;
-          document.getElementById('m-seq').textContent=d.seq;
-        } else {
-          led.classList.remove('on'); ll.className='led-label'; ll.textContent='-- WAITING --';
-          document.getElementById('led-seq').textContent='Packet: --';
-        }
-      }
+      // Sensor values
+      const phEl=document.getElementById('s-ph');
+      const tEl =document.getElementById('s-temp');
+      if(d.pH!=null){ phEl.textContent=d.pH.toFixed(2); phEl.className='sensor-val '+phColor(d.pH); }
+      else           { phEl.textContent='--'; phEl.className='sensor-val ph-safe'; }
+      if(d.T!=null)  { tEl.textContent=d.T.toFixed(1);  tEl.className='sensor-val '+tempColor(d.T); }
+      else           { tEl.textContent='--'; tEl.className='sensor-val temp-ok'; }
 
       // Badges
       const pb=document.getElementById('pico-badge');
       if(d.connected){
         pb.className='badge g'; pb.innerHTML='<span class="badge-dot"></span>CONNECTED';
-        if(prevConn===false){addLog(`Pico connected from ${d.pico_ip}`,'#3fb950'); sessionStart=Date.now();}
+        if(prevConn===false){ addLog(`Pico connected dari ${d.pico_ip}`,'#3fb950'); sessionStart=Date.now(); }
       } else {
         pb.className='badge r'; pb.innerHTML='<span class="badge-dot"></span>DISCONNECTED';
         if(prevConn===true) addLog('Pico disconnected','#f85149');
@@ -314,16 +305,17 @@
       prevConn=d.connected;
 
       const ib=document.getElementById('ipsec-badge');
-      if(d.ipsec){ib.className='badge g'; ib.innerHTML='<span class="badge-dot"></span>ESTABLISHED';}
-      else        {ib.className='badge r'; ib.innerHTML='<span class="badge-dot"></span>DOWN';}
+      ib.className=d.ipsec?'badge g':'badge r';
+      ib.innerHTML=d.ipsec?'<span class="badge-dot"></span>ESTABLISHED':'<span class="badge-dot"></span>DOWN';
       document.getElementById('ipsec-detail').textContent=d.ipsec_detail;
 
-      // Status info
+      // Info
       document.getElementById('pico-ip').textContent  =d.pico_ip;
       document.getElementById('last-seen').textContent=d.last_seen_ago!=null?`${d.last_seen_ago}s ago`:'--';
       document.getElementById('total-pkt').textContent=d.total_packets;
       document.getElementById('m-packets').textContent=d.total_packets;
-      document.getElementById('m-latency').textContent=d.connected&&d.latency_avg?d.latency_avg:'--';
+      document.getElementById('m-ph').textContent     =d.pH!=null?d.pH.toFixed(2):'--';
+      document.getElementById('m-delay').textContent  =d.connected&&d.latency_avg?d.latency_avg:'--';
 
       if(sessionStart&&d.connected){
         const s=Math.floor((Date.now()-sessionStart)/1000);
@@ -339,37 +331,33 @@
         document.getElementById('net-pdr').textContent   =`${d.net_pdr}%`;
       }
 
-      // Progressive AI
-      if(d.mode==='REAL'){
-        document.getElementById('rb-action').textContent =d.rb_action||'--';
-        document.getElementById('fql-action').textContent=d.fql_action||'--';
-        document.getElementById('dqn-action').textContent=d.dqn_action||'--';
-        document.getElementById('rb-ms').textContent =d.rb_infer_ms?`${d.rb_infer_ms} ms`:'--';
-        document.getElementById('fql-ms').textContent=d.fql_infer_ms?`${d.fql_infer_ms} ms`:'--';
-        document.getElementById('dqn-ms').textContent=d.dqn_infer_ms?`${d.dqn_infer_ms} ms`:'--';
-        document.getElementById('t-rb').textContent =d.rb_infer_ms||'--';
-        document.getElementById('t-fql').textContent=d.fql_infer_ms||'--';
-        document.getElementById('t-dqn').textContent=d.dqn_infer_ms||'--';
-      }
+      // Progressive AI decisions
+      document.getElementById('rb-action').textContent =d.rb_action||'--';
+      document.getElementById('fql-action').textContent=d.fql_action||'--';
+      document.getElementById('dqn-action').textContent=d.dqn_action||'--';
+      document.getElementById('rb-ms').textContent =d.rb_infer_ms?`${d.rb_infer_ms} ms`:'--';
+      document.getElementById('fql-ms').textContent=d.fql_infer_ms?`${d.fql_infer_ms} ms`:'--';
+      document.getElementById('dqn-ms').textContent=d.dqn_infer_ms?`${d.dqn_infer_ms} ms`:'--';
+      document.getElementById('t-rb').textContent =d.rb_infer_ms||'--';
+      document.getElementById('t-fql').textContent=d.fql_infer_ms||'--';
+      document.getElementById('t-dqn').textContent=d.dqn_infer_ms||'--';
 
-      document.getElementById('rb-status').textContent =d.rb_available ?'✅ Active':'❌ N/A';
-      document.getElementById('fql-status').textContent=d.fql_available?'✅ Active':'❌ No Q-Table';
-      document.getElementById('dqn-status').textContent=d.dqn_available?'✅ Active':'❌ No Model';
+      document.getElementById('rb-avail').textContent =d.rb_available ?'✅ Active':'❌ N/A';
+      document.getElementById('fql-avail').textContent=d.fql_available?'✅ Active':'❌ No Q-Table';
+      document.getElementById('dqn-avail').textContent=d.dqn_available?'✅ Active':'❌ No Model';
 
       // Log
-      if(d.connected&&d.mode==='REAL'&&d.pH!==prevSeq){
-        addLog(`pH=${d.pH?.toFixed(2)} T=${d.T?.toFixed(1)}°C → RB:${d.rb_action} FQL:${d.fql_action} DQN:${d.dqn_action}`,'#58a6ff');
-        prevSeq=d.pH;
-      } else if(d.connected&&d.mode==='TEST'&&d.seq!==prevSeq&&prevSeq!==null){
-        addLog(`seq=${d.seq} LED=${d.led?'ON':'OFF'} delay=${d.latency_avg}ms`,'#58a6ff');
-        prevSeq=d.seq;
+      if(d.connected&&d.pH!=null&&d.pH!==prevPH){
+        addLog(`pH=${d.pH.toFixed(2)} T=${d.T?.toFixed(1)}°C → RB:${d.rb_action} FQL:${d.fql_action} DQN:${d.dqn_action}`,'#58a6ff');
+        prevPH=d.pH;
       }
+
     } catch(e){ addLog('Error: '+e.message,'#f85149'); }
   }
 
   setInterval(fetchState,500);
   fetchState();
-  addLog('Dashboard started. Waiting for Pico 2W...','#d29922');
+  addLog('Dashboard started. Menunggu data sensor dari Pico 2W...','#d29922');
 </script>
 </body>
 </html>
