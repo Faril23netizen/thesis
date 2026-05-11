@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aquaculture N3IWF Testing Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --green: #3fb950;
+      --red: #f85149;
+      --blue: #58a6ff;
+      --yellow: #d29922;
+      --purple: #bc8cff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .header p {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .live-badge {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Grid Layout ── */
+    .grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+    }
+    .col-left { display: flex; flex-direction: column; gap: 20px; }
+    .col-right { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+    }
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 18px;
+    }
+
+    /* ── LED Widget ── */
+    .led-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      padding: 10px 0;
+    }
+    .led-bulb {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #444, #222);
+      box-shadow: 0 0 0 8px #1c2128;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .led-bulb.on {
+      background: radial-gradient(circle at 35% 35%, #fffde0, #ffe066, #ffb300);
+      box-shadow:
+        0 0 0 8px #1c2128,
+        0 0 30px 10px rgba(255, 200, 0, 0.5),
+        0 0 60px 20px rgba(255, 160, 0, 0.3);
+    }
+    .led-label {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+    .led-label.on { color: #ffd700; }
+    .led-seq {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* ── Status Badges ── */
+    .status-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .status-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    .badge.green { background: rgba(63,185,80,0.15); color: var(--green); }
+    .badge.red { background: rgba(248,81,73,0.15); color: var(--red); }
+    .badge.blue { background: rgba(88,166,255,0.15); color: var(--blue); }
+    .badge.yellow { background: rgba(210,153,34,0.15); color: var(--yellow); }
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ── Metrics Grid ── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .metric-box {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--blue);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .metric-val.green { color: var(--green); }
+    .metric-val.yellow { color: var(--yellow); }
+    .metric-val.purple { color: var(--purple); }
+    .metric-name {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ── Log ── */
+    .log-box {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .log-entry {
+      padding: 2px 0;
+      border-bottom: 1px solid #1c2128;
+    }
+    .log-entry .ts { color: #3fb950; margin-right: 8px; }
+    .log-entry .msg { color: var(--text); }
+
+    /* ── IPsec Detail ── */
+    .ipsec-detail {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      word-break: break-all;
+      min-height: 48px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🐟 Aquaculture N3IWF Testing Dashboard</h1>
+    <p>Pico 2W → RPi5 → IPsec (Simulasi N3IWF) → Callbox 5G</p>
+  </div>
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    LIVE
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- ── LEFT COLUMN ── -->
+  <div class="col-left">
+
+    <!-- LED Widget -->
+    <div class="card">
+      <div class="card-title">🔆 Pico 2W LED Status</div>
+      <div class="led-wrapper">
+        <div class="led-bulb" id="led"></div>
+        <div class="led-label" id="led-label">-- WAITING --</div>
+        <div class="led-seq" id="led-seq">Packet: --</div>
+      </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="card">
+      <div class="card-title">📡 Connection Status</div>
+      <div class="status-row">
+        <div class="status-item">
+          <span class="status-label">Pico 2W</span>
+          <span class="badge red" id="pico-badge">
+            <span class="badge-dot"></span> DISCONNECTED
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">IPsec / N3IWF</span>
+          <span class="badge red" id="ipsec-badge">
+            <span class="badge-dot"></span> DOWN
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Pico IP</span>
+          <span style="font-family:monospace;font-size:0.82rem;color:var(--blue)" id="pico-ip">--</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Last Packet</span>
+          <span style="font-size:0.82rem;color:var(--muted)" id="last-seen">--</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT COLUMN ── -->
+  <div class="col-right">
+
+    <!-- Metrics -->
+    <div class="card">
+      <div class="card-title">📊 Network Metrics</div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-val" id="m-packets">0</div>
+          <div class="metric-name">Total Packets Received</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val green" id="m-seq">--</div>
+          <div class="metric-name">Last Sequence Number</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val yellow" id="m-latency">--</div>
+          <div class="metric-name">Avg Inter-Packet Delay (ms)</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val purple" id="m-uptime">0s</div>
+          <div class="metric-name">Session Uptime</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IPsec Detail -->
+    <div class="card">
+      <div class="card-title">🔒 IPsec Tunnel Detail</div>
+      <div class="ipsec-detail" id="ipsec-detail">Checking tunnel status...</div>
+    </div>
+
+    <!-- Live Log -->
+    <div class="card">
+      <div class="card-title">📋 Live Log</div>
+      <div class="log-box" id="log"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let sessionStart = null;
+  const log = document.getElementById('log');
+
+  function addLog(msg, color) {
+    const now = new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `<span class="ts">${now}</span><span class="msg" style="color:${color||'inherit'}">${msg}</span>`;
+    log.prepend(entry);
+    if (log.children.length > 60) log.removeChild(log.lastChild);
+  }
+
+  let prevConnected = null;
+  let prevSeq = null;
+
+  async function fetchState() {
+    try {
+      const r = await fetch('/api/state');
+      const d = await r.json();
+
+      // LED
+      const led = document.getElementById('led');
+      const ledLabel = document.getElementById('led-label');
+      const ledSeq = document.getElementById('led-seq');
+
+      if (d.connected) {
+        if (d.led) {
+          led.classList.add('on');
+          ledLabel.className = 'led-label on';
+          ledLabel.textContent = 'LED ON';
+        } else {
+          led.classList.remove('on');
+          ledLabel.className = 'led-label';
+          ledLabel.textContent = 'LED OFF';
+        }
+        ledSeq.textContent = `Packet #${d.seq}`;
+      } else {
+        led.classList.remove('on');
+        ledLabel.className = 'led-label';
+        ledLabel.textContent = '-- WAITING --';
+        ledSeq.textContent = 'Packet: --';
+      }
+
+      // Pico badge
+      const picoBadge = document.getElementById('pico-badge');
+      if (d.connected) {
+        picoBadge.className = 'badge green';
+        picoBadge.innerHTML = '<span class="badge-dot"></span> CONNECTED';
+        if (prevConnected === false) {
+          addLog(`Pico connected from ${d.pico_ip}`, '#3fb950');
+          sessionStart = Date.now();
+        }
+      } else {
+        picoBadge.className = 'badge red';
+        picoBadge.innerHTML = '<span class="badge-dot"></span> DISCONNECTED';
+        if (prevConnected === true) addLog('Pico disconnected', '#f85149');
+      }
+      prevConnected = d.connected;
+
+      // IPsec badge
+      const ipsecBadge = document.getElementById('ipsec-badge');
+      if (d.ipsec) {
+        ipsecBadge.className = 'badge green';
+        ipsecBadge.innerHTML = '<span class="badge-dot"></span> ESTABLISHED';
+      } else {
+        ipsecBadge.className = 'badge red';
+        ipsecBadge.innerHTML = '<span class="badge-dot"></span> DOWN';
+      }
+
+      // Info
+      document.getElementById('pico-ip').textContent = d.pico_ip;
+      document.getElementById('last-seen').textContent = d.last_seen_ago !== null ? `${d.last_seen_ago}s ago` : '--';
+
+      // Metrics
+      document.getElementById('m-packets').textContent = d.total_packets;
+      document.getElementById('m-seq').textContent = d.connected ? d.seq : '--';
+      document.getElementById('m-latency').textContent = d.connected && d.latency_avg ? `${d.latency_avg}` : '--';
+
+      // Uptime
+      if (sessionStart && d.connected) {
+        const secs = Math.floor((Date.now() - sessionStart) / 1000);
+        document.getElementById('m-uptime').textContent = secs < 60 ? `${secs}s` : `${Math.floor(secs/60)}m ${secs%60}s`;
+      }
+
+      // IPsec detail
+      document.getElementById('ipsec-detail').textContent = d.ipsec_detail;
+
+      // Log new packets
+      if (d.connected && d.seq !== prevSeq && prevSeq !== null) {
+        addLog(`seq=${d.seq} | LED=${d.led?'ON':'OFF'} | delay=${d.latency_avg}ms`, '#58a6ff');
+      }
+      prevSeq = d.seq;
+
+    } catch(e) {
+      addLog('Failed to fetch state: ' + e.message, '#f85149');
+    }
+  }
+
+  // Poll every 500ms for smooth LED animation
+  setInterval(fetchState, 500);
+  fetchState();
+  addLog('Dashboard started. Waiting for Pico 2W...', '#d29922');
+</script>
+</body>
+</html>
