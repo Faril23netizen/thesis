@@ -36,8 +36,8 @@ Firmware ini mengukur kapasitas penyimpanan data sensor (pH, Suhu, NH3) di SRAM 
 
 ### Detail Koneksi
 
-| Komponen        | Pin Komponen | Pin Pico           | Keterangan                       |
-|-----------------|--------------|---------------------|----------------------------------|
+| Komponen        | Pin Komponen | Pin Pico            | Keterangan                       |
+|------------------|--------------|---------------------|----------------------------------|
 | pH Sensor Module | VCC          | 3V3 (pin 36)        | Supply 3.3 V                     |
 | pH Sensor Module | GND          | GND (pin 38)        |                                  |
 | pH Sensor Module | OUT / Signal | GPIO26 (ADC0)       | Analog output 0–3.3 V            |

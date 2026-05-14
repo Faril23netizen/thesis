@@ -1,0 +1,10 @@
+Skenario,Controller,Avg Reward,Toxicity (NH3 %),Konsumsi Energi
+High NH3 Danger,Rule-Based,-1.913,40.5%,0.583
+High NH3 Danger,FQL,-1.938,40.4%,0.556
+High NH3 Danger,DQN,-1.465,32.0%,0.326
+Alkaline Spike,Rule-Based,-2.687,53.7%,0.600
+Alkaline Spike,FQL,-2.665,53.5%,0.669
+Alkaline Spike,DQN,-2.203,44.0%,0.300
+Multi-Stress Grid,Rule-Based,0.918,10.1%,0.423
+Multi-Stress Grid,FQL,1.280,10.0%,0.427
+Multi-Stress Grid,DQN,1.665,7.0%,0.312

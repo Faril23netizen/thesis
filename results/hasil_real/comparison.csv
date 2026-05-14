@@ -1,0 +1,1 @@
+timestamp,real_step,pH,T_C,NH3_pct,mode,real_action,rb_action,fql_action,reward,rb_reward,energy_real,energy_rb,energy_fql,fql_steps,epsilon

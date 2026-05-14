@@ -32,16 +32,17 @@ add_executable(data_collection_test
     fql_inference.c
 )
 
-# USB Serial as stdout (no UART)
+# USB Serial as stdout — retained for debug monitoring via PuTTY/minicom
 pico_enable_stdio_usb(data_collection_test 1)
-pico_enable_stdio_uart(data_collection_test 0)
+# UART is also enabled for additional debug output
+pico_enable_stdio_uart(data_collection_test 1)
 
 target_link_libraries(data_collection_test
     pico_stdlib
     hardware_adc
     hardware_gpio
     hardware_timer
-    pico_cyw43_arch_none
+    pico_cyw43_arch_lwip_threadsafe_background
 )
 
 # Generate UF2, HEX, BIN

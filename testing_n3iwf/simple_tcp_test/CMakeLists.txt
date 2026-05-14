@@ -12,7 +12,7 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico_2w CACHE STRING "Board type")
+set(PICO_BOARD pico2_w CACHE STRING "Board type")
 
 cmake_minimum_required(VERSION 3.13)
 
@@ -26,9 +26,9 @@ add_executable(simple_tcp_test main.c)
 
 # Add definitions
 target_compile_definitions(simple_tcp_test PRIVATE
-    WIFI_SSID=\"iGWS-2.4GHz\"
-    WIFI_PASSWORD=\"qwertyui\"
-    N3IWF_SERVER_IP=\"192.168.30.2\"
+    WIFI_SSID=\"Check\"
+    WIFI_PASSWORD=\"12345678901234567890\"
+    N3IWF_SERVER_IP=\"192.168.100.79\"
     N3IWF_PORT=5005
 )
 
