@@ -45,11 +45,11 @@
 
 /* ── Wi-Fi & N3IWF Configuration ─────────────────────────────────────────── */
 /* GANTI dengan SSID dan password jaringan Wi-Fi lokal di lokasi tambak       */
-#define WIFI_SSID "Check"
-#define WIFI_PASSWORD "12345678901234567890"
+#define WIFI_SSID "N3IWF_AQUA"
+#define WIFI_PASSWORD "skripsi2026"
 
 /* IP Address Raspberry Pi 5 (N3IWF Edge Server) — sesuaikan dengan IP RPi5  */
-#define N3IWF_SERVER_IP "192.168.1.100"
+#define N3IWF_SERVER_IP "10.42.0.1"
 #define N3IWF_PORT 5005
 
 /* Timeout koneksi Wi-Fi dan socket (ms) */
@@ -172,106 +172,150 @@ static bool wifi_connect(void) {
   return true;
 }
 
-/* ── TCP Socket Handle ──────────────────────────────────────────────────── */
-static int g_sock = -1;
+/* ── TCP Socket Handle (LwIP Raw API) ────────────────────────────────────── */
+static struct tcp_pcb *g_tcp_pcb = NULL;
+static bool g_is_connected = false;
+
+static void socket_disconnect(void);
+
+static err_t tcp_connected_cb(void *arg, struct tcp_pcb *tpcb, err_t err) {
+  if (err == ERR_OK) {
+    printf("# N3IWF TCP connection established!\r\n");
+    g_is_connected = true;
+  } else {
+    printf("# [ERROR] TCP connect error: %d\r\n", err);
+  }
+  return err;
+}
+
+static void tcp_err_cb(void *arg, err_t err) {
+  printf("# [ERROR] TCP connection fatal error: %d\r\n", err);
+  g_is_connected = false;
+  if (g_tcp_pcb) {
+    tcp_close(g_tcp_pcb);
+    g_tcp_pcb = NULL;
+  }
+}
+
+static char g_recv_buf[4096];
+static int g_recv_len = 0;
+
+static err_t tcp_recv_cb(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+  if (p == NULL) {
+    printf("# [WARN] TCP connection closed by server.\r\n");
+    g_is_connected = false;
+    tcp_close(tpcb);
+    g_tcp_pcb = NULL;
+    return ERR_OK;
+  }
+  
+  /* Copy received data to buffer */
+  int copy_len = p->tot_len;
+  if (g_recv_len + copy_len > sizeof(g_recv_buf) - 1) {
+      copy_len = sizeof(g_recv_buf) - 1 - g_recv_len;
+  }
+  pbuf_copy_partial(p, g_recv_buf + g_recv_len, copy_len, 0);
+  g_recv_len += copy_len;
+  g_recv_buf[g_recv_len] = '\0';
+  
+  tcp_recved(tpcb, p->tot_len);
+  pbuf_free(p);
+  return ERR_OK;
+}
 
 static bool socket_connect(void) {
-  g_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (g_sock < 0) {
-    printf("# [ERROR] socket() failed\r\n");
+  if (g_is_connected) return true;
+
+  ip_addr_t server_ip;
+  ipaddr_aton(N3IWF_SERVER_IP, &server_ip);
+
+  printf("# Connecting to N3IWF Server %s:%d ...\r\n", N3IWF_SERVER_IP, N3IWF_PORT);
+  
+  cyw43_arch_lwip_begin();
+  if (!g_tcp_pcb) {
+    g_tcp_pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
+    tcp_err(g_tcp_pcb, tcp_err_cb);
+    tcp_recv(g_tcp_pcb, tcp_recv_cb);
+  }
+  err_t err = tcp_connect(g_tcp_pcb, &server_ip, N3IWF_PORT, tcp_connected_cb);
+  cyw43_arch_lwip_end();
+
+  if (err != ERR_OK) {
+    printf("# [ERROR] TCP connect failed to start (err=%d).\r\n", err);
+    socket_disconnect();
     return false;
   }
 
-  struct sockaddr_in server_addr = {
-      .sin_family = AF_INET,
-      .sin_port = htons(N3IWF_PORT),
-  };
-  ip4addr_aton(N3IWF_SERVER_IP, (ip4_addr_t *)&server_addr.sin_addr);
-
-  printf("# Connecting to N3IWF Server %s:%d ...\r\n", N3IWF_SERVER_IP,
-         N3IWF_PORT);
-  if (connect(g_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) !=
-      0) {
-    printf("# [ERROR] TCP connect failed.\r\n");
-    closesocket(g_sock);
-    g_sock = -1;
-    return false;
+  /* Wait for connection to establish */
+  for(int i=0; i<30 && !g_is_connected && g_tcp_pcb; i++) {
+    sleep_ms(100);
   }
-
-  /* Set recv timeout so it doesn't block the main loop */
-  struct timeval tv = {.tv_sec = 0, .tv_usec = SOCKET_RECV_TIMEOUT_MS * 1000};
-  setsockopt(g_sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
-  printf("# N3IWF TCP connection established!\r\n");
-  return true;
+  
+  if (!g_is_connected) {
+    printf("# [WARN] TCP connection timeout.\r\n");
+    socket_disconnect();
+  }
+  
+  return g_is_connected;
 }
 
 static void socket_disconnect(void) {
-  if (g_sock >= 0) {
-    closesocket(g_sock);
-    g_sock = -1;
+  g_is_connected = false;
+  if (g_tcp_pcb) {
+    cyw43_arch_lwip_begin();
+    tcp_close(g_tcp_pcb);
+    g_tcp_pcb = NULL;
+    cyw43_arch_lwip_end();
   }
 }
 
 /* ── Send DATA string via TCP ───────────────────────────────────────────── */
-/* Returns false if socket is broken (caller should reconnect)               */
-static bool socket_send_data(int32_t ph_x1000, int32_t temp_x100,
-                             uint8_t action) {
-  if (g_sock < 0)
-    return false;
+static bool socket_send_data(int32_t ph_x1000, int32_t temp_x100, uint8_t action) {
+  if (!g_is_connected || !g_tcp_pcb) return false;
+  
   char buf[64];
-  int len = snprintf(buf, sizeof(buf), "DATA:%ld,%ld,%u\n", (long)ph_x1000,
-                     (long)temp_x100, (unsigned)action);
-  return send(g_sock, buf, len, 0) == len;
+  int len = snprintf(buf, sizeof(buf), "DATA:%ld,%ld,%u\n", (long)ph_x1000, (long)temp_x100, (unsigned)action);
+  
+  cyw43_arch_lwip_begin();
+  err_t err = tcp_write(g_tcp_pcb, buf, len, TCP_WRITE_FLAG_COPY);
+  if (err == ERR_OK) {
+    tcp_output(g_tcp_pcb);
+  }
+  cyw43_arch_lwip_end();
+  
+  return err == ERR_OK;
 }
 
 /* ── Receive & parse Q-table from TCP ──────────────────────────────────── */
-static char g_recv_buf[4096]; /* accumulates partial TCP frames           */
-static int g_recv_len = 0;
-
 static void check_wifi_input(FQL_QTable_t *qt) {
-  if (g_sock < 0)
-    return;
+  if (!g_is_connected || g_recv_len == 0) return;
 
-  /* Append any newly received bytes to the accumulation buffer */
-  int n = recv(g_sock, g_recv_buf + g_recv_len,
-               sizeof(g_recv_buf) - g_recv_len - 1, 0);
-  if (n > 0) {
-    g_recv_len += n;
-    g_recv_buf[g_recv_len] = '\0';
-  } else if (n == 0) {
-    /* Server closed connection */
-    printf("# [WARN] N3IWF server disconnected.\r\n");
-    socket_disconnect();
-    return;
-  }
-  /* n < 0 → timeout (no data yet), that is fine — keep accumulating */
-
-  /* Look for complete line ending with '\n' */
   char *nl = strchr(g_recv_buf, '\n');
-  if (!nl)
-    return;   /* not a complete line yet */
+  if (!nl) return;   /* not a complete line yet */
+  
   *nl = '\0'; /* terminate the line      */
 
-  /* Process the line */
   if (strncmp(g_recv_buf, "QTABLE:", 7) == 0) {
-    /* fql_parse_qtable expects the full "QTABLE:..." string */
     if (fql_parse_qtable(g_recv_buf, qt)) {
-      printf("# [OK] Q-table loaded (%d rules x %d actions)\r\n", FQL_N_RULES,
-             FQL_N_ACTIONS);
-      send(g_sock, "ACK:QTABLE_LOADED\n", 18, 0);
+      printf("# [OK] Q-table loaded (%d rules x %d actions)\r\n", FQL_N_RULES, FQL_N_ACTIONS);
+      cyw43_arch_lwip_begin();
+      tcp_write(g_tcp_pcb, "ACK:QTABLE_LOADED\n", 18, TCP_WRITE_FLAG_COPY);
+      tcp_output(g_tcp_pcb);
+      cyw43_arch_lwip_end();
     } else {
       printf("# [ERROR] Q-table parse failed.\r\n");
-      send(g_sock, "ACK:QTABLE_ERROR\n", 17, 0);
+      cyw43_arch_lwip_begin();
+      tcp_write(g_tcp_pcb, "ACK:QTABLE_ERROR\n", 17, TCP_WRITE_FLAG_COPY);
+      tcp_output(g_tcp_pcb);
+      cyw43_arch_lwip_end();
     }
   } else {
     printf("# [WARN] unknown command: %s\r\n", g_recv_buf);
   }
 
-  /* Shift remaining bytes to the front of the buffer */
+  /* Shift remaining bytes */
   int remaining = g_recv_len - (int)(nl - g_recv_buf) - 1;
-  if (remaining > 0)
-    memmove(g_recv_buf, nl + 1, remaining);
+  if (remaining > 0) memmove(g_recv_buf, nl + 1, remaining);
   g_recv_len = remaining > 0 ? remaining : 0;
 }
 

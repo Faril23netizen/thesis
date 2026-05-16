@@ -32,6 +32,9 @@ add_executable(data_collection_test
     fql_inference.c
 )
 
+# Tell CMake where to find lwipopts.h
+target_include_directories(data_collection_test PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+
 # USB Serial as stdout — retained for debug monitoring via PuTTY/minicom
 pico_enable_stdio_usb(data_collection_test 1)
 # UART is also enabled for additional debug output
