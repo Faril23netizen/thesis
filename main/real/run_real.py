@@ -393,6 +393,7 @@ def main():
     logger.info("PHASE B — FQL learning from real Pico data + virtual sim...")
 
     prev_data: dict | None = None
+    reward = 0.0
 
     while not _shutdown:
         # ── Real: receive data from Pico ─────────────────────────────────── #
