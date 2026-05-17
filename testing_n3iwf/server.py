@@ -343,9 +343,59 @@ def get_history():
     with state_lock:
         return jsonify(list(history))
 
+# ── Simulation Mode (tanpa Pico) ─────────────────────────────────────────────
+import math, random
+
+def simulate_pico():
+    """Generate sensor data simulasi pH & suhu tanpa Pico fisik."""
+    t = 0
+    pH  = 7.2
+    temp = 28.0
+    print("[SIM] Simulasi Pico aktif — generate data setiap 2 detik")
+    while True:
+        # Simulasi pH naik-turun sekitar 7.0-8.0
+        pH   = 7.5 + 0.5 * math.sin(t / 30.0) + random.uniform(-0.05, 0.05)
+        temp = 28.0 + 2.0 * math.sin(t / 60.0) + random.uniform(-0.1, 0.1)
+        pH   = round(max(5.5, min(9.5, pH)), 3)
+        temp = round(max(20.0, min(35.0, temp)), 2)
+
+        inf = run_inference(pH, temp)
+        now = time.time()
+        with state_lock:
+            state["connected"] = True
+            state["pico_ip"]   = "SIMULASI"
+            state["mode"]      = "REAL"
+            state["pH"]        = pH
+            state["T"]         = temp
+            state["rb_action"]    = inf.get("rb",  {}).get("name", "--")
+            state["fql_action"]   = inf.get("fql", {}).get("name", "--")
+            state["dqn_action"]   = inf.get("dqn", {}).get("name", "--")
+            state["rb_infer_ms"]  = inf.get("rb",  {}).get("ms", 0)
+            state["fql_infer_ms"] = inf.get("fql", {}).get("ms", 0)
+            state["dqn_infer_ms"] = inf.get("dqn", {}).get("ms", 0)
+            state["last_seen"]    = now
+            state["total_packets"] += 1
+            history.append({"ts": now, "pH": pH, "T": temp,
+                            "rb": state["rb_action"],
+                            "fql": state["fql_action"],
+                            "dqn": state["dqn_action"],
+                            "latency": 0})
+        print(f"[SIM] pH={pH:.3f} T={temp:.1f}C | "
+              f"RB={state['rb_action']} FQL={state['fql_action']} DQN={state['dqn_action']}")
+        t += 1
+        time.sleep(2)
+
 # ── Main ─────────────────────────────────────────────────────────────────────
+import sys as _sys
+SIM_MODE = "--sim" in _sys.argv
+
 if __name__ == '__main__':
-    threading.Thread(target=tcp_server, daemon=True).start()
+    if SIM_MODE:
+        threading.Thread(target=simulate_pico, daemon=True).start()
+        print("[INFO] Mode: SIMULASI (tanpa Pico fisik)")
+    else:
+        threading.Thread(target=tcp_server, daemon=True).start()
+        print("[INFO] Mode: REAL (menunggu Pico di port 5005)")
     threading.Thread(target=ipsec_monitor, daemon=True).start()
     threading.Thread(target=load_network_summary, daemon=True).start()
 
