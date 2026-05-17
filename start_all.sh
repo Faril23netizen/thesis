@@ -30,6 +30,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESULTS_DIR="$SCRIPT_DIR/results"
 PIDS_FILE="$RESULTS_DIR/.pids"
 
+# Set PYTHONPATH to include project root
+export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
+
 mkdir -p "$RESULTS_DIR"
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════════════════${NC}"
