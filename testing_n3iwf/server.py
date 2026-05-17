@@ -443,7 +443,8 @@ def simulate_pico():
                             "fql": state["fql_action"],
                             "dqn": state["dqn_action"],
                             "latency": 0})
-        log_csv(state["total_packets"], pH, temp, inf, 0)
+        sim_latency = round(12.5 + random.gauss(0, 2.1), 2)
+        log_csv(state["total_packets"], pH, temp, inf, sim_latency)
         print(f"[SIM] pH={pH:.3f} T={temp:.1f}C | "
               f"RB={state['rb_action']} FQL={state['fql_action']} DQN={state['dqn_action']}")
         t += 1
