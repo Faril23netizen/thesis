@@ -1,8 +1,31 @@
 # ⚡ Quick Start - Aquaculture N3IWF
 
-## 🚀 CARA PRODUCTION (Recommended)
+## 🚀 CARA 1: N3IWF Server (Recommended - Ada Dashboard)
 
-### **Dengan Dashboard (NEW!)**
+**Untuk deployment dengan N3IWF + Dashboard real-time**
+
+```bash
+# Jalankan server (TCP + Dashboard)
+python3 n3iwf/server.py
+
+# Akses dashboard
+http://<IP_RPi5>:5000
+```
+
+**Output:** `results/n3iwf_real/n3iwf_real_log.csv`
+
+**Analisis:**
+```bash
+python3 n3iwf/analyze_n3iwf_real.py
+```
+
+---
+
+## 🎯 CARA 2: run_real.py (Production - No Dashboard)
+
+**Untuk deployment production dengan virtual simulator**
+
+### **Dengan Dashboard (Optional)**
 
 ```bash
 # Terminal 1: Jalankan sistem
@@ -25,42 +48,27 @@ python3 main/real/run_real.py
 tail -f results/hasil_real/pico_monitor.log
 ```
 
-### **Analisis**
+**Output:** `results/hasil_real/comparison.csv`
 
+**Analisis:**
 ```bash
-# Setelah 100+ steps
 python3 main/real/analyze_results.py
 ```
 
-**Output:** `results/hasil_real/analysis_plots.png`
-
 ---
 
-## 🎯 CARA TESTING (n3iwf/server.py)
+## 📊 Perbedaan Kedua Cara
 
-**⚠️ HANYA UNTUK TESTING MODE (bukan real Pico)**
-
-```bash
-# Jalankan
-python3 n3iwf/server.py --sim
-
-# Akses dashboard
-http://<IP_RPi5>:5000
-```
-
-**Catatan:** `n3iwf/server.py` untuk testing dengan data sintetis, bukan untuk real Pico deployment!
-
----
-
-## 📊 Perbedaan Singkat
-
-| | run_real.py + dashboard.py | n3iwf/server.py |
+| Aspek | n3iwf/server.py | run_real.py |
 |---|---|---|
-| Data | Real Pico | Simulasi |
-| Dashboard | ✅ (port 5000) | ✅ (port 5000) |
-| Virtual Sim | ✅ | ❌ |
-| Output | `hasil_real/` | `n3iwf_real/` |
-| Tujuan | **Production** | Testing |
+| **Dashboard** | ✅ Built-in | ❌ (perlu dashboard.py terpisah) |
+| **TCP Server** | ✅ Port 5005 | ✅ WiFiBridge internal |
+| **Virtual Sim** | ❌ | ✅ Interleaved |
+| **Output** | `n3iwf_real/` | `hasil_real/` |
+| **Analisis** | `analyze_n3iwf_real.py` | `analyze_results.py` |
+| **Tujuan** | **N3IWF Testing** | Production |
+
+**Rekomendasi:** Gunakan **`n3iwf/server.py`** untuk deployment dengan N3IWF + dashboard!
 
 ---
 
