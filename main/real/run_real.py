@@ -40,6 +40,15 @@ from main.env.pond_simulator import PondSimulator, ScenarioType, SimConfig
 from main.env.aerator_sim import AeratorSim
 from dqn.dqn_agent import DQNAgent
 
+# Import Home Assistant Bridge
+try:
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "n3iwf"))
+    from homeassistant_bridge import HomeAssistantBridge
+    HA_AVAILABLE = True
+except ImportError as e:
+    print(f"[HA] Import failed: {e}")
+    HA_AVAILABLE = False
+
 # ── Path configuration ───────────────────────────────────────────────────── #
 # Go up two levels from 'main/real' to the root directory
 BASE_DIR        = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -52,6 +61,7 @@ DQN_MODEL_FILE  = os.path.join(RESULTS_REAL, "dqn_model.pt")
 LOG_FILE        = os.path.join(RESULTS_REAL, "fql.log")
 LOG_ERROR_FILE  = os.path.join(RESULTS_REAL, "fql_error.log")
 COMPARISON_CSV  = os.path.join(RESULTS_REAL, "comparison.csv")
+HA_COMPARISON_CSV = os.path.join(RESULTS_REAL, "ha_comparison.csv")
 STATE_JSON_FILE = os.path.join(RESULTS_REAL, "state.json")
 
 # ── Constants ────────────────────────────────────────────────────────────── #
@@ -261,6 +271,57 @@ def _init_comparison_csv() -> None:
         ])
         _csv_file.flush()
 
+# ── Home Assistant Comparison CSV writer ──────────────────────────────────── #
+
+_ha_csv_file   = None
+_ha_csv_writer = None
+
+def _init_ha_comparison_csv() -> None:
+    global _ha_csv_file, _ha_csv_writer
+    os.makedirs(RESULTS_REAL, exist_ok=True)
+    write_header = not os.path.exists(HA_COMPARISON_CSV)
+    _ha_csv_file   = open(HA_COMPARISON_CSV, "a", newline="")
+    _ha_csv_writer = csv.writer(_ha_csv_file)
+    if write_header:
+        _ha_csv_writer.writerow([
+            "timestamp", "real_step",
+            # Real sensor data (from Pico via N3IWF)
+            "real_pH", "real_T_C",
+            # IoT sensor data (from Home Assistant)
+            "iot_pH", "iot_T_C",
+            # Differences
+            "pH_diff", "T_diff",
+            # Latency comparison
+            "real_latency_ms", "iot_latency_ms",
+            # Data quality
+            "iot_available",
+        ])
+        _ha_csv_file.flush()
+
+def _log_ha_comparison(real_step: int, 
+                       real_pH: float, real_T: float,
+                       iot_pH: float | None, iot_T: float | None,
+                       real_latency: float, iot_latency: float) -> None:
+    if _ha_csv_writer is None:
+        return
+    
+    iot_available = (iot_pH is not None and iot_T is not None)
+    pH_diff = abs(real_pH - iot_pH) if iot_available else None
+    T_diff = abs(real_T - iot_T) if iot_available else None
+    
+    _ha_csv_writer.writerow([
+        time.strftime("%Y-%m-%d %H:%M:%S"), real_step,
+        round(real_pH, 4), round(real_T, 2),
+        round(iot_pH, 4) if iot_pH is not None else "N/A",
+        round(iot_T, 2) if iot_T is not None else "N/A",
+        round(pH_diff, 4) if pH_diff is not None else "N/A",
+        round(T_diff, 2) if T_diff is not None else "N/A",
+        round(real_latency, 2),
+        round(iot_latency, 2),
+        "YES" if iot_available else "NO",
+    ])
+    _ha_csv_file.flush()
+
 def _log_comparison(real_step: int, pH: float, T: float,
                     mode: str, real_action: int,
                     fql: FQLAgent, reward: float,
@@ -313,10 +374,15 @@ _init_comparison_csv()
 def main():
     global _shutdown
 
+    # Parse command line arguments for Home Assistant
+    use_ha = "--with-ha" in sys.argv
+    
     logger.info("=" * 65)
     logger.info("Aquaculture FQL Controller — Raspberry Pi 4")
     logger.info(f"  Virtual sim   : {VIRTUAL_STEPS_PER_REAL} steps per real step")
     logger.info(f"  Episode length: {VIRTUAL_EPISODE_LEN} steps per scenario")
+    if use_ha and HA_AVAILABLE:
+        logger.info(f"  Home Assistant: ENABLED (comparison mode)")
     logger.info("=" * 65)
 
     # ── Initialize main objects ──────────────────────────────────────────── #
@@ -335,6 +401,32 @@ def main():
     if USE_AERATOR_SIM:
         logger.info("Aerator sim : ENABLED (typical 5-30W aquaculture pump)")
         logger.info("             Set USE_AERATOR_SIM=False when real aerator connected")
+    
+    # ── Initialize Home Assistant Bridge (if enabled) ────────────────────── #
+    ha_bridge = None
+    if use_ha and HA_AVAILABLE:
+        # EDIT INI SESUAI SETUP HOME ASSISTANT ANDA
+        HA_URL = os.getenv("HA_URL", "http://192.168.1.100:8123")
+        HA_TOKEN = os.getenv("HA_TOKEN", "your_long_lived_access_token_here")
+        HA_PH_ENTITY = os.getenv("HA_PH_ENTITY", "sensor.aquaculture_ph")
+        HA_TEMP_ENTITY = os.getenv("HA_TEMP_ENTITY", "sensor.aquaculture_temperature")
+        
+        ha_bridge = HomeAssistantBridge(
+            url=HA_URL,
+            token=HA_TOKEN,
+            ph_entity=HA_PH_ENTITY,
+            temp_entity=HA_TEMP_ENTITY
+        )
+        
+        if ha_bridge.test_connection():
+            _init_ha_comparison_csv()
+            logger.info(f"[HA] Connected to Home Assistant at {HA_URL}")
+            logger.info(f"[HA] Comparison data will be saved to {HA_COMPARISON_CSV}")
+        else:
+            logger.warning("[HA] Failed to connect to Home Assistant — comparison disabled")
+            ha_bridge = None
+    elif use_ha and not HA_AVAILABLE:
+        logger.warning("[HA] Home Assistant requested but module not available")
 
     dqn_ready_logged      = False
     dqn_model_ready       = False  # DQN trained but not yet controlling Pico
@@ -407,6 +499,26 @@ def main():
         T_real  = data["T"]
         action  = data["action"]
         real_steps += 1
+        
+        # Get latency from bridge (time since last packet)
+        real_latency = data.get("latency_ms", 0)
+
+        # ── Get IoT data from Home Assistant (if enabled) ────────────────── #
+        iot_pH, iot_T, iot_latency = None, None, 0
+        if ha_bridge is not None:
+            iot_pH, iot_T, iot_latency = ha_bridge.get_sensor_data()
+            _log_ha_comparison(real_steps, pH_real, T_real, 
+                             iot_pH, iot_T, real_latency, iot_latency)
+            
+            if iot_pH is not None and iot_T is not None:
+                pH_diff = abs(pH_real - iot_pH)
+                T_diff = abs(T_real - iot_T)
+                if real_steps % LOG_INTERVAL == 0:
+                    logger.info(
+                        f"[HA] IoT: pH={iot_pH:.3f} T={iot_T:.1f}°C | "
+                        f"Diff: ΔpH={pH_diff:.3f} ΔT={T_diff:.1f}°C | "
+                        f"Latency: Real={real_latency:.1f}ms IoT={iot_latency:.1f}ms"
+                    )
 
         # Apply aerator sim using the action that was running last step
         action_for_sim = prev_data["action"] if prev_data else ACTION_LOW

@@ -322,7 +322,11 @@ static void check_wifi_input(FQL_QTable_t *qt) {
 /* ── main ───────────────────────────────────────────────────────────────── */
 int main(void) {
   stdio_init_all();
-  cyw43_arch_init();
+  if (cyw43_arch_init()) {
+    printf("# [ERROR] cyw43_arch_init failed!\r\n");
+    return 1;
+  }
+  cyw43_arch_enable_sta_mode();
 
   /* Init relay pins */
   gpio_init(RELAY_PIN_A);

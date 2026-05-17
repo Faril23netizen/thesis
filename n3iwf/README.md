@@ -2,6 +2,29 @@
 
 Panduan ini menjelaskan cara mengonfigurasi **Amarisoft 5G Callbox** dan **Raspberry Pi 5** untuk menjalankan N3IWF (*Non-3GPP Interworking Function*) sebagai bagian dari Integrated System Architecture thesis ini.
 
+## 🔄 Perbedaan: `testing_n3iwf` vs `n3iwf`
+
+| Aspek | `testing_n3iwf/` | `n3iwf/` |
+|---|---|---|
+| **Mode** | Simulasi (`--sim`) | Real (data dari Pico) |
+| **Data Source** | Sintetis (generated) | Pico 2W via TCP |
+| **Callbox** | Tidak perlu | Opsional (bisa tanpa) |
+| **Learning** | Tidak ada (hanya inference) | Progressive: RB→FQL→DQN |
+| **Tujuan** | Testing network metrics | Real deployment + learning |
+| **File Log** | `results/n3iwf/n3iwf_log.csv` | `results/n3iwf_real/n3iwf_real_log.csv` |
+| **Analisis** | `testing_n3iwf/analyze_n3iwf.py` | `n3iwf/analyze_n3iwf_real.py` |
+
+**Cara Jalankan:**
+```bash
+# Testing (simulasi tanpa hardware)
+python3 testing_n3iwf/server.py --sim
+python3 testing_n3iwf/analyze_n3iwf.py
+
+# Real (dengan Pico, progressive learning)
+python3 n3iwf/server.py
+python3 n3iwf/analyze_n3iwf_real.py
+```
+
 ## 📐 Arsitektur Jaringan
 
 ```
