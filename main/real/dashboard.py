@@ -25,6 +25,10 @@ COMPARISON_CSV = os.path.join(RESULTS_DIR, "comparison.csv")
 CALLBOX_STATS = os.path.join(NETWORK_DIR, "callbox_stats.json")
 N3IWF_STATUS = os.path.join(NETWORK_DIR, "n3iwf_status.json")
 
+# Ensure directories exist
+os.makedirs(RESULTS_DIR, exist_ok=True)
+os.makedirs(NETWORK_DIR, exist_ok=True)
+
 app = Flask(__name__)
 
 # HTML Template with Charts
@@ -594,8 +598,38 @@ def get_state():
 def get_network():
     """Read network stats from callbox_stats.json"""
     try:
+        # Check if file exists and is recent
         if not os.path.exists(CALLBOX_STATS):
-            return jsonify({"error": "callbox_stats.json not found"})
+            return jsonify({
+                "error": "Network stats not available yet",
+                "ipsec_status": "UNKNOWN",
+                "avg_latency_ms": 0,
+                "packet_loss_rate": 0,
+                "throughput": 0,
+                "packets_sent": 0,
+                "packets_dropped": 0,
+                "uptime": 0,
+                "amf_status": "UNKNOWN",
+                "smf_status": "UNKNOWN",
+                "upf_status": "UNKNOWN"
+            })
+        
+        # Check if file is stale (older than 30 seconds)
+        file_age = time.time() - os.path.getmtime(CALLBOX_STATS)
+        if file_age > 30:
+            return jsonify({
+                "error": "Network stats are stale",
+                "ipsec_status": "STALE",
+                "avg_latency_ms": 0,
+                "packet_loss_rate": 0,
+                "throughput": 0,
+                "packets_sent": 0,
+                "packets_dropped": 0,
+                "uptime": 0,
+                "amf_status": "UNKNOWN",
+                "smf_status": "UNKNOWN",
+                "upf_status": "UNKNOWN"
+            })
         
         with open(CALLBOX_STATS, 'r') as f:
             stats = json.load(f)
@@ -618,8 +652,34 @@ def get_network():
             "upf_status": stats.get('upf_status', 'UNKNOWN')
         })
     
+    except json.JSONDecodeError:
+        return jsonify({
+            "error": "Invalid network stats format",
+            "ipsec_status": "ERROR",
+            "avg_latency_ms": 0,
+            "packet_loss_rate": 0,
+            "throughput": 0,
+            "packets_sent": 0,
+            "packets_dropped": 0,
+            "uptime": 0,
+            "amf_status": "ERROR",
+            "smf_status": "ERROR",
+            "upf_status": "ERROR"
+        })
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({
+            "error": str(e),
+            "ipsec_status": "ERROR",
+            "avg_latency_ms": 0,
+            "packet_loss_rate": 0,
+            "throughput": 0,
+            "packets_sent": 0,
+            "packets_dropped": 0,
+            "uptime": 0,
+            "amf_status": "ERROR",
+            "smf_status": "ERROR",
+            "upf_status": "ERROR"
+        })
 
 
 if __name__ == '__main__':

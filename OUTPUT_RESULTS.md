@@ -363,6 +363,47 @@ pH_std,0.456
 
 ## 🔍 Cara Lihat Hasil
 
+### 0. Dashboard Real-time (Recommended!) ⭐⭐⭐
+
+**URL:** `http://192.168.137.251:5000` (atau IP RPi5 Anda)
+
+**Fitur Lengkap:**
+- 📈 **Grafik Real-time**: pH & Temperature (dual-axis chart dengan Chart.js)
+- 🌐 **Network Performance**: 
+  - Latency (ms)
+  - Packet Loss (%)
+  - Throughput (Mbps)
+  - Packets Sent/Dropped
+  - Uptime (hours)
+- 📡 **5G Core Status**: AMF, SMF, UPF status
+- 🔒 **IPsec Tunnel**: Connection status (ESTABLISHED/DOWN)
+- 🤖 **AI Control**: 
+  - Current Phase (RB/FQL/DQN)
+  - Action (OFF/LOW/MED/HIGH)
+  - Reward
+  - Real Steps
+  - Buffer Size
+  - FQL Epsilon
+- 🎨 **Professional Dark Theme**: Modern, responsive UI
+- 🔄 **Auto-refresh**: Setiap 2 detik
+- 🛡️ **Error Handling**: Dashboard tetap berjalan meskipun network stats belum tersedia
+
+**Cara Akses:**
+```bash
+# Dari browser di laptop/PC yang terhubung ke RPi5
+http://192.168.137.251:5000
+
+# Atau dari RPi5 sendiri
+http://localhost:5000
+```
+
+**Troubleshooting:**
+- Jika dashboard tidak connect, cek log: `tail -f results/dashboard.log`
+- Pastikan sistem running: `sudo ./start_all.sh`
+- Cek port 5000: `sudo netstat -tulpn | grep 5000`
+
+---
+
 ### 1. PDF Report (Recommended)
 
 ```bash
