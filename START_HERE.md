@@ -3,9 +3,10 @@
 ## 📖 File Penting (Baca Ini Aja!)
 
 1. **`START_HERE.md`** ← Kamu di sini (1 menit)
-2. **`OUTPUT_RESULTS.md`** ← Apa aja hasilnya? (3 menit)
-3. **`SINGLE_COMMAND_USAGE.md`** ← Panduan lengkap (5 menit)
-4. **`README.md`** ← Overview project
+2. **`DASHBOARD_ACCESS.md`** ← Cara akses dashboard (2 menit) ⭐
+3. **`OUTPUT_RESULTS.md`** ← Apa aja hasilnya? (3 menit)
+4. **`SINGLE_COMMAND_USAGE.md`** ← Panduan lengkap (5 menit)
+5. **`README.md`** ← Overview project
 
 **Sisanya:** File teknis (ga perlu dibaca)
 
