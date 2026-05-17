@@ -75,9 +75,9 @@ def state_reader():
             if os.path.exists(STATE_JSON):
                 mtime = os.path.getmtime(STATE_JSON)
                 if mtime != last_mtime:
-                    last_mtime = mtime
                     with open(STATE_JSON) as f:
                         s = json.load(f)
+                    last_mtime = mtime
                     with lock:
                         state["pH"]             = s.get("pH")
                         state["T"]              = s.get("T")
