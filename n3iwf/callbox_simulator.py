@@ -344,13 +344,19 @@ class CallboxSimulator:
     
     def _save_stats(self):
         """Save statistics to file"""
+        log(f"Stats saver started, will save to {STATS_FILE}", "INFO")
         while self.running:
             try:
                 with stats_lock:
                     stats_copy = stats.copy()
                 
+                # Ensure directory exists
+                os.makedirs(os.path.dirname(STATS_FILE), exist_ok=True)
+                
                 with open(STATS_FILE, "w") as f:
                     json.dump(stats_copy, f, indent=2)
+                
+                log(f"Stats saved: uptime={stats_copy['uptime']}s, ipsec={stats_copy['ipsec_status']}", "DEBUG")
                 
             except Exception as e:
                 log(f"Error saving stats: {e}", "ERROR")
