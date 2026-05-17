@@ -29,15 +29,53 @@ from datetime import datetime
 from flask import Flask, jsonify, render_template
 
 # ── Path setup ────────────────────────────────────────────────────────────────
+import csv as _csv
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BASE_DIR)
 
-RESULTS_DIR = os.path.join(BASE_DIR, "results", "hasil_real")
-NETWORK_DIR = os.path.join(BASE_DIR, "results", "network")
+RESULTS_DIR  = os.path.join(BASE_DIR, "results", "hasil_real")
+NETWORK_DIR  = os.path.join(BASE_DIR, "results", "network")
+N3IWF_DIR    = os.path.join(BASE_DIR, "results", "n3iwf")
 os.makedirs(RESULTS_DIR, exist_ok=True)
 os.makedirs(NETWORK_DIR, exist_ok=True)
+os.makedirs(N3IWF_DIR,   exist_ok=True)
 
 NETWORK_SUMMARY = os.path.join(NETWORK_DIR, "network_summary.json")
+N3IWF_CSV       = os.path.join(N3IWF_DIR,   "n3iwf_log.csv")
+
+# ── CSV Logger ────────────────────────────────────────────────────────────────
+_csv_lock = threading.Lock()
+_csv_initialized = False
+
+def _init_csv():
+    global _csv_initialized
+    if _csv_initialized:
+        return
+    with open(N3IWF_CSV, "w", newline="") as f:
+        w = _csv.writer(f)
+        w.writerow(["timestamp", "packet_no", "pH", "T_C",
+                    "rb_action", "fql_action", "dqn_action",
+                    "rb_ms", "fql_ms", "dqn_ms",
+                    "latency_ms"])
+    _csv_initialized = True
+
+def log_csv(packet_no, pH, T, inf, latency):
+    with _csv_lock:
+        _init_csv()
+        with open(N3IWF_CSV, "a", newline="") as f:
+            w = _csv.writer(f)
+            w.writerow([
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                packet_no, round(pH, 3), round(T, 2),
+                inf.get("rb",  {}).get("name", "--"),
+                inf.get("fql", {}).get("name", "--"),
+                inf.get("dqn", {}).get("name", "--"),
+                inf.get("rb",  {}).get("ms", 0),
+                inf.get("fql", {}).get("ms", 0),
+                inf.get("dqn", {}).get("ms", 0),
+                latency,
+            ])
 
 # ── Load AI agents (optional) ────────────────────────────────────────────────
 RB_AVAILABLE  = False
@@ -237,6 +275,7 @@ def tcp_server():
                                     "dqn": state["dqn_action"],
                                     "latency": latency
                                 })
+                            log_csv(state["total_packets"], pH, T, inf, latency)
                             print(f"[REAL] pH={pH:.2f} T={T:.1f}°C | "
                                   f"RB={state['rb_action']}({state['rb_infer_ms']:.2f}ms) "
                                   f"FQL={state['fql_action']}({state['fql_infer_ms']:.2f}ms) "
@@ -404,6 +443,7 @@ def simulate_pico():
                             "fql": state["fql_action"],
                             "dqn": state["dqn_action"],
                             "latency": 0})
+        log_csv(state["total_packets"], pH, temp, inf, 0)
         print(f"[SIM] pH={pH:.3f} T={temp:.1f}C | "
               f"RB={state['rb_action']} FQL={state['fql_action']} DQN={state['dqn_action']}")
         t += 1
