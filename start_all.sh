@@ -100,7 +100,7 @@ echo ""
 # Step 3: Start Callbox Simulator
 ################################################################################
 echo -e "${YELLOW}[3/7] Starting Callbox 5G Simulator...${NC}"
-python3 "$SCRIPT_DIR/n3iwf/callbox_simulator.py" > "$RESULTS_DIR/callbox.log" 2>&1 &
+PYTHONPATH="$SCRIPT_DIR" python3 "$SCRIPT_DIR/n3iwf/callbox_simulator.py" > "$RESULTS_DIR/callbox.log" 2>&1 &
 CALLBOX_PID=$!
 echo "$CALLBOX_PID" >> "$PIDS_FILE"
 echo -e "${GREEN}✅ Callbox started (PID: $CALLBOX_PID)${NC}"
@@ -142,7 +142,7 @@ echo ""
 # Step 5: Start N3IWF Client
 ################################################################################
 echo -e "${YELLOW}[5/7] Starting N3IWF Client...${NC}"
-python3 "$SCRIPT_DIR/n3iwf/n3iwf_client.py" > "$RESULTS_DIR/n3iwf_client.log" 2>&1 &
+PYTHONPATH="$SCRIPT_DIR" python3 "$SCRIPT_DIR/n3iwf/n3iwf_client.py" > "$RESULTS_DIR/n3iwf_client.log" 2>&1 &
 N3IWF_PID=$!
 echo "$N3IWF_PID" >> "$PIDS_FILE"
 echo -e "${GREEN}✅ N3IWF Client started (PID: $N3IWF_PID)${NC}"
@@ -178,7 +178,7 @@ REAL_USER="${SUDO_USER:-$USER}"
 REAL_HOME=$(eval echo ~$REAL_USER)
 
 # Start run_real.py as real user
-sudo -u "$REAL_USER" python3 "$SCRIPT_DIR/main/real/run_real.py" > "$RESULTS_DIR/run_real.log" 2>&1 &
+sudo -u "$REAL_USER" PYTHONPATH="$SCRIPT_DIR" python3 "$SCRIPT_DIR/main/real/run_real.py" > "$RESULTS_DIR/run_real.log" 2>&1 &
 RUNREAL_PID=$!
 echo "$RUNREAL_PID" >> "$PIDS_FILE"
 echo -e "${GREEN}✅ run_real.py started (PID: $RUNREAL_PID)${NC}"
@@ -186,7 +186,7 @@ echo -e "${BLUE}   Log: $RESULTS_DIR/run_real.log${NC}"
 sleep 2
 
 # Start dashboard as real user
-sudo -u "$REAL_USER" python3 "$SCRIPT_DIR/main/real/dashboard.py" > "$RESULTS_DIR/dashboard.log" 2>&1 &
+sudo -u "$REAL_USER" PYTHONPATH="$SCRIPT_DIR" python3 "$SCRIPT_DIR/main/real/dashboard.py" > "$RESULTS_DIR/dashboard.log" 2>&1 &
 DASHBOARD_PID=$!
 echo "$DASHBOARD_PID" >> "$PIDS_FILE"
 echo -e "${GREEN}✅ Dashboard started (PID: $DASHBOARD_PID)${NC}"
