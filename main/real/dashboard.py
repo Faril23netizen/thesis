@@ -51,6 +51,7 @@ HTML_TEMPLATE = """
     <title>Aquaculture Dashboard</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="refresh" content="2">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -248,7 +249,7 @@ HTML_TEMPLATE = """
         </div>
 
         <!-- Error Banner -->
-        <div id="error-banner" class="error-banner" style="display: none;">
+        <div id="error-banner" class="error-banner" style="{% if not has_data %}display: block;{% else %}display: none;{% endif %}">
             <h3>⚠️ System Not Running</h3>
             <p>Please start the system: <code>sudo ./start_all.sh</code></p>
         </div>
@@ -257,23 +258,23 @@ HTML_TEMPLATE = """
         <div class="status-bar">
             <div class="status-card">
                 <div class="status-label">System Status</div>
-                <div class="status-value status-offline pulse" id="system-status">Connecting...</div>
+                <div class="status-value {% if has_data %}status-online{% else %}status-offline{% endif %}" id="system-status">{% if has_data %}Online{% else %}Connecting...{% endif %}</div>
             </div>
             <div class="status-card">
                 <div class="status-label">IPsec Tunnel</div>
-                <div class="status-value status-offline" id="ipsec-status">Unknown</div>
+                <div class="status-value {% if ipsec_status == 'ESTABLISHED' %}status-online{% else %}status-offline{% endif %}" id="ipsec-status">{{ ipsec_status }}</div>
             </div>
             <div class="status-card">
                 <div class="status-label">Pico 2W</div>
-                <div class="status-value status-offline" id="pico-status">Disconnected</div>
+                <div class="status-value {% if has_data and pH != 'null' %}status-online{% else %}status-offline{% endif %}" id="pico-status">{% if has_data and pH != 'null' %}Connected{% else %}Disconnected{% endif %}</div>
             </div>
             <div class="status-card">
                 <div class="status-label">AI Phase</div>
-                <div class="status-value" id="ai-phase">--</div>
+                <div class="status-value" id="ai-phase">{{ phase }}</div>
             </div>
         </div>
 
-        <div id="main-content" style="display: none;">
+        <div id="main-content" style="{% if has_data %}display: block;{% else %}display: none;{% endif %}">
             <!-- Water Quality Section -->
             <div class="grid">
                 <div class="card">
@@ -284,12 +285,12 @@ HTML_TEMPLATE = """
                     <div class="metrics">
                         <div class="metric">
                             <div class="metric-label">pH Level</div>
-                            <div class="metric-value" id="ph-value">--</div>
+                            <div class="metric-value" id="ph-value">{{ '%.3f'|format(pH) if pH != 'null' else '--' }}</div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">Temperature</div>
                             <div class="metric-value">
-                                <span id="temp-value">--</span>
+                                <span id="temp-value">{{ '%.1f'|format(T) if T != 'null' else '--' }}</span>
                                 <span class="metric-unit">°C</span>
                             </div>
                         </div>
@@ -307,19 +308,19 @@ HTML_TEMPLATE = """
                     <div class="metrics">
                         <div class="metric">
                             <div class="metric-label">Current Action</div>
-                            <div class="metric-value" id="action-value">--</div>
+                            <div class="metric-value" id="action-value">{{ action }}</div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">Reward</div>
-                            <div class="metric-value" id="reward-value">--</div>
+                            <div class="metric-value" id="reward-value">{{ '%.4f'|format(reward) if reward != 'null' else '--' }}</div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">Real Steps</div>
-                            <div class="metric-value" id="steps-value">--</div>
+                            <div class="metric-value" id="steps-value">{{ real_steps }}</div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">Buffer Size</div>
-                            <div class="metric-value" id="buffer-value">--</div>
+                            <div class="metric-value" id="buffer-value">{{ buffer_size }}</div>
                         </div>
                     </div>
                 </div>
@@ -335,27 +336,27 @@ HTML_TEMPLATE = """
                     <div class="network-grid">
                         <div class="network-stat">
                             <div class="network-stat-label">Latency</div>
-                            <div class="network-stat-value status-online" id="latency-value">-- ms</div>
+                            <div class="network-stat-value status-online" id="latency-value">{{ '%.1f'|format(avg_latency_ms) if avg_latency_ms > 0 else '--' }} ms</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Packet Loss</div>
-                            <div class="network-stat-value" id="packet-loss-value">-- %</div>
+                            <div class="network-stat-value" id="packet-loss-value">{{ '%.2f'|format(packet_loss_rate) if packet_loss_rate > 0 else '--' }} %</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Throughput</div>
-                            <div class="network-stat-value" id="throughput-value">-- Mbps</div>
+                            <div class="network-stat-value" id="throughput-value">{{ throughput if throughput > 0 else '--' }} Mbps</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Packets Sent</div>
-                            <div class="network-stat-value" id="packets-sent-value">--</div>
+                            <div class="network-stat-value" id="packets-sent-value">{{ '{:,}'.format(packets_sent) if packets_sent > 0 else '--' }}</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Packets Dropped</div>
-                            <div class="network-stat-value" id="packets-dropped-value">--</div>
+                            <div class="network-stat-value" id="packets-dropped-value">{{ '{:,}'.format(packets_dropped) if packets_dropped > 0 else '--' }}</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Uptime</div>
-                            <div class="network-stat-value" id="uptime-value">-- h</div>
+                            <div class="network-stat-value" id="uptime-value">{{ '%.1f'|format(uptime) if uptime > 0 else '--' }} h</div>
                         </div>
                     </div>
                 </div>
@@ -370,15 +371,15 @@ HTML_TEMPLATE = """
                     <div class="metrics">
                         <div class="metric">
                             <div class="metric-label">AMF (Access)</div>
-                            <div class="metric-value status-online" id="amf-status">--</div>
+                            <div class="metric-value status-online" id="amf-status">{{ amf_status }}</div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">SMF (Session)</div>
-                            <div class="metric-value status-online" id="smf-status">--</div>
+                            <div class="metric-value status-online" id="smf-status">{{ smf_status }}</div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">UPF (User Plane)</div>
-                            <div class="metric-value status-online" id="upf-status">--</div>
+                            <div class="metric-value status-online" id="upf-status">{{ upf_status }}</div>
                         </div>
                     </div>
                 </div>
@@ -390,7 +391,7 @@ HTML_TEMPLATE = """
                     <div class="metrics">
                         <div class="metric">
                             <div class="metric-label">FQL Epsilon</div>
-                            <div class="metric-value" id="epsilon-value">--</div>
+                            <div class="metric-value" id="epsilon-value">{{ '%.3f'|format(fql_eps) if fql_eps != 'null' else '--' }}</div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">Total Energy</div>
@@ -479,102 +480,15 @@ HTML_TEMPLATE = """
 
         const maxDataPoints = 50;
 
-        function updateDashboard() {
-            Promise.all([
-                fetch('/api/state').then(r => r.json()),
-                fetch('/api/network').then(r => r.json())
-            ]).then(([state, network]) => {
-                if (state.error) {
-                    document.getElementById('error-banner').style.display = 'block';
-                    document.getElementById('main-content').style.display = 'none';
-                    document.getElementById('system-status').textContent = 'Offline';
-                    document.getElementById('system-status').className = 'status-value status-offline';
-                    return;
-                }
-
-                document.getElementById('error-banner').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-                document.getElementById('system-status').textContent = 'Online';
-                document.getElementById('system-status').className = 'status-value status-online';
-
-                // Water quality
-                const pH = state.pH !== null ? state.pH.toFixed(3) : '--';
-                const temp = state.T !== null ? state.T.toFixed(1) : '--';
-                document.getElementById('ph-value').textContent = pH;
-                document.getElementById('temp-value').textContent = temp;
-
-                // Update chart
-                if (state.pH !== null && state.T !== null) {
-                    const now = new Date().toLocaleTimeString();
-                    waterChart.data.labels.push(now);
-                    waterChart.data.datasets[0].data.push(state.pH);
-                    waterChart.data.datasets[1].data.push(state.T);
-
-                    if (waterChart.data.labels.length > maxDataPoints) {
-                        waterChart.data.labels.shift();
-                        waterChart.data.datasets[0].data.shift();
-                        waterChart.data.datasets[1].data.shift();
-                    }
-                    waterChart.update('none');
-                }
-
-                // AI control
-                const phase = state.phase || '--';
-                document.getElementById('ai-phase').textContent = phase;
-                document.getElementById('action-value').textContent = state.action || '--';
-                document.getElementById('reward-value').textContent = state.reward !== null ? state.reward.toFixed(4) : '--';
-                document.getElementById('steps-value').textContent = state.real_steps || '--';
-                document.getElementById('buffer-value').textContent = state.buffer_size || '--';
-                document.getElementById('epsilon-value').textContent = state.fql_eps !== null ? state.fql_eps.toFixed(3) : '--';
-
-                // Network stats
-                if (!network.error) {
-                    const ipsecStatus = network.ipsec_status || 'UNKNOWN';
-                    document.getElementById('ipsec-status').textContent = ipsecStatus;
-                    document.getElementById('ipsec-status').className = ipsecStatus === 'ESTABLISHED' ? 
-                        'status-value status-online' : 'status-value status-offline';
-
-                    document.getElementById('latency-value').textContent = 
-                        network.avg_latency_ms ? network.avg_latency_ms.toFixed(1) + ' ms' : '-- ms';
-                    
-                    const packetLoss = network.packet_loss_rate ? network.packet_loss_rate.toFixed(2) : '--';
-                    document.getElementById('packet-loss-value').textContent = packetLoss + ' %';
-                    
-                    document.getElementById('throughput-value').textContent = 
-                        network.throughput ? network.throughput + ' Mbps' : '-- Mbps';
-                    
-                    document.getElementById('packets-sent-value').textContent = 
-                        network.packets_sent ? network.packets_sent.toLocaleString() : '--';
-                    
-                    document.getElementById('packets-dropped-value').textContent = 
-                        network.packets_dropped ? network.packets_dropped.toLocaleString() : '--';
-                    
-                    const uptime = network.uptime ? (network.uptime / 3600).toFixed(1) : '--';
-                    document.getElementById('uptime-value').textContent = uptime + ' h';
-
-                    // 5G Core
-                    document.getElementById('amf-status').textContent = network.amf_status || '--';
-                    document.getElementById('smf-status').textContent = network.smf_status || '--';
-                    document.getElementById('upf-status').textContent = network.upf_status || '--';
-                }
-
-                // Pico status
-                document.getElementById('pico-status').textContent = state.pH !== null ? 'Connected' : 'Waiting';
-                document.getElementById('pico-status').className = state.pH !== null ? 
-                    'status-value status-online' : 'status-value status-warning';
-
-                // Last update
-                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
-            }).catch(error => {
-                console.error('Error:', error);
-                document.getElementById('error-banner').style.display = 'block';
-                document.getElementById('main-content').style.display = 'none';
-            });
-        }
-
-        // Update every 2 seconds
-        updateDashboard();
-        setInterval(updateDashboard, 2000);
+        // Dashboard uses server-side rendering with auto-refresh
+        // No JavaScript fetch needed - page reloads every 2 seconds via meta refresh
+        
+        // Chart.js for pH & Temperature (optional - will work on refresh)
+        const ctx = document.getElementById('waterChart').getContext('2d');
+        const waterChart = new Chart(ctx, chartConfig);
+        
+        // Note: Chart data will reset on each refresh
+        // For persistent chart, we would need to store data in localStorage or use fetch API
     </script>
 </body>
 </html>
@@ -583,7 +497,62 @@ HTML_TEMPLATE = """
 
 @app.route('/')
 def index():
-    return render_template_string(HTML_TEMPLATE)
+    """Render dashboard with server-side data"""
+    try:
+        # Read state.json
+        state = {}
+        if os.path.exists(STATE_JSON):
+            file_age = time.time() - os.path.getmtime(STATE_JSON)
+            if file_age < 30:
+                with open(STATE_JSON, 'r') as f:
+                    state = json.load(f)
+        
+        # Read network stats
+        network = {}
+        if os.path.exists(CALLBOX_STATS):
+            with open(CALLBOX_STATS, 'r') as f:
+                network = json.load(f)
+        
+        # Calculate packet loss rate
+        packets_sent = network.get('packets_sent', 0)
+        packets_dropped = network.get('packets_dropped', 0)
+        packet_loss_rate = (packets_dropped / max(packets_sent, 1)) * 100 if packets_sent > 0 else 0
+        
+        # Prepare data for template
+        template_data = {
+            'pH': state.get('pH', 'null'),
+            'T': state.get('T', 'null'),
+            'action': state.get('action', '--'),
+            'phase': state.get('phase', '--'),
+            'reward': state.get('reward', 'null'),
+            'real_steps': state.get('real_steps', '--'),
+            'buffer_size': state.get('buffer_size', '--'),
+            'fql_eps': state.get('fql_eps', 'null'),
+            'ipsec_status': network.get('ipsec_status', 'UNKNOWN'),
+            'avg_latency_ms': network.get('avg_latency_ms', 0),
+            'packet_loss_rate': packet_loss_rate,
+            'throughput': network.get('current_bandwidth_mbps', 0),
+            'packets_sent': packets_sent,
+            'packets_dropped': packets_dropped,
+            'uptime': network.get('uptime', 0) / 3600 if network.get('uptime', 0) > 0 else 0,
+            'amf_status': network.get('amf_status', 'UNKNOWN'),
+            'smf_status': network.get('smf_status', 'UNKNOWN'),
+            'upf_status': network.get('upf_status', 'UNKNOWN'),
+            'has_data': bool(state)
+        }
+        
+        return render_template_string(HTML_TEMPLATE, **template_data)
+    
+    except Exception as e:
+        print(f"[ERROR] Error rendering dashboard: {e}")
+        return render_template_string(HTML_TEMPLATE, 
+            pH='null', T='null', action='--', phase='--', 
+            reward='null', real_steps='--', buffer_size='--', 
+            fql_eps='null', ipsec_status='UNKNOWN', 
+            avg_latency_ms=0, packet_loss_rate=0, throughput=0,
+            packets_sent=0, packets_dropped=0, uptime=0,
+            amf_status='UNKNOWN', smf_status='UNKNOWN', upf_status='UNKNOWN',
+            has_data=False)
 
 
 @app.route('/api/state')
