@@ -301,6 +301,16 @@ def ipsec_monitor():
                 state["ipsec_detail"] = "Error checking"
         time.sleep(5)
 
+def ipsec_monitor_sim():
+    """Simulasi IPsec tunnel ESTABLISHED ke N3IWF Callbox."""
+    time.sleep(2)
+    with state_lock:
+        state["ipsec"] = True
+        state["ipsec_detail"] = "N3IWF[1]: ESTABLISHED 192.168.137.251...192.168.100.101 (SIMULASI)"
+    print("[SIM] IPsec tunnel: ESTABLISHED")
+    while True:
+        time.sleep(30)
+
 # ── Network Summary Loader ────────────────────────────────────────────────────
 def load_network_summary():
     """Load pre-measured network stats from latency_test.py results."""
@@ -318,6 +328,20 @@ def load_network_summary():
         except Exception:
             pass
         time.sleep(30)
+
+def load_network_summary_sim():
+    """Simulasi network stats N3IWF 5G realistis."""
+    import random
+    time.sleep(1)
+    with state_lock:
+        state["net_avg_ms"] = round(12.5 + random.uniform(-1, 1), 2)
+        state["net_min_ms"] = round(8.3  + random.uniform(-0.5, 0.5), 2)
+        state["net_max_ms"] = round(21.7 + random.uniform(-1, 2), 2)
+        state["net_jitter"] = round(2.1  + random.uniform(-0.3, 0.3), 2)
+        state["net_pdr"]    = round(99.2 + random.uniform(-0.5, 0.5), 1)
+    print(f"[SIM] Network stats: avg={state['net_avg_ms']}ms jitter={state['net_jitter']}ms PDR={state['net_pdr']}%")
+    while True:
+        time.sleep(60)
 
 # ── Flask App ─────────────────────────────────────────────────────────────────
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -391,13 +415,15 @@ SIM_MODE = "--sim" in _sys.argv
 
 if __name__ == '__main__':
     if SIM_MODE:
-        threading.Thread(target=simulate_pico, daemon=True).start()
-        print("[INFO] Mode: SIMULASI (tanpa Pico fisik)")
+        threading.Thread(target=simulate_pico,          daemon=True).start()
+        threading.Thread(target=ipsec_monitor_sim,      daemon=True).start()
+        threading.Thread(target=load_network_summary_sim, daemon=True).start()
+        print("[INFO] Mode: SIMULASI (tanpa Pico & Callbox)")
     else:
-        threading.Thread(target=tcp_server, daemon=True).start()
+        threading.Thread(target=tcp_server,             daemon=True).start()
+        threading.Thread(target=ipsec_monitor,          daemon=True).start()
+        threading.Thread(target=load_network_summary,   daemon=True).start()
         print("[INFO] Mode: REAL (menunggu Pico di port 5005)")
-    threading.Thread(target=ipsec_monitor, daemon=True).start()
-    threading.Thread(target=load_network_summary, daemon=True).start()
 
     hostname = socket.gethostname()
     try:
