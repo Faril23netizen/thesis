@@ -123,13 +123,13 @@ conn callbox-n3iwf
     keyexchange=ikev2
     
     # Callbox (responder) - listen for connections
-    left=%any
+    left={CALLBOX_IP}
     leftsubnet={IPSEC_TUNNEL_IP}/32
     leftid=@callbox
     leftauth=psk
     
     # N3IWF client (initiator)
-    right=%any
+    right={CALLBOX_IP}
     rightsubnet={N3IWF_TUNNEL_IP}/32
     rightid=@n3iwf-client
     rightauth=psk

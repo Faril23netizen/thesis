@@ -70,6 +70,7 @@ def setup_ipsec_client():
         log("Found callbox config, will merge", "INFO")
     
     # IPsec config for N3IWF client (initiator)
+    # NOTE: This will be merged with callbox config
     n3iwf_conn = f"""
 conn n3iwf-callbox
     type=tunnel
@@ -77,13 +78,13 @@ conn n3iwf-callbox
     keyexchange=ikev2
     
     # N3IWF client (initiator) - initiate connection
-    left=%defaultroute
+    left={N3IWF_CLIENT_IP}
     leftsubnet={IPSEC_TUNNEL_IP_N3IWF}/32
     leftid=@n3iwf-client
     leftauth=psk
     
-    # Callbox (responder) - same machine, use loopback
-    right=127.0.0.1
+    # Callbox (responder) - same machine, use actual IP
+    right={CALLBOX_IP}
     rightsubnet={IPSEC_TUNNEL_IP_CALLBOX}/32
     rightid=@callbox
     rightauth=psk
