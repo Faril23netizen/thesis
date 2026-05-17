@@ -21,7 +21,7 @@ git pull origin master
 sudo ./start_all.sh
 
 # 4. Tunggu 5-10 detik, lalu akses dashboard
-# Browser: http://192.168.137.251:5000
+# Browser: http://10.42.0.1:5000
 ```
 
 ## Apa yang Diperbaiki?
@@ -93,6 +93,6 @@ sudo ipsec restart
 **Action Required:**
 1. `git pull origin master` di RPi5
 2. `sudo ./start_all.sh`
-3. Akses `http://192.168.137.251:5000`
+3. Akses `http://10.42.0.1:5000`
 
 **Dashboard sekarang robust dan tidak akan crash!** 🎉

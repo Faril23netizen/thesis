@@ -365,7 +365,7 @@ pH_std,0.456
 
 ### 0. Dashboard Real-time (Recommended!) ⭐⭐⭐
 
-**URL:** `http://192.168.137.251:5000` (atau IP RPi5 Anda)
+**URL:** `http://10.42.0.1:5000` (RPi5 IP via USB tethering)
 
 **Fitur Lengkap:**
 - 📈 **Grafik Real-time**: pH & Temperature (dual-axis chart dengan Chart.js)
@@ -390,8 +390,8 @@ pH_std,0.456
 
 **Cara Akses:**
 ```bash
-# Dari browser di laptop/PC yang terhubung ke RPi5
-http://192.168.137.251:5000
+# Dari browser di laptop/PC yang terhubung ke RPi5 via USB tethering
+http://10.42.0.1:5000
 
 # Atau dari RPi5 sendiri
 http://localhost:5000

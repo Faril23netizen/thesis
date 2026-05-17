@@ -124,7 +124,7 @@ curl http://localhost:5000
    ```
 
 3. **Access Dashboard**
-   - Open browser: `http://192.168.137.251:5000`
+   - Open browser: `http://10.42.0.1:5000`
    - Should see dashboard with charts and network info
    - If network stats not ready, should show "Network stats not available yet"
 
