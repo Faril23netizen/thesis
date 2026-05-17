@@ -366,101 +366,100 @@ def plot_network_stats(stats, ax):
             bbox=dict(boxstyle='round', facecolor=status_color, alpha=0.3))
 
 
-def plot_comparison_table(data, ax):
-    """Plot comparison table for RB vs FQL vs DQN"""
+def plot_network_details_table(stats, ax):
+    """Plot detailed network statistics table"""
     ax.axis('tight')
     ax.axis('off')
     
-    if not data:
-        ax.text(0.5, 0.5, 'No Data Available', ha='center', va='center', fontsize=12)
+    if not stats.get('callbox'):
+        ax.text(0.5, 0.5, 'No Network Data Available', ha='center', va='center', fontsize=12)
         return
     
-    # Separate by mode
-    rb_data = [d for d in data if d['mode'] == 'RB']
-    fql_data = [d for d in data if d['mode'] == 'FQL']
-    dqn_data = [d for d in data if d['mode'] == 'DQN']
+    callbox = stats['callbox']
+    n3iwf = stats.get('n3iwf', {})
     
     # Calculate metrics
+    packet_loss_rate = (callbox.get('packets_dropped', 0) / max(callbox.get('packets_sent', 1), 1)) * 100
+    uptime_hours = callbox.get('uptime', 0) / 3600
+    
+    # Create table data
     table_data = []
-    table_data.append(['Metric', 'Rule-Based', 'FQL', 'DQN', 'Best'])
+    table_data.append(['Metric', 'Value', 'Status'])
     
-    # Steps
-    rb_steps = len(rb_data)
-    fql_steps = len(fql_data)
-    dqn_steps = len(dqn_data)
-    table_data.append(['Steps', f'{rb_steps}', f'{fql_steps}', f'{dqn_steps}', '-'])
+    # IPsec Status
+    ipsec_status = callbox.get('ipsec_status', 'UNKNOWN')
+    ipsec_emoji = '✅' if ipsec_status == 'ESTABLISHED' else '❌'
+    table_data.append(['IPsec Tunnel', ipsec_status, ipsec_emoji])
     
-    # Average Reward
-    rb_reward = np.mean([d['reward'] for d in rb_data]) if rb_data else 0
-    fql_reward = np.mean([d['reward'] for d in fql_data]) if fql_data else 0
-    dqn_reward = np.mean([d['reward'] for d in dqn_data]) if dqn_data else 0
-    best_reward = max(rb_reward, fql_reward, dqn_reward)
-    best_reward_name = ['RB', 'FQL', 'DQN'][[rb_reward, fql_reward, dqn_reward].index(best_reward)]
-    table_data.append(['Avg Reward', f'{rb_reward:.4f}', f'{fql_reward:.4f}', f'{dqn_reward:.4f}', best_reward_name])
+    # Latency
+    avg_latency = callbox.get('avg_latency_ms', 0)
+    latency_status = '✅' if avg_latency <= 15 else '⚠️' if avg_latency <= 25 else '❌'
+    table_data.append(['Avg Latency', f'{avg_latency:.2f} ms', latency_status])
     
-    # Reward Std Dev
-    rb_std = np.std([d['reward'] for d in rb_data]) if rb_data else 0
-    fql_std = np.std([d['reward'] for d in fql_data]) if fql_data else 0
-    dqn_std = np.std([d['reward'] for d in dqn_data]) if dqn_data else 0
-    best_std = min(rb_std, fql_std, dqn_std)
-    best_std_name = ['RB', 'FQL', 'DQN'][[rb_std, fql_std, dqn_std].index(best_std)]
-    table_data.append(['Reward Std', f'{rb_std:.4f}', f'{fql_std:.4f}', f'{dqn_std:.4f}', best_std_name])
+    # Packet Loss
+    loss_status = '✅' if packet_loss_rate <= 1.5 else '⚠️' if packet_loss_rate <= 3 else '❌'
+    table_data.append(['Packet Loss', f'{packet_loss_rate:.2f} %', loss_status])
     
-    # Average Energy
-    rb_energy = np.mean([d['energy'] for d in rb_data]) if rb_data else 0
-    fql_energy = np.mean([d['energy'] for d in fql_data]) if fql_data else 0
-    dqn_energy = np.mean([d['energy'] for d in dqn_data]) if dqn_data else 0
-    best_energy = min(rb_energy, fql_energy, dqn_energy)
-    best_energy_name = ['RB', 'FQL', 'DQN'][[rb_energy, fql_energy, dqn_energy].index(best_energy)]
-    table_data.append(['Avg Energy', f'{rb_energy:.4f}', f'{fql_energy:.4f}', f'{dqn_energy:.4f}', best_energy_name])
+    # Throughput
+    throughput = callbox.get('current_bandwidth_mbps', 100)
+    throughput_status = '✅' if throughput >= 90 else '⚠️' if throughput >= 70 else '❌'
+    table_data.append(['Throughput', f'{throughput:.0f} Mbps', throughput_status])
     
-    # pH Stability (std dev)
-    rb_ph_std = np.std([d['pH'] for d in rb_data]) if rb_data else 0
-    fql_ph_std = np.std([d['pH'] for d in fql_data]) if fql_data else 0
-    dqn_ph_std = np.std([d['pH'] for d in dqn_data]) if dqn_data else 0
-    best_ph_std = min(rb_ph_std, fql_ph_std, dqn_ph_std)
-    best_ph_std_name = ['RB', 'FQL', 'DQN'][[rb_ph_std, fql_ph_std, dqn_ph_std].index(best_ph_std)]
-    table_data.append(['pH Stability', f'{rb_ph_std:.4f}', f'{fql_ph_std:.4f}', f'{dqn_ph_std:.4f}', best_ph_std_name])
+    # Packets Sent
+    packets_sent = callbox.get('packets_sent', 0)
+    table_data.append(['Packets Sent', f'{packets_sent:,}', '-'])
     
-    # Temperature Stability (std dev)
-    rb_t_std = np.std([d['T'] for d in rb_data]) if rb_data else 0
-    fql_t_std = np.std([d['T'] for d in fql_data]) if fql_data else 0
-    dqn_t_std = np.std([d['T'] for d in dqn_data]) if dqn_data else 0
-    best_t_std = min(rb_t_std, fql_t_std, dqn_t_std)
-    best_t_std_name = ['RB', 'FQL', 'DQN'][[rb_t_std, fql_t_std, dqn_t_std].index(best_t_std)]
-    table_data.append(['Temp Stability', f'{rb_t_std:.4f}', f'{fql_t_std:.4f}', f'{dqn_t_std:.4f}', best_t_std_name])
+    # Packets Received
+    packets_received = callbox.get('packets_received', 0)
+    table_data.append(['Packets Received', f'{packets_received:,}', '-'])
+    
+    # Packets Dropped
+    packets_dropped = callbox.get('packets_dropped', 0)
+    table_data.append(['Packets Dropped', f'{packets_dropped:,}', '-'])
+    
+    # Uptime
+    uptime_status = '✅' if uptime_hours >= 1 else '-'
+    table_data.append(['Uptime', f'{uptime_hours:.2f} hours', uptime_status])
+    
+    # 5G Core Status
+    amf_status = callbox.get('amf_status', 'UNKNOWN')
+    amf_emoji = '✅' if amf_status == 'RUNNING' else '❌'
+    table_data.append(['AMF Status', amf_status, amf_emoji])
+    
+    smf_status = callbox.get('smf_status', 'UNKNOWN')
+    smf_emoji = '✅' if smf_status == 'RUNNING' else '❌'
+    table_data.append(['SMF Status', smf_status, smf_emoji])
+    
+    upf_status = callbox.get('upf_status', 'UNKNOWN')
+    upf_emoji = '✅' if upf_status == 'RUNNING' else '❌'
+    table_data.append(['UPF Status', upf_status, upf_emoji])
     
     # Create table
     table = ax.table(cellText=table_data, cellLoc='center', loc='center',
-                     colWidths=[0.25, 0.18, 0.18, 0.18, 0.15])
+                     colWidths=[0.35, 0.35, 0.15])
     
     table.auto_set_font_size(False)
     table.set_fontsize(9)
     table.scale(1, 2)
     
     # Style header row
-    for i in range(5):
+    for i in range(3):
         cell = table[(0, i)]
         cell.set_facecolor('#3498db')
         cell.set_text_props(weight='bold', color='white')
     
-    # Style "Best" column
+    # Color code status column
     for i in range(1, len(table_data)):
-        cell = table[(i, 4)]
-        cell.set_facecolor('#f39c12')
-        cell.set_text_props(weight='bold')
+        status = table_data[i][2]
+        cell = table[(i, 2)]
+        if status == '✅':
+            cell.set_facecolor('#d5f4e6')
+        elif status == '⚠️':
+            cell.set_facecolor('#fff3cd')
+        elif status == '❌':
+            cell.set_facecolor('#f8d7da')
     
-    # Highlight best values
-    for i in range(1, len(table_data)):
-        best_col = table_data[i][4]
-        if best_col == 'RB':
-            table[(i, 1)].set_facecolor('#d5f4e6')
-        elif best_col == 'FQL':
-            table[(i, 2)].set_facecolor('#d5f4e6')
-        elif best_col == 'DQN':
-            table[(i, 3)].set_facecolor('#d5f4e6')
-    
-    ax.set_title('Performance Comparison Table', fontsize=12, fontweight='bold', pad=20)
+    ax.set_title('Network Performance Details (N3IWF + 5G Core)', fontsize=12, fontweight='bold', pad=20)
     bars = ax.bar(metrics, values, color=colors_bars, alpha=0.8)
     
     # Add value labels
@@ -561,6 +560,9 @@ def generate_all_plots():
     ax6 = fig.add_subplot(gs[3, 1])
     plot_network_stats(network_stats, ax6)
     
+    # Plot 7: Network Details Table (NEW!)
+    ax7 = fig.add_subplot(gs[4, :])
+    plot_network_details_table(network_stats, ax7)
     
     plt.tight_layout(rect=[0, 0, 1, 0.99])
     

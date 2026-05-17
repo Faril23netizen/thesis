@@ -3,7 +3,7 @@
 ## 🎯 Summary Singkat
 
 **Hasil Utama (3 files):**
-1. **PDF Report** - Semua grafik dalam 1 file (7 plots + 1 tabel)
+1. **PDF Report** - Semua grafik dalam 1 file (6 grafik + 1 tabel network)
 2. **Summary CSV** - Statistik ringkasan
 3. **Raw Data CSV** - Data mentah lengkap
 
@@ -16,7 +16,7 @@
 ```
 results/
 ├── thesis/                          # ⭐ HASIL UTAMA
-│   ├── complete_analysis.pdf        # ⭐⭐⭐ PDF lengkap (7 grafik + 1 tabel)
+│   ├── complete_analysis.pdf        # ⭐⭐⭐ PDF lengkap (6 grafik + 1 tabel network)
 │   ├── summary.csv                  # ⭐⭐ Statistik ringkasan
 │   └── plots/                       # ⭐ Grafik individual
 │       ├── plot_1.png               # Water quality
@@ -25,7 +25,7 @@ results/
 │       ├── plot_4.png               # Phase comparison
 │       ├── plot_5.png               # Energy consumption
 │       ├── plot_6.png               # Network performance (enhanced)
-│       └── plot_7.png               # Comparison table (NEW!)
+│       └── plot_7.png               # Network details table (NEW!)
 │
 ├── hasil_real/                      # Data Real (dari Pico)
 │   ├── comparison.csv               # ⭐ Data mentah lengkap
@@ -178,29 +178,35 @@ timestamp,real_step,pH,T_C,NH3_pct,mode,real_action,rb_action,fql_action,reward,
 
 ---
 
-### 7. Comparison Table (NEW!) ⭐⭐
+### 7. Network Details Table (NEW!) ⭐⭐
 **File:** `plot_7.png`
 
 **Isi:**
-- **Tabel perbandingan lengkap** RB vs FQL vs DQN
+- **Tabel detail network performance**
 - Metrics:
-  1. Steps (jumlah data points)
-  2. Average Reward
-  3. Reward Std Dev (stability)
-  4. Average Energy Cost
-  5. pH Stability (std dev)
-  6. Temperature Stability (std dev)
-- **"Best" column** - menunjukkan algoritma terbaik per metric
-- Color-coded:
-  - 🔵 Blue header
-  - 🟢 Green highlight untuk best value
-  - 🟠 Orange untuk "Best" column
+  1. IPsec Tunnel Status (ESTABLISHED/DOWN)
+  2. Average Latency (ms) dengan status ✅/⚠️/❌
+  3. Packet Loss (%) dengan status
+  4. Throughput (Mbps) dengan status
+  5. Packets Sent (total)
+  6. Packets Received (total)
+  7. Packets Dropped (total)
+  8. Uptime (hours)
+  9. AMF Status (5G Core)
+  10. SMF Status (5G Core)
+  11. UPF Status (5G Core)
+- Color-coded status:
+  - � Green = Good performance
+  - 🟠 Orange = Acceptable
+  - 🔴 Red = Poor
+- Status indicators: ✅ (good), ⚠️ (warning), ❌ (error)
 
 **Untuk paper:**
-- Tabel perbandingan lengkap untuk paper
-- Menunjukkan DQN unggul di hampir semua metric
-- Stability comparison (pH & Temperature)
-- Energy efficiency comparison
+- Tabel lengkap network performance
+- N3IWF + IPsec tunnel metrics
+- 5G Core components status (AMF, SMF, UPF)
+- Packet statistics (sent/received/dropped)
+- Uptime dan reliability metrics
 
 ---
 
@@ -307,7 +313,7 @@ pH_std,0.456
 ### File yang Dipakai
 
 1. **`complete_analysis.pdf`** ⭐⭐⭐
-   - 7 grafik + 1 tabel perbandingan
+   - 6 grafik + 1 tabel network details
    - Siap insert ke paper
 
 2. **`summary.csv`** ⭐⭐
@@ -315,9 +321,10 @@ pH_std,0.456
    - Copy-paste ke LaTeX/Word
 
 3. **`plot_7.png`** ⭐⭐ (NEW!)
-   - Tabel perbandingan RB vs FQL vs DQN
+   - Tabel network performance details
+   - IPsec status, latency, packet loss, throughput
+   - 5G Core status (AMF, SMF, UPF)
    - Langsung bisa dipakai di paper
-   - Menunjukkan best algorithm per metric
 
 4. **`comparison.csv`** ⭐
    - Raw data untuk analisis tambahan
@@ -404,18 +411,20 @@ cat results/network/n3iwf_status.json | python3 -m json.tool
 ## 📝 Summary
 
 **Hasil Utama:**
-- ✅ 1 PDF (7 grafik + 1 tabel)
+- ✅ 1 PDF (6 grafik + 1 tabel network)
 - ✅ 1 CSV (statistik)
 - ✅ 1 CSV (raw data)
-- ✅ 7 PNG (grafik individual + tabel)
+- ✅ 7 PNG (grafik individual + tabel network)
 - ✅ 2 JSON (network stats)
 
 **Total:** ~20 MB untuk 8 jam running
 
 **Untuk paper:** 
 - Pakai PDF (complete_analysis.pdf)
-- Tabel perbandingan (plot_7.png) ⭐
+- Tabel network details (plot_7.png) ⭐
 - Summary CSV
 - Network stats JSON
 
 **Simple!** Semua hasil dalam 1 folder: `results/thesis/` 🎉
+
+**Note:** Untuk comparison RB vs FQL vs DQN, gunakan hasil simulasi (fair comparison dengan steps yang sama).

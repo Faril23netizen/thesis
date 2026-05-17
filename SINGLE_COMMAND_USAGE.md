@@ -32,7 +32,7 @@ python3 analyze_all.py
 - Logs & data tetap tersimpan
 
 **`analyze_all.py` buat:**
-- PDF: `results/thesis/complete_analysis.pdf` (7 grafik + 1 tabel)
+- PDF: `results/thesis/complete_analysis.pdf` (6 grafik + 1 tabel network)
 - CSV: `results/thesis/summary.csv`
 - Plots: `results/thesis/plots/*.png` (7 files)
 
@@ -129,16 +129,18 @@ sudo ./start_all.sh
 4. Phase Comparison
 5. Energy Consumption
 6. Network Performance (Enhanced - Latency, Jitter, Packet Loss, Throughput)
-7. **Comparison Table** ⭐ (RB vs FQL vs DQN - lengkap!)
+7. **Network Details Table** ⭐ (IPsec, 5G Core, Packet Stats)
 
 **Claim yang bisa dibuat:**
 - ✅ Edge AI on Raspberry Pi 5
-- ✅ N3IWF Integration with 5G Core
+- ✅ N3IWF Integration with 5G Core (AMF, SMF, UPF)
 - ✅ IPsec Secure Communication (10-15ms latency)
 - ✅ Progressive Learning (RB → FQL → DQN)
 - ✅ Real-time Monitoring Dashboard
-- ✅ Stability Improvement (pH & Temperature)
-- ✅ Energy Efficiency Optimization
+- ✅ Network Reliability (packet loss ~1%)
+- ✅ 5G Core Components Running
+
+**Note:** Untuk comparison RB vs FQL vs DQN yang fair, gunakan hasil simulasi (steps sama).
 
 ---
 
