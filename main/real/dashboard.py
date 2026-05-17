@@ -336,27 +336,27 @@ HTML_TEMPLATE = """
                     <div class="network-grid">
                         <div class="network-stat">
                             <div class="network-stat-label">Latency</div>
-                            <div class="network-stat-value status-online" id="latency-value">{{ '%.1f'|format(avg_latency_ms) if avg_latency_ms > 0 else '--' }} ms</div>
+                            <div class="network-stat-value status-online" id="latency-value">{{ '%.1f'|format(avg_latency_ms) }} ms</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Packet Loss</div>
-                            <div class="network-stat-value" id="packet-loss-value">{{ '%.2f'|format(packet_loss_rate) if packet_loss_rate > 0 else '--' }} %</div>
+                            <div class="network-stat-value" id="packet-loss-value">{{ '%.2f'|format(packet_loss_rate) }} %</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Throughput</div>
-                            <div class="network-stat-value" id="throughput-value">{{ throughput if throughput > 0 else '--' }} Mbps</div>
+                            <div class="network-stat-value" id="throughput-value">{{ throughput }} Mbps</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Packets Sent</div>
-                            <div class="network-stat-value" id="packets-sent-value">{{ '{:,}'.format(packets_sent) if packets_sent > 0 else '--' }}</div>
+                            <div class="network-stat-value" id="packets-sent-value">{{ '{:,}'.format(packets_sent) }}</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Packets Dropped</div>
-                            <div class="network-stat-value" id="packets-dropped-value">{{ '{:,}'.format(packets_dropped) if packets_dropped > 0 else '--' }}</div>
+                            <div class="network-stat-value" id="packets-dropped-value">{{ '{:,}'.format(packets_dropped) }}</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Uptime</div>
-                            <div class="network-stat-value" id="uptime-value">{{ '%.1f'|format(uptime) if uptime > 0 else '--' }} h</div>
+                            <div class="network-stat-value" id="uptime-value">{{ '%.1f'|format(uptime) }} h</div>
                         </div>
                     </div>
                 </div>

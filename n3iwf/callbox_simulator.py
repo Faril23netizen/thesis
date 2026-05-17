@@ -340,6 +340,26 @@ class CallboxSimulator:
                 stats["amf_status"] = self.amf.status
                 stats["smf_status"] = self.smf.status
                 stats["upf_status"] = self.upf.status
+                
+                # Simulate network traffic if IPsec is established
+                if stats["ipsec_status"] == "ESTABLISHED":
+                    # Simulate latency (10-15ms with jitter)
+                    stats["avg_latency_ms"] = BASE_LATENCY_MS + random.uniform(-JITTER_MS, JITTER_MS)
+                    
+                    # Simulate packet traffic (increase over time)
+                    packets_per_second = 10  # Simulate 10 packets/sec
+                    stats["packets_sent"] += packets_per_second
+                    stats["packets_received"] += packets_per_second
+                    
+                    # Simulate packet loss (1%)
+                    if random.random() < PACKET_LOSS_RATE:
+                        stats["packets_dropped"] += 1
+                    
+                    # Update latency history
+                    latency_history.append(stats["avg_latency_ms"])
+                    if len(latency_history) > 0:
+                        stats["avg_latency_ms"] = sum(latency_history) / len(latency_history)
+            
             time.sleep(1)
     
     def _save_stats(self):
