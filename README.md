@@ -1,89 +1,117 @@
 # Edge-Intelligent Aquaculture Controller 🐟
 
-This project implements a **Progressive Hybrid FQL-DQN** controller for aquaculture aeration, integrated with an **N3IWF Local Edge Service** dashboard.
-
-## 📁 Directory Structure
-- `fql/` : Fuzzy Q-Learning algorithm and pretraining scripts.
-- `dqn/` : Deep Q-Network logic and offline training scripts.
-- `n3iwf/` : N3IWF Web Dashboard (Flask + HTML/JS).
-- `main/` : Core execution scripts.
-  - `main/simulasi/` : Scripts for virtual evaluation.
-  - `main/real/` : Scripts for real hardware deployment (Raspberry Pi + RP2040).
-  - `main/env/` : Virtual pond simulator and environment models.
-- `results/` : Auto-generated directory for logs, CSVs, and trained models.
+Progressive Hybrid FQL-DQN controller untuk aquaculture dengan N3IWF integration.
 
 ---
 
-## 💻 1. Running Simulations (Virtual Environment)
-Use the simulation mode to test the algorithms (Rule-Based vs FQL vs DQN) safely on your computer without any physical hardware.
+## 🚀 Quick Start (3 Commands!)
 
 ```bash
-# Run the full simulation comparison
-python3 -m main.simulasi.run_simulasi
+# 1. Start semua
+sudo ./start_all.sh
 
-# Run simulation with specific parameters
-python3 -m main.simulasi.run_simulasi --episodes 50 --steps 500
+# 2. Monitor dashboard
+http://10.42.0.1:5000
+
+# 3. Stop dan analisis
+sudo ./stop_all.sh
+python3 analyze_all.py
 ```
-*(All generated graphs and CSVs will be saved in `results/simulation/`)*
+
+**Baca:** `SINGLE_COMMAND_USAGE.md` untuk panduan lengkap.
 
 ---
 
-## 🍓 2. Running Real Hardware (Raspberry Pi)
-When deployed to the physical pond, use the provided bash script. This script automatically starts **both** the AI Controller and the Web Dashboard.
+## 📁 Struktur Project
+
+```
+start_all.sh          # ⭐ Start semua service
+stop_all.sh           # ⭐ Stop semua service
+analyze_all.py        # ⭐ Generate grafik + PDF
+
+fql/                  # Fuzzy Q-Learning
+dqn/                  # Deep Q-Network
+n3iwf/                # N3IWF + Callbox Simulator
+  ├── callbox_simulator.py
+  ├── n3iwf_client.py
+  └── server.py
+main/
+  ├── env/            # Pond simulator
+  ├── simulasi/       # Virtual testing
+  └── real/           # Hardware deployment
+results/              # Output (logs, CSV, plots)
+```
+
+---
+
+## 💻 Simulasi (Virtual)
+
+Test algoritma tanpa hardware:
 
 ```bash
-# Make the script executable (only needed once)
-chmod +x start_edge.sh
+python3 -m main.simulasi.run_simulasi
+```
 
-# Start the edge services
+Output: `results/simulation/`
+
+---
+
+## 🍓 Hardware (Raspberry Pi)
+
+### Option A: Complete System (Recommended)
+
+```bash
+sudo ./start_all.sh       # Start semua
+http://10.42.0.1:5000     # Dashboard
+sudo ./stop_all.sh        # Stop semua
+python3 analyze_all.py    # Analisis
+```
+
+Output: `results/thesis/complete_analysis.pdf`
+
+### Option B: Manual (Legacy)
+
+```bash
+chmod +x start_edge.sh
 ./start_edge.sh
 ```
-- **Dashboard:** Open your browser and go to `http://<IP_RASPBERRY_PI>:5000`
-- **Logs & Data:** Q-Tables, Models, and Telemetry CSVs are saved to `results/hasil_real/`
 
-### Analyzing Real Hardware Data
-After running the real hardware for some time, you can generate performance graphs:
-```bash
-python3 -m main.real.analyze_results
-```
-*(Graphs will be saved in `results/hasil_real/`)*
+Output: `results/hasil_real/`
 
 ---
 
-## ⚙️ 3. Running as a 24/7 Background Service (SystemD)
-To ensure the system automatically starts when the Raspberry Pi turns on (and restarts if it crashes), install it as a Linux service.
+## ⚙️ Systemd Service (Auto-start)
 
-**Important:** Before installing, open `aquaculture.service` and ensure the paths (like `/home/ubuntu/thesis/`) correctly match your Raspberry Pi's directory structure.
+Agar sistem auto-start saat RPi boot:
 
 ```bash
-# Copy the service file to systemd
+# Edit path di aquaculture.service
 sudo cp aquaculture.service /etc/systemd/system/
-
-# Reload systemd manager
 sudo systemctl daemon-reload
-
-# Enable the service to start on boot
 sudo systemctl enable aquaculture
-
-# Start the service right now
 sudo systemctl start aquaculture
-```
 
-**Useful Service Commands:**
-- Check status: `sudo systemctl status aquaculture`
-- Stop service: `sudo systemctl stop aquaculture`
-- View live logs: `tail -f results/hasil_real/service.log`
+# Check status
+sudo systemctl status aquaculture
+```
 
 ---
 
-## 🧠 Architectural Note: Why We Bypass INT8 Quantization (TinyML)
-In typical TinyML deployments, Deep Neural Networks are compressed using **INT8 Quantization** (via TensorFlow Lite for Microcontrollers) to allow Matrix Multiplication operations to run within the strict RAM and CPU constraints of microcontrollers. 
+## 🧠 Arsitektur
 
-However, this system purposefully **bypasses INT8 Quantization** in favor of a much more efficient **Edge-to-MCU Distillation** architecture:
+**Edge-to-MCU Distillation:**
+- DQN training di RPi5 (Edge)
+- Q-Table distillation ke RP2040 Pico
+- O(1) inference di MCU (array lookup)
+- Lebih efisien dari INT8 quantization
 
-1. **Heavy Lifting on the Edge**: The Deep Q-Network (DQN) is trained and executed on the Raspberry Pi 5 (Edge Server), which has abundant computational resources.
-2. **Q-Table Distillation**: Instead of exporting the neural network weights to the MCU, the Edge Server evaluates the continuous DQN across the discrete state space (pH and Temperature bounds) to generate a flat policy matrix (Q-Table).
-3. **O(1) Inference on MCU**: This distilled Q-Table is serialized and sent to the RP2040 Pico. To predict an action, the Pico simply performs a 2D array lookup (`action = qtable[ph_idx][temp_idx]`).
+**Kenapa bypass INT8?**
+- Tidak perlu matrix multiplication di MCU
+- Latency minimal (O(1) lookup)
+- Power consumption terendah
+- Lebih simple dan reliable
 
-**Conclusion:** 
-By avoiding Neural Network inference on the microcontroller altogether, the RP2040 Pico requires **zero mathematical operations (no MACs)** to determine the optimal action. An `O(1)` memory lookup is mathematically the absolute lowest latency and lowest power consumption possible—making it strictly superior to even the most highly optimized INT8 Quantized neural network.
+---
+
+**Author:** Faril  
+**Version:** 2.0 - Simplified
