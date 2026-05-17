@@ -1,16 +1,34 @@
 # ⚡ Quick Start - Aquaculture N3IWF
 
-## 🚀 Pilih Salah Satu Cara
+## 🚀 CARA PRODUCTION (Recommended)
 
-### CARA 1: Production (Recommended)
+### **Dengan Dashboard (NEW!)**
+
+```bash
+# Terminal 1: Jalankan sistem
+python3 main/real/run_real.py
+
+# Terminal 2: Jalankan dashboard
+python3 main/real/dashboard.py
+
+# Akses dashboard
+http://<IP_RPi5>:5000
+```
+
+### **Tanpa Dashboard**
+
 ```bash
 # Jalankan
 python3 main/real/run_real.py
 
 # Monitor (terminal kedua)
 tail -f results/hasil_real/pico_monitor.log
+```
 
-# Analisis (setelah 100+ steps)
+### **Analisis**
+
+```bash
+# Setelah 100+ steps
 python3 main/real/analyze_results.py
 ```
 
@@ -18,30 +36,31 @@ python3 main/real/analyze_results.py
 
 ---
 
-### CARA 2: Testing + Dashboard
+## 🎯 CARA TESTING (n3iwf/server.py)
+
+**⚠️ HANYA UNTUK TESTING MODE (bukan real Pico)**
+
 ```bash
 # Jalankan
-python3 n3iwf/server.py
+python3 n3iwf/server.py --sim
 
 # Akses dashboard
 http://<IP_RPi5>:5000
-
-# Analisis (setelah 10+ packets)
-python3 n3iwf/analyze_n3iwf_real.py
 ```
 
-**Output:** `results/n3iwf_real/n3iwf_real_analysis.png`
+**Catatan:** `n3iwf/server.py` untuk testing dengan data sintetis, bukan untuk real Pico deployment!
 
 ---
 
 ## 📊 Perbedaan Singkat
 
-| | run_real.py | n3iwf/server.py |
+| | run_real.py + dashboard.py | n3iwf/server.py |
 |---|---|---|
-| Dashboard | ❌ | ✅ |
+| Data | Real Pico | Simulasi |
+| Dashboard | ✅ (port 5000) | ✅ (port 5000) |
 | Virtual Sim | ✅ | ❌ |
 | Output | `hasil_real/` | `n3iwf_real/` |
-| Tujuan | Production | Testing |
+| Tujuan | **Production** | Testing |
 
 ---
 
