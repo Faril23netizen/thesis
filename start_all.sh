@@ -154,17 +154,31 @@ echo ""
 # Step 6: Verify IPsec Tunnel
 ################################################################################
 echo -e "${YELLOW}[6/7] Verifying IPsec tunnel...${NC}"
-if ipsec statusall 2>/dev/null | grep -q "ESTABLISHED"; then
+
+# Wait up to 30 seconds for tunnel to establish
+TUNNEL_ESTABLISHED=false
+for i in {1..30}; do
+    if ipsec statusall 2>/dev/null | grep -q "ESTABLISHED"; then
+        TUNNEL_ESTABLISHED=true
+        break
+    fi
+    sleep 1
+done
+
+if [ "$TUNNEL_ESTABLISHED" = true ]; then
     echo -e "${GREEN}✅ IPsec tunnel ESTABLISHED${NC}"
     
     # Test connectivity
     if ping -c 2 -W 2 192.168.100.1 > /dev/null 2>&1; then
         echo -e "${GREEN}✅ Connectivity OK (ping successful)${NC}"
     else
-        echo -e "${YELLOW}⚠️  Ping failed, but continuing...${NC}"
+        echo -e "${YELLOW}⚠️  Ping failed, but tunnel is up${NC}"
     fi
 else
-    echo -e "${YELLOW}⚠️  IPsec tunnel not established yet, continuing...${NC}"
+    echo -e "${YELLOW}⚠️  IPsec tunnel not established after 30s${NC}"
+    echo -e "${YELLOW}   This is OK - system will continue without IPsec${NC}"
+    echo -e "${YELLOW}   To debug: ./diagnose_ipsec.sh${NC}"
+    echo -e "${YELLOW}   To fix later: sudo ipsec restart${NC}"
 fi
 echo ""
 
