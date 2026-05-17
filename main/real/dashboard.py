@@ -14,7 +14,8 @@ import sys
 import json
 import time
 import socket
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, jsonify, render_template_string, make_response, request
+from functools import wraps
 
 # Path configuration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -30,6 +31,17 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 os.makedirs(NETWORK_DIR, exist_ok=True)
 
 app = Flask(__name__)
+
+# CORS support - allow all origins
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+
+@app.after_request
+def after_request(response):
+    return add_cors_headers(response)
 
 # HTML Template with Charts
 HTML_TEMPLATE = """
@@ -578,19 +590,25 @@ def index():
 def get_state():
     """Read state from state.json"""
     try:
+        print(f"[API] /api/state called from {request.remote_addr if 'request' in dir() else 'unknown'}")
+        
         if not os.path.exists(STATE_JSON):
+            print(f"[API] state.json not found at {STATE_JSON}")
             return jsonify({"error": "state.json not found"})
         
         file_age = time.time() - os.path.getmtime(STATE_JSON)
         if file_age > 30:
+            print(f"[API] state.json is stale (age: {file_age}s)")
             return jsonify({"error": "state.json is stale"})
         
         with open(STATE_JSON, 'r') as f:
             state = json.load(f)
         
+        print(f"[API] Returning state: pH={state.get('pH')}, T={state.get('T')}")
         return jsonify(state)
     
     except Exception as e:
+        print(f"[API] Error in /api/state: {e}")
         return jsonify({"error": str(e)})
 
 
