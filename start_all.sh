@@ -111,9 +111,9 @@ echo ""
 ################################################################################
 # Step 4: Setup IPsec (Callbox Side)
 ################################################################################
-echo -e "${YELLOW}[4/7] Setting up IPsec tunnel (Callbox side)...${NC}"
+echo -e "${YELLOW}[4/7] Preparing IPsec config (Callbox side)...${NC}"
 
-# Wait for config files
+# Wait for callbox to create config files
 for i in {1..10}; do
     if [ -f "/tmp/ipsec_callbox.conf" ]; then
         break
@@ -122,20 +122,13 @@ for i in {1..10}; do
 done
 
 if [ -f "/tmp/ipsec_callbox.conf" ]; then
-    cp /tmp/ipsec_callbox.conf /etc/ipsec.conf
-    cp /tmp/ipsec_callbox.secrets /etc/ipsec.secrets
-    chmod 600 /etc/ipsec.secrets
-    
-    # Restart IPsec
-    ipsec stop > /dev/null 2>&1 || true
-    sleep 2
-    ipsec start > /dev/null 2>&1
-    
-    echo -e "${GREEN}✅ IPsec configured (Callbox)${NC}"
+    echo -e "${GREEN}✅ Callbox IPsec config created${NC}"
+    echo -e "${BLUE}   Config will be merged by N3IWF client${NC}"
 else
-    echo -e "${YELLOW}⚠️  IPsec config not found, continuing...${NC}"
+    echo -e "${YELLOW}⚠️  Callbox IPsec config not found${NC}"
+    echo -e "${YELLOW}   N3IWF will use standalone config${NC}"
 fi
-sleep 2
+sleep 1
 echo ""
 
 ################################################################################

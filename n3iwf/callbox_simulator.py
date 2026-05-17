@@ -111,6 +111,7 @@ def setup_ipsec_tunnel():
         return False
     
     # Create IPsec config for Callbox (responder)
+    # NOTE: This will be merged with N3IWF client config
     ipsec_conf = f"""
 config setup
     charondebug="ike 2, knl 2, cfg 2, net 2"
@@ -121,8 +122,8 @@ conn callbox-n3iwf
     auto=add
     keyexchange=ikev2
     
-    # Callbox (responder)
-    left={CALLBOX_IP}
+    # Callbox (responder) - listen for connections
+    left=%any
     leftsubnet={IPSEC_TUNNEL_IP}/32
     leftid=@callbox
     leftauth=psk
@@ -149,19 +150,15 @@ conn callbox-n3iwf
 """
     
     try:
-        # Write config files
+        # Write config files to /tmp (will be merged later)
         with open("/tmp/ipsec_callbox.conf", "w") as f:
             f.write(ipsec_conf)
         
         with open("/tmp/ipsec_callbox.secrets", "w") as f:
             f.write(ipsec_secrets)
         
-        log("IPsec config files created", "INFO")
-        log("To activate IPsec tunnel:", "INFO")
-        log("  sudo cp /tmp/ipsec_callbox.conf /etc/ipsec.conf", "INFO")
-        log("  sudo cp /tmp/ipsec_callbox.secrets /etc/ipsec.secrets", "INFO")
-        log("  sudo chmod 600 /etc/ipsec.secrets", "INFO")
-        log("  sudo ipsec restart", "INFO")
+        log("IPsec config files created in /tmp", "INFO")
+        log("Config will be merged with N3IWF client config", "INFO")
         
         return True
         

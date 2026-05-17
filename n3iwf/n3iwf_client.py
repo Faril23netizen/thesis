@@ -55,25 +55,35 @@ def setup_ipsec_client():
         log(f"Error: {e}", "ERROR")
         return False
     
+    # Wait for callbox config
+    log("Waiting for callbox config...", "INFO")
+    for i in range(10):
+        if os.path.exists("/tmp/ipsec_callbox.conf"):
+            break
+        time.sleep(1)
+    
+    # Read callbox config if exists
+    callbox_config = ""
+    if os.path.exists("/tmp/ipsec_callbox.conf"):
+        with open("/tmp/ipsec_callbox.conf", "r") as f:
+            callbox_config = f.read()
+        log("Found callbox config, will merge", "INFO")
+    
     # IPsec config for N3IWF client (initiator)
-    ipsec_conf = f"""
-config setup
-    charondebug="ike 2, knl 2, cfg 2, net 2"
-    uniqueids=never
-
+    n3iwf_conn = f"""
 conn n3iwf-callbox
     type=tunnel
     auto=start
     keyexchange=ikev2
     
-    # N3IWF client (initiator)
-    left={N3IWF_CLIENT_IP}
+    # N3IWF client (initiator) - initiate connection
+    left=%defaultroute
     leftsubnet={IPSEC_TUNNEL_IP_N3IWF}/32
     leftid=@n3iwf-client
     leftauth=psk
     
-    # Callbox (responder)
-    right={CALLBOX_IP}
+    # Callbox (responder) - same machine, use loopback
+    right=127.0.0.1
     rightsubnet={IPSEC_TUNNEL_IP_CALLBOX}/32
     rightid=@callbox
     rightauth=psk
@@ -88,29 +98,44 @@ conn n3iwf-callbox
     dpdtimeout=120s
 """
     
+    # Merge configs
+    if callbox_config:
+        # Extract config setup from callbox
+        merged_config = callbox_config.rstrip() + "\n" + n3iwf_conn
+    else:
+        # No callbox config, use standalone
+        merged_config = f"""
+config setup
+    charondebug="ike 2, knl 2, cfg 2, net 2"
+    uniqueids=never
+
+{n3iwf_conn}
+"""
+    
     ipsec_secrets = f"""
 # PSK for N3IWF tunnel
 @n3iwf-client @callbox : PSK "aquaculture_n3iwf_2026_secret_key"
 """
     
     try:
-        # Backup existing config
-        if os.path.exists("/etc/ipsec.conf"):
-            subprocess.run(["sudo", "cp", "/etc/ipsec.conf", "/etc/ipsec.conf.backup"])
+        # Write merged config
+        with open("/tmp/ipsec_merged.conf", "w") as f:
+            f.write(merged_config)
         
-        # Write new config
-        with open("/tmp/ipsec_n3iwf.conf", "w") as f:
-            f.write(ipsec_conf)
-        
-        with open("/tmp/ipsec_n3iwf.secrets", "w") as f:
+        with open("/tmp/ipsec_merged.secrets", "w") as f:
             f.write(ipsec_secrets)
         
-        # Copy to /etc
-        subprocess.run(["sudo", "cp", "/tmp/ipsec_n3iwf.conf", "/etc/ipsec.conf"], check=True)
-        subprocess.run(["sudo", "cp", "/tmp/ipsec_n3iwf.secrets", "/etc/ipsec.secrets"], check=True)
+        # Backup existing config
+        if os.path.exists("/etc/ipsec.conf"):
+            subprocess.run(["sudo", "cp", "/etc/ipsec.conf", "/etc/ipsec.conf.backup"], check=False)
+        
+        # Install merged config
+        subprocess.run(["sudo", "cp", "/tmp/ipsec_merged.conf", "/etc/ipsec.conf"], check=True)
+        subprocess.run(["sudo", "cp", "/tmp/ipsec_merged.secrets", "/etc/ipsec.secrets"], check=True)
         subprocess.run(["sudo", "chmod", "600", "/etc/ipsec.secrets"], check=True)
         
-        log("IPsec config installed successfully", "INFO")
+        log("IPsec merged config installed successfully", "INFO")
+        log("Config includes both callbox and N3IWF connections", "INFO")
         return True
         
     except Exception as e:
