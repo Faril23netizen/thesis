@@ -23,3 +23,9 @@ results/n3iwf/*.png
 results/n3iwf_real/*.csv
 results/n3iwf_real/*.png
 results/n3iwf_real/qtable.json
+
+# Keep hasil_real data (for analysis on Windows)
+!results/hasil_real/comparison.csv
+!results/hasil_real/comparison_filtered.csv
+!results/network/callbox_stats.json
+!results/network/n3iwf_status.json
