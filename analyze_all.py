@@ -58,19 +58,23 @@ def load_comparison_data():
             reader = csv.DictReader(f)
             for row in reader:
                 try:
+                    # Skip rows with missing or None values
+                    if not row.get('real_step') or not row.get('pH') or not row.get('T_C'):
+                        continue
+                    
                     data.append({
                         'step': int(row['real_step']),
                         'pH': float(row['pH']),
                         'T': float(row['T_C']),
-                        'mode': row['mode'],
-                        'action': int(row['real_action']),
-                        'reward': float(row['reward']),
-                        'rb_reward': float(row['rb_reward']),
-                        'energy': float(row['energy_real']),
-                        'fql_steps': int(row['fql_steps']),
-                        'epsilon': float(row['epsilon'])
+                        'mode': row.get('mode', 'Unknown'),
+                        'action': int(row.get('real_action', 0)),
+                        'reward': float(row.get('reward', 0)),
+                        'rb_reward': float(row.get('rb_reward', 0)),
+                        'energy': float(row.get('energy_real', 0)),
+                        'fql_steps': int(row.get('fql_steps', 0)),
+                        'epsilon': float(row.get('epsilon', 0))
                     })
-                except (ValueError, KeyError):
+                except (ValueError, KeyError, TypeError):
                     continue
     except FileNotFoundError:
         print(f"⚠️  File not found: {COMPARISON_CSV}")

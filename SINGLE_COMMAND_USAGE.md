@@ -107,6 +107,29 @@ sleep 5
 sudo ./start_all.sh
 ```
 
+**RPi5 dimatikan tanpa stop (ada orphan processes):**
+```bash
+# Quick restart - otomatis bersihkan semua
+chmod +x quick_restart.sh
+sudo ./quick_restart.sh
+```
+
+**Manual cleanup:**
+```bash
+# Kill orphan processes
+pkill -f callbox_simulator.py
+pkill -f n3iwf_client.py
+pkill -f run_real.py
+pkill -f dashboard.py
+
+# Remove stale files
+rm -f results/.pids
+sudo ipsec stop
+
+# Start fresh
+sudo ./start_all.sh
+```
+
 ---
 
 ## ⏱️ Timeline

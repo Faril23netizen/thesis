@@ -18,7 +18,13 @@ sudo ./stop_all.sh
 python3 analyze_all.py
 ```
 
-**Baca:** `SINGLE_COMMAND_USAGE.md` untuk panduan lengkap.
+**Restart setelah shutdown tidak normal:**
+```bash
+chmod +x quick_restart.sh
+sudo ./quick_restart.sh
+```
+
+**Baca:** `START_HERE.md` atau `SINGLE_COMMAND_USAGE.md` untuk panduan lengkap.
 
 ---
 

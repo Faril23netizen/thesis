@@ -1,12 +1,10 @@
 # 🚀 START HERE - Panduan Singkat
 
-## 📖 File Penting (Baca Ini Aja!)
+## 📖 Dokumentasi (3 File Aja!)
 
-1. **`START_HERE.md`** ← Kamu di sini (1 menit)
-2. **`DASHBOARD_ACCESS.md`** ← Cara akses dashboard (2 menit) ⭐
-3. **`OUTPUT_RESULTS.md`** ← Apa aja hasilnya? (3 menit)
-4. **`SINGLE_COMMAND_USAGE.md`** ← Panduan lengkap (5 menit)
-5. **`README.md`** ← Overview project
+1. **`START_HERE.md`** ← Panduan singkat (2 menit)
+2. **`SINGLE_COMMAND_USAGE.md`** ← Manual lengkap (5 menit)
+3. **`OUTPUT_RESULTS.md`** ← Hasil analisis (3 menit)
 
 **Sisanya:** File teknis (ga perlu dibaca)
 
@@ -78,13 +76,19 @@ sleep 5
 sudo ./start_all.sh
 ```
 
+**RPi5 dimatikan tanpa stop:**
+```bash
+# Quick restart (otomatis bersihkan)
+chmod +x quick_restart.sh
+sudo ./quick_restart.sh
+```
+
 ---
 
 ## 📚 Baca Selanjutnya
 
-- **Apa aja hasilnya?** `OUTPUT_RESULTS.md`
 - **Detail lengkap:** `SINGLE_COMMAND_USAGE.md`
-- **Troubleshooting:** `SINGLE_COMMAND_USAGE.md` (bagian Troubleshooting)
+- **Apa aja hasilnya?** `OUTPUT_RESULTS.md`
 - **Project overview:** `README.md`
 
 ---
