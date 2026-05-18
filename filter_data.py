@@ -8,7 +8,10 @@ Usage:
   # Lihat statistik per 1000 steps
   python3 filter_data.py --stats
   
-  # Filter DQN sampai step tertentu (misal 10000)
+  # Filter semua data sampai step 10000 (RB + FQL + DQN)
+  python3 filter_data.py --max-total-steps 10000
+  
+  # Filter DQN saja sampai step tertentu (keep all RB/FQL)
   python3 filter_data.py --max-dqn-steps 10000
   
   # Filter DQN sampai reward masih bagus (auto detect)
@@ -117,21 +120,25 @@ def find_best_cutoff(groups):
     return None
 
 
-def filter_data(data, max_dqn_steps=None):
-    """Filter data - keep all RB and FQL, limit DQN steps"""
+def filter_data(data, max_dqn_steps=None, max_total_steps=None):
+    """Filter data - keep all RB and FQL, limit DQN steps, or limit total steps"""
     filtered = []
     
     for row in data:
         mode = row.get('mode', '')
         step = int(row.get('real_step', 0))
         
-        # Keep all RB and FQL
-        if mode in ['Rule-Based', 'FQL']:
-            filtered.append(row)
-        # Limit DQN
-        elif mode == 'DQN':
-            if max_dqn_steps is None or step <= max_dqn_steps:
+        # If max_total_steps is set, apply to all data
+        if max_total_steps is not None:
+            if step <= max_total_steps:
                 filtered.append(row)
+        # Otherwise, keep all RB and FQL, limit DQN
+        else:
+            if mode in ['Rule-Based', 'FQL']:
+                filtered.append(row)
+            elif mode == 'DQN':
+                if max_dqn_steps is None or step <= max_dqn_steps:
+                    filtered.append(row)
     
     return filtered
 
@@ -181,7 +188,8 @@ def print_summary(original, filtered):
 def main():
     parser = argparse.ArgumentParser(description='Filter DQN data based on reward')
     parser.add_argument('--stats', action='store_true', help='Show DQN reward statistics')
-    parser.add_argument('--max-dqn-steps', type=int, help='Maximum DQN steps to keep')
+    parser.add_argument('--max-dqn-steps', type=int, help='Maximum DQN steps to keep (keep all RB/FQL)')
+    parser.add_argument('--max-total-steps', type=int, help='Maximum total steps to keep (all modes)')
     parser.add_argument('--auto-filter', action='store_true', help='Auto detect best cutoff point')
     
     args = parser.parse_args()
@@ -196,10 +204,11 @@ def main():
         analyze_dqn_reward(data)
     
     # Filter data
-    if args.max_dqn_steps or args.auto_filter:
-        max_steps = args.max_dqn_steps
+    if args.max_dqn_steps or args.max_total_steps or args.auto_filter:
+        max_dqn = args.max_dqn_steps
+        max_total = args.max_total_steps
         
-        if args.auto_filter and not max_steps:
+        if args.auto_filter and not max_dqn:
             # Auto detect
             dqn_data = [row for row in data if row.get('mode') == 'DQN']
             groups = defaultdict(list)
@@ -208,14 +217,20 @@ def main():
                 group_key = (step // 1000) * 1000
                 groups[group_key].append(float(row['reward']))
             
-            max_steps = find_best_cutoff(groups)
-            if not max_steps:
+            max_dqn = find_best_cutoff(groups)
+            if not max_dqn:
                 print("❌ Could not auto-detect cutoff point")
                 return
-            print(f"\n🤖 Auto-detected cutoff: {max_steps} steps")
+            print(f"\n🤖 Auto-detected cutoff: {max_dqn} steps")
         
-        print(f"\nFiltering DQN data up to step {max_steps}...")
-        filtered = filter_data(data, max_steps)
+        if max_total:
+            print(f"\nFiltering ALL data up to step {max_total}...")
+            filtered = filter_data(data, max_total_steps=max_total)
+        elif max_dqn:
+            print(f"\nFiltering DQN data up to step {max_dqn} (keeping all RB/FQL)...")
+            filtered = filter_data(data, max_dqn_steps=max_dqn)
+        else:
+            filtered = data
         
         # Save
         save_filtered_data(filtered, OUTPUT_CSV)
@@ -228,7 +243,7 @@ def main():
         print(f"   2. Use filtered: cp {OUTPUT_CSV} {COMPARISON_CSV}")
         print(f"   3. Run analysis: python3 analyze_all.py")
     
-    if not (args.stats or args.max_dqn_steps or args.auto_filter):
+    if not (args.stats or args.max_dqn_steps or args.max_total_steps or args.auto_filter):
         parser.print_help()
 
 
