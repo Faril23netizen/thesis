@@ -11,6 +11,14 @@ sudo ./start_all.sh
 
 # 3. Stop dan analisis
 sudo ./stop_all.sh
+
+# Cek reward DQN (opsional - jika reward turun di akhir)
+python3 filter_data.py --stats
+python3 filter_data.py --auto-filter
+cp results/hasil_real/comparison.csv results/hasil_real/comparison.csv.backup
+cp results/hasil_real/comparison_filtered.csv results/hasil_real/comparison.csv
+
+# Generate grafik
 python3 analyze_all.py
 ```
 
@@ -32,9 +40,14 @@ python3 analyze_all.py
 - Logs & data tetap tersimpan
 
 **`analyze_all.py` buat:**
-- PDF: `results/thesis/complete_analysis.pdf` (6 grafik + 1 tabel network)
-- CSV: `results/thesis/summary.csv`
-- Plots: `results/thesis/plots/*.png` (7 files)
+- 7 grafik PNG di `results/simulation/`
+- 1 tabel network performance CSV
+- 1 file Excel lengkap
+
+**`filter_data.py` untuk:**
+- Analisis reward DQN per 1000 steps
+- Filter data DQN yang rewardnya turun
+- Auto-detect cutoff point terbaik
 
 ---
 
