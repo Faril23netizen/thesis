@@ -464,17 +464,7 @@ def plot_network_details_table(stats, ax):
             cell.set_facecolor('#f8d7da')
     
     ax.set_title('Network Performance Details (N3IWF + 5G Core)', fontsize=12, fontweight='bold', pad=20)
-    bars = ax.bar(metrics, values, color=colors_bars, alpha=0.8)
-    
-    # Add value labels
-    for bar, val in zip(bars, values):
-        height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2., height,
-                f'{val:.1f}', ha='center', va='bottom', fontweight='bold')
-    
-    ax.set_ylabel('Value')
-    ax.set_title('Network Performance (N3IWF + Callbox)')
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.axis('off')
 
 
 # ══════════════════════════════════════════════════════════════════════════════
