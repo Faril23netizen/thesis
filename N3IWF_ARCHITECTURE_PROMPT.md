@@ -1,179 +1,259 @@
-# 🎨 Prompt untuk Membuat Arsitektur N3IWF
+# 🎨 Prompt untuk Membuat Arsitektur N3IWF Local Edge Service
 
-Copy-paste prompt ini ke ChatGPT/Claude untuk generate diagram arsitektur N3IWF.
+Copy-paste prompt ini ke ChatGPT/Claude untuk generate diagram arsitektur N3IWF sebagai local edge service.
 
 ---
 
 ## 📋 PROMPT:
 
 ```
-Buatkan diagram arsitektur sistem N3IWF (Non-3GPP Interworking Function) untuk thesis aquaculture dengan detail berikut:
+Buatkan diagram arsitektur N3IWF (Non-3GPP Interworking Function) sebagai LOCAL EDGE SERVICE untuk aquaculture monitoring system dengan detail berikut:
 
-## KOMPONEN SISTEM:
+## KONSEP UTAMA:
 
-### 1. PICO 2W (IoT Device)
-- Sensor: pH & Temperature
-- Aktuator: Relay Aerator (OFF, LOW, MED, HIGH)
-- Koneksi: WiFi TCP ke RPi5 (port 5005)
-- IP: 10.42.0.206
+N3IWF berfungsi sebagai **local edge gateway** yang menyediakan:
+1. Secure communication (IPsec tunnel)
+2. 5G Core Network simulation (AMF, SMF, UPF)
+3. Network performance monitoring
+4. Low-latency local processing
 
-### 2. RASPBERRY PI 5 (Edge AI + N3IWF Client)
-- IP: 10.42.0.1 (USB tethering/hotspot mode)
-- Komponen:
-  a) WiFi Bridge (port 5005) - menerima data dari Pico
-  b) AI Controller:
-     - Phase 1: Rule-Based (100 steps)
-     - Phase 2: FQL Training (200 steps)
-     - Phase 3: DQN (continuous)
-  c) N3IWF Client (IPsec tunnel initiator)
-     - Tunnel IP: 192.168.100.2/32
-     - Protocol: IKEv2/IPsec
-     - Auth: PSK (Pre-Shared Key)
-  d) Dashboard (port 5000)
-     - Real-time monitoring
-     - Network performance metrics
+## KOMPONEN N3IWF LOCAL EDGE SERVICE:
 
-### 3. CALLBOX 5G SIMULATOR (5G Core Network)
-- IP: 10.42.0.1 (same machine as RPi5 for simulation)
-- Tunnel IP: 192.168.100.1/32
-- Komponen 5G Core:
-  a) AMF (Access and Mobility Management Function)
-     - Register UE (User Equipment)
-     - Status: RUNNING
-  b) SMF (Session Management Function)
-     - Create PDU sessions
-     - QoS management
-     - Status: RUNNING
-  c) UPF (User Plane Function)
-     - Forward packets
-     - Simulate latency (10-15ms)
-     - Simulate packet loss (~1%)
-     - Status: RUNNING
-  d) N3IWF (IPsec responder)
-     - Accept IPsec connections
-     - Tunnel to 5G Core
+### 1. N3IWF CLIENT (Edge Device Side)
+- **Lokasi:** Raspberry Pi 5
+- **IP:** 10.42.0.1
+- **Tunnel IP:** 192.168.100.2/32
+- **Fungsi:**
+  - Initiate IPsec tunnel
+  - Encrypt data traffic
+  - Monitor tunnel status
+- **Protocol:** IKEv2/IPsec
+- **Auth:** Pre-Shared Key (PSK)
 
-## ALUR DATA:
+### 2. IPSEC TUNNEL (Secure Channel)
+- **Protocol:** IKEv2 (Internet Key Exchange v2)
+- **Encryption:** AES-256
+- **Authentication:** SHA-256
+- **Key Exchange:** Diffie-Hellman Group 14 (modp2048)
+- **Tunnel IPs:** 192.168.100.2 ↔ 192.168.100.1
+- **Metrics:**
+  - Latency: 10-15ms
+  - Jitter: ±5ms
+  - Packet Loss: ~1%
+  - Throughput: 100 Mbps
 
-1. **Data Collection:**
-   Pico 2W → WiFi TCP → RPi5 (port 5005)
-   - Sensor data: pH, Temperature
-   - Frequency: Real-time
+### 3. N3IWF GATEWAY (5G Core Side)
+- **Lokasi:** Raspberry Pi 5 (same machine, local simulation)
+- **IP:** 10.42.0.1
+- **Tunnel IP:** 192.168.100.1/32
+- **Fungsi:**
+  - Accept IPsec connections
+  - Terminate IPsec tunnel
+  - Forward to 5G Core components
+- **Status:** ESTABLISHED
 
-2. **AI Processing:**
-   WiFi Bridge → AI Controller (RB/FQL/DQN) → Action Decision
-   - Input: pH, Temperature
-   - Output: Aerator action (OFF/LOW/MED/HIGH)
-   - Progressive learning: RB → FQL → DQN
+### 4. 5G CORE NETWORK COMPONENTS (Local Simulation)
 
-3. **Control Command:**
-   AI Controller → WiFi Bridge → Pico 2W
-   - Command: Aerator control
-   - Frequency: Per step
+#### a) AMF (Access and Mobility Management Function)
+- **Fungsi:**
+  - Register UE (User Equipment)
+  - Manage mobility
+  - Authentication
+- **Status:** RUNNING
+- **Registered UE:** n3iwf-client
 
-4. **Secure Communication (N3IWF):**
-   RPi5 (N3IWF Client) ←→ IPsec Tunnel ←→ Callbox (N3IWF + 5G Core)
-   - Protocol: IKEv2/IPsec
-   - Encryption: AES-256, SHA-256
-   - Tunnel IPs: 192.168.100.2 ↔ 192.168.100.1
-   - Latency: 10-15ms
-   - Packet loss: ~1%
+#### b) SMF (Session Management Function)
+- **Fungsi:**
+  - Create PDU sessions
+  - Manage QoS (Quality of Service)
+  - Session lifecycle
+- **Status:** RUNNING
+- **Active Sessions:** session-001
+- **QoS:** QoS-1 (default)
 
-5. **5G Core Processing:**
-   N3IWF → AMF (registration) → SMF (session) → UPF (forwarding)
-   - UE registration
-   - PDU session creation
-   - Packet forwarding with QoS
+#### c) UPF (User Plane Function)
+- **Fungsi:**
+  - Forward data packets
+  - Apply QoS policies
+  - Monitor traffic
+- **Status:** RUNNING
+- **Metrics:**
+  - Packets sent/received
+  - Packet loss simulation
+  - Latency simulation
 
-6. **Monitoring:**
-   All components → Dashboard (port 5000)
-   - Real-time water quality
-   - AI phase status
-   - Network performance
-   - 5G Core status
+## ALUR KERJA N3IWF:
 
-## NETWORK METRICS:
+### FASE 1: TUNNEL ESTABLISHMENT
+```
+1. N3IWF Client (RPi5) → IKE_SA_INIT → N3IWF Gateway
+   - Negotiate encryption algorithms
+   - Exchange Diffie-Hellman keys
 
-- **Latency:** 10-15ms (avg)
-- **Jitter:** ±5ms
-- **Packet Loss:** ~1%
-- **Throughput:** 100 Mbps
-- **IPsec Status:** ESTABLISHED
-- **Tunnel:** IKEv2/IPsec with PSK
+2. N3IWF Client ← IKE_SA_INIT ← N3IWF Gateway
+   - Confirm algorithms
+   - Send DH response
 
-## SECURITY:
+3. N3IWF Client → IKE_AUTH → N3IWF Gateway
+   - Authenticate with PSK
+   - Request tunnel creation
 
-- **IPsec Tunnel:** AES-256-SHA-256
-- **IKE:** modp2048 (Diffie-Hellman Group 14)
-- **ESP:** AES-256 encryption + SHA-256 authentication
-- **PSK:** "aquaculture_n3iwf_2026_secret_key"
-- **DPD (Dead Peer Detection):** 30s delay, 120s timeout
+4. N3IWF Client ← IKE_AUTH ← N3IWF Gateway
+   - Confirm authentication
+   - Tunnel ESTABLISHED
+```
 
-## DEPLOYMENT MODE:
+### FASE 2: UE REGISTRATION
+```
+1. N3IWF Gateway → Registration Request → AMF
+   - UE ID: n3iwf-client
+   - Tunnel IP: 192.168.100.2
 
-- **Callbox & N3IWF Client:** Same machine (RPi5) for simulation
-- **Tunnel:** Loopback with virtual IPs (192.168.100.1/2)
-- **Purpose:** Demonstrate N3IWF integration without physical 5G Callbox
+2. AMF → Registration Accept → N3IWF Gateway
+   - UE registered
+   - Status: REGISTERED
+```
+
+### FASE 3: SESSION CREATION
+```
+1. N3IWF Gateway → PDU Session Request → SMF
+   - UE ID: n3iwf-client
+   - Session ID: session-001
+
+2. SMF → Session Created → N3IWF Gateway
+   - QoS: QoS-1
+   - Bandwidth: 100 Mbps
+   - Status: ACTIVE
+```
+
+### FASE 4: DATA FORWARDING
+```
+1. Application Data → N3IWF Client (encrypt)
+2. Encrypted Data → IPsec Tunnel → N3IWF Gateway (decrypt)
+3. Decrypted Data → UPF (forward with QoS)
+4. UPF → Simulate latency (10-15ms)
+5. UPF → Check packet loss (~1%)
+6. UPF → Forward to destination
+```
+
+### FASE 5: MONITORING
+```
+1. N3IWF Client → Check tunnel status (every 5s)
+2. N3IWF Gateway → Update statistics (every 1s)
+3. Statistics → Save to JSON (every 5s)
+   - callbox_stats.json
+   - n3iwf_status.json
+4. Dashboard → Read statistics → Display metrics
+```
+
+## KEUNTUNGAN LOCAL EDGE N3IWF:
+
+1. **Low Latency:** 10-15ms (vs 40-100ms cloud)
+2. **Secure:** IPsec encryption end-to-end
+3. **Reliable:** Local processing, no internet dependency
+4. **Standardized:** Follow 3GPP TS 23.501 standard
+5. **Scalable:** Can connect multiple edge devices
+6. **Monitored:** Real-time network metrics
+
+## DEPLOYMENT ARCHITECTURE:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    RASPBERRY PI 5                           │
+│                  (Local Edge Server)                        │
+│                                                             │
+│  ┌──────────────┐         ┌──────────────┐                │
+│  │  N3IWF       │ IPsec   │  N3IWF       │                │
+│  │  Client      │◄───────►│  Gateway     │                │
+│  │              │ Tunnel  │              │                │
+│  │ 192.168.100.2│         │192.168.100.1 │                │
+│  └──────────────┘         └──────┬───────┘                │
+│                                   │                         │
+│                          ┌────────▼────────┐               │
+│                          │   5G Core       │               │
+│                          │   Components    │               │
+│                          │                 │               │
+│                          │  ┌───────────┐  │               │
+│                          │  │    AMF    │  │               │
+│                          │  │ (Register)│  │               │
+│                          │  └─────┬─────┘  │               │
+│                          │        │        │               │
+│                          │  ┌─────▼─────┐  │               │
+│                          │  │    SMF    │  │               │
+│                          │  │ (Session) │  │               │
+│                          │  └─────┬─────┘  │               │
+│                          │        │        │               │
+│                          │  ┌─────▼─────┐  │               │
+│                          │  │    UPF    │  │               │
+│                          │  │ (Forward) │  │               │
+│                          │  └───────────┘  │               │
+│                          └─────────────────┘               │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ## DIAGRAM REQUIREMENTS:
 
-1. Tampilkan semua komponen dengan jelas
-2. Gunakan warna berbeda untuk setiap layer:
-   - IoT Layer (Pico): Hijau
-   - Edge AI Layer (RPi5): Biru
-   - Network Layer (IPsec): Oranye
-   - 5G Core Layer (Callbox): Merah
-3. Tunjukkan alur data dengan panah
-4. Label setiap koneksi dengan protocol dan port
-5. Tampilkan metrics penting (latency, packet loss)
-6. Gunakan icon yang sesuai untuk setiap komponen
-7. Format: Professional, suitable for thesis/paper
+1. **Fokus pada N3IWF workflow:**
+   - Tunnel establishment
+   - UE registration
+   - Session creation
+   - Data forwarding
+   - Monitoring
 
-## STYLE:
+2. **Tampilkan layer:**
+   - Application Layer (top)
+   - N3IWF Client Layer
+   - IPsec Tunnel Layer (highlight security)
+   - N3IWF Gateway Layer
+   - 5G Core Layer (bottom)
 
-- Clean and professional
-- Suitable for academic thesis
-- Clear labels and legends
-- Show both data flow and control flow
-- Highlight IPsec tunnel security
+3. **Gunakan warna:**
+   - N3IWF Client: Biru
+   - IPsec Tunnel: Oranye (security)
+   - N3IWF Gateway: Hijau
+   - 5G Core: Merah
+
+4. **Tunjukkan:**
+   - Alur data dengan panah
+   - Protocol di setiap koneksi
+   - Metrics (latency, packet loss)
+   - Status (ESTABLISHED, RUNNING)
+
+5. **Style:**
+   - Professional untuk thesis
+   - Clear labels
+   - Show security aspect (encryption)
+   - Highlight local edge benefit
+
+## METRICS TO DISPLAY:
+
+- **Tunnel Status:** ESTABLISHED
+- **Latency:** 10-15ms
+- **Jitter:** ±5ms
+- **Packet Loss:** ~1%
+- **Throughput:** 100 Mbps
+- **Encryption:** AES-256-SHA-256
+- **Uptime:** Real-time
 ```
 
 ---
 
-## 🎯 TIPS PENGGUNAAN:
+## 🎯 FOKUS DIAGRAM:
 
-1. **Untuk Diagram Sederhana:**
-   - Fokus pada alur utama: Pico → RPi5 → IPsec → 5G Core
-   - Tampilkan 3 layer: IoT, Edge AI, 5G Core
-
-2. **Untuk Diagram Detail:**
-   - Tampilkan semua komponen 5G Core (AMF, SMF, UPF)
-   - Tunjukkan progressive learning (RB → FQL → DQN)
-   - Include network metrics
-
-3. **Untuk Paper/Thesis:**
-   - Gunakan format landscape
-   - High resolution (300 DPI)
-   - Black & white friendly (jika perlu print)
+Diagram harus menjelaskan:
+1. **Bagaimana N3IWF bekerja sebagai local edge gateway**
+2. **Alur establishment IPsec tunnel**
+3. **Integrasi dengan 5G Core components**
+4. **Benefit: low latency, secure, local processing**
 
 ---
 
-## 📊 ALTERNATIF TOOLS:
+## 📊 OUTPUT FORMAT:
 
-Jika ingin buat manual:
-- **Draw.io:** https://app.diagrams.net/
-- **Lucidchart:** https://www.lucidchart.com/
-- **PlantUML:** Text-based diagram
-- **Mermaid:** Markdown-based diagram
-
----
-
-## 🔍 REFERENSI STANDAR:
-
-- **3GPP TS 23.501:** 5G System Architecture
-- **3GPP TS 24.502:** N3IWF Procedures
-- **RFC 7296:** IKEv2 Protocol
-- **RFC 4303:** ESP (Encapsulating Security Payload)
+- **Landscape orientation**
+- **High resolution (300 DPI)**
+- **Professional style untuk thesis**
+- **Clear flow: top-to-bottom atau left-to-right**
 
 ---
 
