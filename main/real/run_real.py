@@ -166,6 +166,22 @@ def nh3_fraction(pH: float, T: float) -> float:
     pka = 0.09018 + 2729.92 / (T + 273.15)
     return 1.0 / (1.0 + 10 ** (pka - pH))
 
+def rule_based_risk(pH: float, T: float) -> int:
+    """
+    Rule-Based risk prediction based on NH3%.
+    Returns: 0=SAFE, 1=CAUTION, 2=WARNING, 3=CRITICAL
+    """
+    nh3_pct = nh3_fraction(pH, T) * 100.0
+    
+    if nh3_pct < 1.0:
+        return RISK_SAFE
+    elif nh3_pct < 5.0:
+        return RISK_CAUTION
+    elif nh3_pct < 10.0:
+        return RISK_WARNING
+    else:
+        return RISK_CRITICAL
+
 # ── Comparison CSV writer ────────────────────────────────────────────────── #
 
 _csv_file   = None
@@ -314,8 +330,8 @@ def main():
     # ── Initialize main objects ──────────────────────────────────────────── #
     fql        = FQLAgent()
     
-    # N3IWF Wi-Fi Bridge (TCP Server on Port 5005)
-    bridge     = WiFiBridge(port=5005)
+    # N3IWF Wi-Fi Bridge (TCP Server on Port 5000)
+    bridge     = WiFiBridge(port=5000)
     
     # To fallback to USB Serial, comment the WiFiBridge above and uncomment below:
     # _setup_pico_monitor_log(RESULTS_REAL)

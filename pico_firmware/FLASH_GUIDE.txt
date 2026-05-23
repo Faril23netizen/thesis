@@ -1,86 +1,64 @@
 ================================================================================
-CARA FLASH FIRMWARE KE PICO WH
+CARA FLASH FIRMWARE KE PICO WH (WINDOWS)
 ================================================================================
 
-STEP 1: BUILD FIRMWARE DI RPI5
--------------------------------
+STEP 1: BUILD FIRMWARE DI WINDOWS
+----------------------------------
 
-1. Install Pico SDK (jika belum):
-   ```bash
-   cd ~
-   git clone https://github.com/raspberrypi/pico-sdk.git
-   cd pico-sdk
-   git submodule update --init
-   export PICO_SDK_PATH=~/pico-sdk
-   
-   # Add to ~/.bashrc
-   echo 'export PICO_SDK_PATH=~/pico-sdk' >> ~/.bashrc
-   source ~/.bashrc
+1. Install Pico SDK:
+   - Download: https://github.com/raspberrypi/pico-sdk
+   - Extract ke C:\pico-sdk
+   - Set environment variable:
+     PICO_SDK_PATH=C:\pico-sdk
+
+2. Install ARM toolchain:
+   - Download: https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
+   - Install ARM GCC (arm-none-eabi)
+   - Add to PATH
+
+3. Install CMake:
+   - Download: https://cmake.org/download/
+   - Install dan add to PATH
+
+4. Build firmware:
+   ```cmd
+   cd pico_firmware
+   mkdir build
+   cd build
+   cmake -G "NMake Makefiles" ..
+   nmake
    ```
 
-2. Install ARM toolchain (jika belum):
-   ```bash
-   sudo apt update
-   sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
-   ```
-
-3. Build firmware:
-   ```bash
-   cd ~/thesis/pico_firmware
-   chmod +x build.sh
-   ./build.sh
-   ```
-
-4. Output: `build/aquaculture_monitoring.uf2`
+5. Output: `build\aquaculture_monitoring.uf2`
 
 
 STEP 2: FLASH KE PICO WH
 -------------------------
 
-**Method 1: Direct USB (Pico connected to RPi5)**
-
 1. Hold BOOTSEL button on Pico WH
-2. Connect USB cable to RPi5
+2. Connect USB cable to computer
 3. Release BOOTSEL button
-4. Pico akan muncul sebagai USB drive: `/media/ubuntu/RPI-RP2`
+4. Pico akan muncul sebagai USB drive: RPI-RP2
 5. Copy firmware:
-   ```bash
-   cp build/aquaculture_monitoring.uf2 /media/ubuntu/RPI-RP2/
-   ```
+   - Drag & drop `aquaculture_monitoring.uf2` ke drive RPI-RP2
 6. Pico akan auto-reboot dengan firmware baru
-
-
-**Method 2: Via Computer (Windows/Mac/Linux)**
-
-1. Build firmware di RPi5 (step 1)
-2. Copy `aquaculture_monitoring.uf2` ke computer (via SCP/USB drive)
-3. Hold BOOTSEL button on Pico WH
-4. Connect USB to computer
-5. Drag & drop `aquaculture_monitoring.uf2` ke drive RPI-RP2
-6. Pico akan auto-reboot
 
 
 STEP 3: VERIFY FIRMWARE
 ------------------------
 
-1. Connect Pico WH via USB
-2. Open serial monitor (115200 baud):
-   ```bash
-   screen /dev/ttyACM0 115200
-   ```
-   
+1. Install PuTTY atau serial terminal
+2. Connect ke COM port Pico (115200 baud)
 3. Expected output:
    ```
-   ==========================================
-     Pico WH - NH3 Risk Monitoring
-     MONITORING ONLY (No Control)
-   ==========================================
-   # Connecting to WiFi: N3IWF_AQUA
-   # WiFi connected!
-   # Connecting to 10.42.0.1:5005
-   # TCP connected!
-   # System ready - starting monitoring
-   > #0001 | pH=7.250 T=28.5°C NH3=0.123% | Risk=SAFE
+   === Pico WH Aquaculture Monitor ===
+   Connecting to WiFi: N3IWF_AQUA
+   WiFi connected
+   Sensors initialized
+   Starting monitoring loop...
+   Connected to server
+   pH: 7.25, Temp: 28.50°C, Risk: 0
+   Sent: DATA:7250,2850,0
    ```
 
 
@@ -95,49 +73,43 @@ Solution:
 
 **Problem: Build error "PICO_SDK_PATH not set"**
 Solution:
-```bash
-export PICO_SDK_PATH=~/pico-sdk
-echo 'export PICO_SDK_PATH=~/pico-sdk' >> ~/.bashrc
-```
+- Set environment variable PICO_SDK_PATH
+- Restart command prompt
 
 **Problem: Build error "arm-none-eabi-gcc not found"**
 Solution:
-```bash
-sudo apt install gcc-arm-none-eabi libnewlib-arm-none-eabi
-```
+- Install ARM GCC toolchain
+- Add to PATH
 
 **Problem: WiFi tidak connect**
 Solution:
-- Cek SSID dan password di main.c (line 33-34)
+- Cek SSID dan password di main.c (line 18-19)
 - Pastikan RPi5 hotspot "N3IWF_AQUA" aktif
 - Cek jarak antara Pico dan RPi5
 
 **Problem: TCP tidak connect**
 Solution:
-- Cek IP RPi5 di main.c (line 35)
+- Cek IP RPi5 di main.c (line 20)
 - Pastikan RPi5 IP = 10.42.0.1
-- Pastikan port 5005 tidak diblok firewall:
-  ```bash
-  sudo ufw allow 5005/tcp
-  ```
+- Pastikan port 5000 tidak diblok firewall
 
 
 WIFI CONFIGURATION
 ------------------
 
-Edit di `main.c` (line 33-36):
+Edit di `main.c` (line 18-21):
 
 ```c
 #define WIFI_SSID       "N3IWF_AQUA"        // ← Ganti SSID
 #define WIFI_PASSWORD   "aquaculture2026"   // ← Ganti password
 #define SERVER_IP       "10.42.0.1"         // ← Ganti IP RPi5
-#define SERVER_PORT     5005                // ← Port TCP
+#define SERVER_PORT     5000                // ← Port TCP
 ```
 
 Setelah edit, build ulang:
-```bash
-cd ~/thesis/pico_firmware
-./build.sh
+```cmd
+cd pico_firmware\build
+nmake
 ```
 
 
@@ -147,7 +119,7 @@ NOTES
 - Firmware ini MONITORING ONLY (tidak control aerator)
 - Protocol: DATA:ph_x1000,temp_x100,risk
 - Risk levels: 0=SAFE, 1=CAUTION, 2=WARNING, 3=CRITICAL
-- Sample interval: 2 detik
-- LED blink setiap kirim data
+- Sample interval: 5 detik
+- LED blink setiap WiFi activity
 
 ================================================================================

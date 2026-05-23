@@ -4,7 +4,7 @@ WiFi Bridge — bidirectional communication RPi4/5 <-> Pico WH
 N3IWF Local Edge Service via TCP Sockets.
 
 RPi5 acts as the TCP Server, waiting for the Pico WH to connect.
-Receive : "DATA:ph_x1000,temp_x100,action\\n"
+Receive : "DATA:ph_x1000,temp_x100,risk\\n"
 Send    : "QTABLE:[[...9x4 floats...]]\\n"
 Receive : "ACK:QTABLE_LOADED\\n"
 
@@ -35,7 +35,7 @@ def _setup_pico_monitor_log(log_dir: str) -> None:
     ))
     _pico_log.addHandler(fh)
 
-DEFAULT_PORT = 5005
+DEFAULT_PORT = 5000
 ACK_TIMEOUT  = 10      # seconds to wait for ACK after sending Q-table
 RECONNECT_DELAY = 2    # seconds between reconnect attempts
 
@@ -148,7 +148,7 @@ class WiFiBridge:
         Read one line from Wi-Fi.
 
         If it starts with "DATA:" -> parse and return:
-          {"pH": float, "T": float, "action": int}
+          {"pH": float, "T": float, "risk": int, "latency_ms": float}
 
         Other lines (monitor/comment/ACK) -> logged then return None.
         If connection drops -> attempt automatic reconnect.
@@ -181,12 +181,13 @@ class WiFiBridge:
 
         ph_x1000  = int(m.group(1))
         temp_x100 = int(m.group(2))
-        action    = int(m.group(3))
+        risk      = int(m.group(3))
 
         return {
-            "pH":    ph_x1000  / 1000.0,
-            "T":     temp_x100 / 100.0,
-            "action": action,
+            "pH":         ph_x1000  / 1000.0,
+            "T":          temp_x100 / 100.0,
+            "risk":       risk,
+            "latency_ms": 0.0,  # Can be calculated if needed
         }
 
     # ── Send Q-table ─────────────────────────────────────────────────────── #

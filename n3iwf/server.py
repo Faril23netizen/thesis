@@ -240,9 +240,9 @@ DATA_RE = re.compile(r'^DATA:(-?\d+),(-?\d+),([0-3])$')
 def tcp_server():
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    srv.bind(('0.0.0.0', 5005))
+    srv.bind(('0.0.0.0', 5000))
     srv.listen(1)
-    print("[TCP] Waiting for Pico 2W on port 5005 ...")
+    print("[TCP] Waiting for Pico WH on port 5000 ...")
 
     while True:
         try:
@@ -457,8 +457,8 @@ if __name__ == '__main__':
     print(f"\n{'='*60}")
     print(f"  Aquaculture N3IWF Real Server")
     print(f"{'='*60}")
-    print(f"  Dashboard  : http://{local_ip}:5000")
-    print(f"  TCP Port   : 5005 (Pico 2W)")
+    print(f"  Dashboard  : http://{local_ip}:8080")
+    print(f"  TCP Port   : 5000 (Pico WH)")
     print(f"  Mode       : REAL (data dari Pico)")
     print(f"  RB         : {'✅' if RB_AVAILABLE else '❌'}")
     print(f"  FQL        : {'✅' if FQL_AVAILABLE else '❌'}")
@@ -466,4 +466,4 @@ if __name__ == '__main__':
     print(f"  CSV Log    : {N3IWF_CSV}")
     print(f"{'='*60}\n")
 
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=8080, debug=False)

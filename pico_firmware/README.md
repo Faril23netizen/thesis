@@ -4,10 +4,9 @@ Firmware untuk Raspberry Pi Pico WH - **MONITORING ONLY** (no aerator control).
 
 ## Features
 
-- **Risk Assessment**: Rule-Based NH3 risk prediction
+- **Risk Assessment**: Rule-Based NH3 risk calculation
 - **Sensor Reading**: pH (ADC0) + DS18B20 temperature (GPIO15)
-- **WiFi Communication**: Send data to RPi5 via TCP (port 5005)
-- **Q-Table Support**: Receive Q-table from RPi5 for FQL/DQN inference
+- **WiFi Communication**: Send data to RPi5 via TCP (port 5000)
 
 ## Hardware
 
@@ -29,18 +28,9 @@ Example: `DATA:7250,2850,1\n`
 - T = 28.50°C
 - Risk = 1 (CAUTION)
 
-**RPi5 → Pico (Q-table):**
-```
-QTABLE:[[q00,q01,q02,q03],[q10,...],...]\n
-```
-
-**Pico → RPi5 (ACK):**
-```
-ACK:QTABLE_LOADED\n
-```
-
 ## Risk Levels
 
+Based on NH3% calculation:
 ```c
 #define RISK_SAFE       0  // NH3 < 1%
 #define RISK_CAUTION    1  // NH3 1-5%
@@ -48,13 +38,14 @@ ACK:QTABLE_LOADED\n
 #define RISK_CRITICAL   3  // NH3 > 10%
 ```
 
-## Build
+## Build (Windows)
 
 ```bash
 cd pico_firmware
-mkdir build && cd build
-cmake ..
-make -j4
+mkdir build
+cd build
+cmake -G "NMake Makefiles" ..
+nmake
 ```
 
 Output: `aquaculture_monitoring.uf2`
@@ -73,7 +64,7 @@ Edit in `main.c`:
 #define WIFI_SSID       "N3IWF_AQUA"
 #define WIFI_PASSWORD   "aquaculture2026"
 #define SERVER_IP       "10.42.0.1"
-#define SERVER_PORT     5005
+#define SERVER_PORT     5000
 ```
 
 ## Files
@@ -83,7 +74,6 @@ pico_firmware/
 ├── main.c              # Main program (monitoring loop)
 ├── ph_sensor.h/c       # pH sensor driver (ADC)
 ├── ds18b20.h/c         # DS18B20 temperature driver (1-Wire)
-├── fql_inference.h/c   # FQL Q-table inference engine
 ├── CMakeLists.txt      # Build configuration
 └── README.md           # This file
 ```
@@ -91,23 +81,21 @@ pico_firmware/
 ## Monitoring Output
 
 ```
-========================================
-  Pico WH - NH3 Risk Monitoring
-  MONITORING ONLY (No Control)
-========================================
-# Connecting to WiFi: N3IWF_AQUA
-# WiFi connected!
-# Connecting to 10.42.0.1:5005
-# TCP connected!
-# System ready - starting monitoring
-> #0001 | pH=7.250 T=28.5°C NH3=0.123% | Risk=SAFE
-> #0002 | pH=7.180 T=28.7°C NH3=0.145% | Risk=SAFE
-> #0003 | pH=8.120 T=29.2°C NH3=1.234% | Risk=CAUTION
+=== Pico WH Aquaculture Monitor ===
+Connecting to WiFi: N3IWF_AQUA
+WiFi connected
+Sensors initialized
+Starting monitoring loop...
+Connected to server
+pH: 7.25, Temp: 28.50°C, Risk: 0
+Sent: DATA:7250,2850,0
+pH: 7.18, Temp: 28.70°C, Risk: 0
+Sent: DATA:7180,2870,0
 ```
 
 ## Notes
 
 - **No aerator control** - monitoring only
 - **Risk-based** instead of action-based
-- Compatible with RPi5 Python code (FQL/DQN training)
-- LED blinks on each data transmission
+- Reads sensors every 5 seconds
+- LED blinks on WiFi activity

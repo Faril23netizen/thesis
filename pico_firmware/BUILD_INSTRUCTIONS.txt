@@ -1,0 +1,154 @@
+================================================================================
+PICO WH FIRMWARE - MONITORING ONLY
+================================================================================
+
+OVERVIEW
+--------
+Firmware ini untuk Raspberry Pi Pico WH yang berfungsi sebagai MONITORING ONLY
+(tidak ada kontrol aerator). Firmware mengirim data pH, temperature, dan risk
+level ke RPi5 via WiFi TCP.
+
+PROTOCOL: DATA:ph_x1000,temp_x100,risk\n
+- ph_x1000: pH * 1000 (contoh: 7250 = pH 7.25)
+- temp_x100: Temperature * 100 (contoh: 2850 = 28.50°C)
+- risk: 0=SAFE, 1=CAUTION, 2=WARNING, 3=CRITICAL
+
+RISK CALCULATION
+----------------
+Risk dihitung berdasarkan NH3% menggunakan formula:
+  pKa = 0.09018 + (2729.92 / (T + 273.15))
+  NH3% = 100 / (1 + 10^(pKa - pH))
+
+Risk levels:
+  0 (SAFE):     NH3 < 1%
+  1 (CAUTION):  NH3 1-5%
+  2 (WARNING):  NH3 5-10%
+  3 (CRITICAL): NH3 > 10%
+
+
+FILES
+-----
+pico_firmware/
+├── main.c              # Main program (WiFi, TCP, monitoring loop)
+├── ph_sensor.h/c       # pH sensor driver (ADC0/GPIO26)
+├── ds18b20.h/c         # DS18B20 temperature driver (GPIO15)
+├── CMakeLists.txt      # Build configuration
+├── build.sh            # Build script (Linux/Mac)
+├── README.md           # Documentation
+├── FLASH_GUIDE.txt     # Flash instructions (Windows)
+└── BUILD_INSTRUCTIONS.txt  # This file
+
+
+BUILD DI WINDOWS
+----------------
+
+1. Install prerequisites:
+   - Pico SDK: https://github.com/raspberrypi/pico-sdk
+   - ARM GCC: https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
+   - CMake: https://cmake.org/download/
+
+2. Set environment variable:
+   PICO_SDK_PATH=C:\pico-sdk
+
+3. Build:
+   cd pico_firmware
+   rmdir /s /q build       # Delete old build folder if exists
+   mkdir build
+   cd build
+   cmake -G "NMake Makefiles" ..
+   nmake
+
+4. Output: build\aquaculture_monitoring.uf2
+
+IMPORTANT: CMakeLists.txt must have PICO_BOARD set to "pico_w" for WiFi support!
+
+
+FLASH KE PICO WH
+----------------
+
+1. Hold BOOTSEL button on Pico WH
+2. Connect USB to computer
+3. Release BOOTSEL button
+4. Pico akan muncul sebagai drive RPI-RP2
+5. Copy aquaculture_monitoring.uf2 ke drive RPI-RP2
+6. Pico akan auto-reboot dengan firmware baru
+
+
+VERIFY FIRMWARE
+---------------
+
+1. Connect Pico WH via USB
+2. Open serial terminal (PuTTY, Tera Term, etc.) at 115200 baud
+3. Expected output:
+
+   === Pico WH Aquaculture Monitor ===
+   Connecting to WiFi: N3IWF_AQUA
+   WiFi connected
+   Sensors initialized
+   Starting monitoring loop...
+   Connected to server
+   pH: 7.25, Temp: 28.50°C, Risk: 0
+   Sent: DATA:7250,2850,0
+
+
+CONFIGURATION
+-------------
+
+Edit main.c (line 18-21):
+
+#define WIFI_SSID "N3IWF_AQUA"
+#define WIFI_PASSWORD "aquaculture2026"
+#define SERVER_IP "10.42.0.1"
+#define SERVER_PORT 5000
+
+Setelah edit, build ulang firmware.
+
+
+HARDWARE CONNECTIONS
+--------------------
+
+Raspberry Pi Pico WH:
+  GPIO26 (ADC0) → pH Sensor analog output
+  GPIO15        → DS18B20 data pin (with 4.7kΩ pull-up to 3.3V)
+  3.3V          → Sensor power
+  GND           → Sensor ground
+
+
+TROUBLESHOOTING
+---------------
+
+Problem: Build error "PICO_SDK_PATH not set"
+Solution: Set environment variable PICO_SDK_PATH
+
+Problem: Build error "arm-none-eabi-gcc not found"
+Solution: Install ARM GCC toolchain and add to PATH
+
+Problem: WiFi tidak connect
+Solution: 
+  - Cek SSID dan password di main.c
+  - Pastikan RPi5 hotspot "N3IWF_AQUA" aktif
+  - Cek jarak antara Pico dan RPi5
+
+Problem: TCP tidak connect
+Solution:
+  - Cek IP di main.c (harus sama dengan IP RPi5)
+  - Pastikan RPi5 server running di port 5000
+  - Cek firewall di RPi5
+
+Problem: Sensor reading error
+Solution:
+  - Cek koneksi hardware
+  - Cek voltage (pH sensor: 0-3.3V, DS18B20: 3.3V power)
+  - Cek pull-up resistor 4.7kΩ di DS18B20
+
+
+NOTES
+-----
+
+- Firmware ini MONITORING ONLY (tidak ada kontrol aerator)
+- Sample interval: 5 detik
+- LED onboard blink saat WiFi activity
+- Protocol: DATA:ph_x1000,temp_x100,risk\n
+- Compatible dengan RPi5 Python code (main/real/run_real.py)
+
+================================================================================

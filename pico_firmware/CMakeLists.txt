@@ -12,38 +12,40 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico CACHE STRING "Board type")
+set(PICO_BOARD pico_w CACHE STRING "Board type")
 
 cmake_minimum_required(VERSION 3.13)
 
-# Include Pico SDK
-include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
+# Pull in Pico SDK (must be before project())
+include(pico_sdk_import.cmake)
 
-project(aquaculture_monitoring C CXX ASM)
+project(risk_monitor C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-# Initialize Pico SDK
 pico_sdk_init()
 
-# Add executable
-add_executable(aquaculture_monitoring
+add_executable(risk_monitor
     main.c
-    ph_sensor.c
     ds18b20.c
-    fql_inference.c
+    ph_sensor.c
 )
 
-# Link libraries
-target_link_libraries(aquaculture_monitoring
+# USB Serial as stdout — retained for debug monitoring via PuTTY/minicom
+pico_enable_stdio_usb(risk_monitor 1)
+# UART is also enabled for additional debug output
+pico_enable_stdio_uart(risk_monitor 1)
+
+# Add current directory to include path for lwipopts.h
+target_include_directories(risk_monitor PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+
+target_link_libraries(risk_monitor
     pico_stdlib
-    pico_cyw43_arch_lwip_threadsafe_background
     hardware_adc
+    hardware_gpio
+    hardware_timer
+    pico_cyw43_arch_lwip_threadsafe_background
 )
 
-# Enable USB output, disable UART output
-pico_enable_stdio_usb(aquaculture_monitoring 1)
-pico_enable_stdio_uart(aquaculture_monitoring 0)
-
-# Create map/bin/hex/uf2 files
-pico_add_extra_outputs(aquaculture_monitoring)
+# Generate UF2, HEX, BIN
+pico_add_extra_outputs(risk_monitor)

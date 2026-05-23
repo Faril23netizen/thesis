@@ -1,0 +1,163 @@
+================================================================================
+PROTOCOL UPDATE - MONITORING ONLY SYSTEM
+================================================================================
+
+OVERVIEW
+--------
+System telah diubah dari ACTION-BASED (kontrol aerator) menjadi RISK-BASED
+(monitoring only). Pico WH sekarang hanya mengirim risk level, tidak lagi
+mengirim action atau mengontrol aerator.
+
+
+PROTOCOL CHANGES
+----------------
+
+OLD PROTOCOL (Action-Based):
+  Pico → RPi5: "DATA:ph_x1000,temp_x100,action\n"
+  - action: 0=OFF, 1=LOW, 2=MED, 3=HIGH (aerator control)
+
+NEW PROTOCOL (Risk-Based):
+  Pico → RPi5: "DATA:ph_x1000,temp_x100,risk\n"
+  - risk: 0=SAFE, 1=CAUTION, 2=WARNING, 3=CRITICAL (NH3 risk level)
+
+
+RISK CALCULATION
+----------------
+Risk dihitung berdasarkan NH3% menggunakan formula:
+  pKa = 0.09018 + (2729.92 / (T + 273.15))
+  NH3% = 100 / (1 + 10^(pKa - pH))
+
+Risk levels:
+  0 (SAFE):     NH3 < 1%
+  1 (CAUTION):  NH3 1-5%
+  2 (WARNING):  NH3 5-10%
+  3 (CRITICAL): NH3 > 10%
+
+
+FILES UPDATED
+-------------
+
+1. PICO WH FIRMWARE (pico_firmware/):
+   - main.c: Monitoring loop, WiFi, TCP, risk calculation
+   - ph_sensor.h/c: pH sensor driver (ADC0/GPIO26)
+   - ds18b20.h/c: DS18B20 temperature driver (GPIO15)
+   - lwipopts.h: lwIP TCP/IP stack configuration (NEW)
+   - CMakeLists.txt: Build config (PICO_BOARD = pico_w)
+   - README.md: Documentation
+   - FLASH_GUIDE.txt: Flash instructions for Windows
+   - BUILD_INSTRUCTIONS.txt: Complete build guide
+
+2. RPI5 PYTHON CODE (main/real/):
+   - wifi_bridge.py: Updated to parse "risk" instead of "action"
+   - run_real.py: Added rule_based_risk() function
+
+
+WHAT CHANGED IN RPI5 CODE
+--------------------------
+
+wifi_bridge.py:
+  - Protocol comment updated: "DATA:ph_x1000,temp_x100,risk\n"
+  - read_data_line() now returns {"pH", "T", "risk", "latency_ms"}
+  - Changed "action" to "risk" in parsing
+
+run_real.py:
+  - Added rule_based_risk(pH, T) function
+  - Function calculates NH3% and returns risk level (0-3)
+  - Same logic as Pico firmware for consistency
+
+
+BACKWARD COMPATIBILITY
+----------------------
+NONE - This is a breaking change!
+
+Old Pico firmware (action-based) will NOT work with new RPi5 code.
+New Pico firmware (risk-based) will NOT work with old RPi5 code.
+
+You MUST update both:
+  1. Flash new firmware to Pico WH
+  2. Update Python code on RPi5 (git pull or copy files)
+
+
+TESTING CHECKLIST
+-----------------
+
+1. Build firmware di Windows:
+   cd pico_firmware\build
+   cmake -G "NMake Makefiles" ..
+   nmake
+
+2. Flash firmware ke Pico WH:
+   - Hold BOOTSEL button
+   - Connect USB
+   - Copy aquaculture_monitoring.uf2 to RPI-RP2 drive
+
+3. Update code di RPi5:
+   cd ~/thesis
+   git pull  # or copy updated files
+
+4. Test WiFi connection:
+   - Pastikan RPi5 hotspot "N3IWF_AQUA" aktif
+   - Pico WH akan auto-connect
+
+5. Test data transmission:
+   - Run: python3 main/real/run_real.py
+   - Check log: tail -f results/hasil_real/fql.log
+   - Expected: "DATA:7250,2850,0" (pH=7.25, T=28.5°C, Risk=SAFE)
+
+6. Verify risk calculation:
+   - Compare Pico risk vs RPi5 rule_based_risk()
+   - Should match exactly
+
+
+CONFIGURATION
+-------------
+
+Pico WH (main.c line 18-21):
+  #define WIFI_SSID       "N3IWF_AQUA"
+  #define WIFI_PASSWORD   "aquaculture2026"
+  #define SERVER_IP       "10.42.0.1"
+  #define SERVER_PORT     5000
+
+RPi5 (wifi_bridge.py line 30):
+  DEFAULT_PORT = 5005  # MUST MATCH Pico SERVER_PORT!
+
+IMPORTANT: Port mismatch akan menyebabkan connection failed!
+Pastikan Pico SERVER_PORT = RPi5 DEFAULT_PORT
+
+
+TROUBLESHOOTING
+---------------
+
+Problem: Pico tidak connect ke WiFi
+Solution:
+  - Cek SSID dan password di main.c
+  - Pastikan RPi5 hotspot aktif
+  - Cek jarak antara Pico dan RPi5
+
+Problem: TCP connection failed
+Solution:
+  - Cek IP di main.c (harus 10.42.0.1)
+  - Cek port match (Pico 5000 = RPi5 5005)
+  - Cek firewall: sudo ufw allow 5005/tcp
+
+Problem: RPi5 error "action not found"
+Solution:
+  - Update wifi_bridge.py dan run_real.py
+  - Protocol sudah berubah dari "action" ke "risk"
+
+Problem: Risk level tidak match
+Solution:
+  - Cek formula NH3% di Pico dan RPi5
+  - Harus sama persis (pKa calculation)
+
+
+NOTES
+-----
+
+- System sekarang MONITORING ONLY (tidak ada kontrol aerator)
+- Pico WH mengirim risk level setiap 5 detik
+- RPi5 menerima data dan train FQL/DQN untuk prediksi risk
+- Q-table yang dikirim RPi5 ke Pico adalah untuk FQL/DQN inference
+- Tidak ada feedback loop ke aerator (monitoring only)
+
+================================================================================
