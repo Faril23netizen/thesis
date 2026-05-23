@@ -194,45 +194,51 @@ class WiFiBridge:
 
     def send_qtable(self, qtable_string: str) -> bool:
         """
-        Send Q-table to Pico.
-        Waits for "ACK:QTABLE_LOADED\\n" up to ACK_TIMEOUT seconds.
-        Returns True if ACK received, False on timeout or error.
+        Send Q-table to Pico and wait for ACK.
+        
+        Format: "QTABLE:[[row0],[row1],...,[row8]]\\n"
+        Expected ACK: "ACK:QTABLE_LOADED\\n" or "ACK:QTABLE_ERROR\\n"
+        
+        Returns True if ACK received successfully.
         """
         if not self.is_connected():
             logger.warning("Not connected — cannot send Q-table.")
             return False
 
-        # Ensure newline at the end
-        if not qtable_string.endswith("\n"):
-            qtable_string += "\n"
-
         try:
-            self.client_socket.sendall(qtable_string.encode("utf-8"))
-            logger.info(f"Q-table sent via WiFi ({len(qtable_string)} bytes), "
-                        f"waiting for ACK (max {ACK_TIMEOUT}s)...")
-        except OSError as e:
-            logger.warning(f"Failed to send Q-table: {e}")
-            self.disconnect()
+            # Send Q-table
+            msg = qtable_string + "\n"
+            self.client_socket.sendall(msg.encode("utf-8"))
+            logger.info(f"Q-table sent to Pico ({len(msg)} bytes)")
+
+            # Wait for ACK with timeout
+            start_time = time.time()
+            while time.time() - start_time < ACK_TIMEOUT:
+                line = self._readline()
+                if not line:
+                    time.sleep(0.1)
+                    continue
+
+                # Monitor/comment lines -> log and continue waiting
+                if line.startswith(">") or line.startswith("#"):
+                    _pico_log.debug(line)
+                    continue
+
+                # ACK received
+                if line.startswith("ACK:"):
+                    logger.info(f"[pico] {line}")
+                    _pico_log.debug(line)
+                    if "QTABLE_LOADED" in line:
+                        return True
+                    elif "QTABLE_ERROR" in line:
+                        logger.error("Pico reported Q-table error")
+                        return False
+
+            # Timeout
+            logger.warning(f"Q-table ACK timeout after {ACK_TIMEOUT}s")
             return False
 
-        # Wait for ACK
-        deadline = time.time() + ACK_TIMEOUT
-        while time.time() < deadline:
-            line = self._readline()
-            if line is None:
-                continue
-
-            if line == "ACK:QTABLE_LOADED":
-                logger.info("ACK received — Q-table loaded by Pico.")
-                return True
-
-            if line == "ACK:QTABLE_ERROR":
-                logger.error("ACK error — Pico failed to parse Q-table.")
-                return False
-
-            # Other lines received while waiting for ACK
-            if line:
-                logger.debug(f"[pico waiting ACK] {line}")
-
-        logger.warning("Timeout waiting for ACK from Pico.")
-        return False
+        except OSError as e:
+            logger.error(f"Error sending Q-table: {e}")
+            self.disconnect()
+            return False
