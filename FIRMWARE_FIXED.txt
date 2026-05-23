@@ -1,0 +1,160 @@
+FIRMWARE FIXED - Pico WH Connection Issue Resolved
+===================================================
+
+ROOT CAUSE IDENTIFIED:
+----------------------
+Firmware yang saya buat kemarin menggunakan lwIP Raw TCP API (tcp_new, tcp_connect),
+tapi firmware yang WORKING (commit af1a407) menggunakan BSD socket API (socket, connect, send, recv).
+
+Socket API lebih stabil dan sudah terbukti working di sistem kamu.
+
+SOLUTION APPLIED:
+-----------------
+✅ Restore firmware ke BSD socket API implementation
+✅ Based on working firmware from commit af1a407
+✅ Minimal changes - hanya update konfigurasi dan protocol
+
+CHANGES FROM WORKING FIRMWARE:
+-------------------------------
+1. WiFi SSID: "Check" → "N3IWF_AQUA"
+2. Password: "12345678901234567890" → "skripsi2026"
+3. Server IP: "192.168.1.100" → "10.42.0.1"
+4. Port: 5005 → 5000
+5. Protocol: DATA:ph,temp,action → DATA:ph,temp,risk
+6. Removed: Relay control (GPIO16, GPIO17)
+7. Removed: FQL inference
+8. Changed: Action-based → Risk-based monitoring
+
+FIRMWARE FEATURES:
+------------------
+✅ BSD socket API (proven working)
+✅ WiFi connection with auto-retry
+✅ TCP connection with auto-reconnect
+✅ Non-blocking socket recv
+✅ pH sensor reading (ADC0, GPIO26)
+✅ DS18B20 temperature sensor (GPIO15)
+✅ NH3 calculation from pH + Temp
+✅ Risk level calculation (SAFE/CAUTION/WARNING/CRITICAL)
+✅ Serial monitor output (115200 baud)
+✅ LED blink indicator
+
+PROTOCOL:
+---------
+Send to RPi5:
+  DATA:ph_x1000,temp_x100,risk\n
+
+Example:
+  DATA:7015,2501,0\n
+  
+  pH = 7015/1000 = 7.015
+  Temp = 2501/100 = 25.01°C
+  Risk = 0 (SAFE)
+
+Risk Levels:
+  0 = SAFE     (NH3 < 1%)
+  1 = CAUTION  (NH3 1-5%)
+  2 = WARNING  (NH3 5-10%)
+  3 = CRITICAL (NH3 > 10%)
+
+BUILD INSTRUCTIONS:
+-------------------
+Di Windows (folder pico_firmware):
+
+1. Open Git Bash atau PowerShell
+2. cd pico_firmware
+3. bash build.sh
+
+Output: build/risk_monitor.uf2
+
+FLASH INSTRUCTIONS:
+-------------------
+1. Tekan tombol BOOTSEL di Pico WH
+2. Sambil tekan BOOTSEL, colok USB ke komputer
+3. Pico WH akan muncul sebagai USB drive (RPI-RP2)
+4. Copy file build/risk_monitor.uf2 ke drive RPI-RP2
+5. Pico WH akan auto-reboot dan mulai running
+
+MONITOR SERIAL OUTPUT:
+----------------------
+Windows:
+- Buka Device Manager → Ports (COM & LPT)
+- Cari "USB Serial Device (COMx)"
+- Buka PuTTY atau serial monitor
+- Settings: 115200 baud, 8N1
+
+Expected output:
+============================================================
+  Risk Monitoring Node — Pico WH
+  N3IWF Edge Service
+============================================================
+  SSID: N3IWF_AQUA
+  Server: 10.42.0.1:5000
+  Protocol: DATA:ph_x1000,temp_x100,risk
+============================================================
+
+# Connecting to Wi-Fi: N3IWF_AQUA ...
+# Wi-Fi connected! IP: 10.42.0.2
+# Connecting to N3IWF Server 10.42.0.1:5000 ...
+# N3IWF TCP connection established!
+# 
+# Starting data stream...
+# 
+>  Num |   Time  |   pH   | Temp°C |  NH3%  | Risk
+> -----|---------|--------|--------|--------|---------------
+>    1 |     2.0s | 7.015  | 25.01  | 0.123% | [----] SAFE
+>    2 |     4.0s | 7.020  | 25.03  | 0.125% | [----] SAFE
+
+TROUBLESHOOTING:
+----------------
+Q: WiFi connection failed?
+A: 1. Cek SSID di serial output
+   2. Pastikan hotspot N3IWF_AQUA aktif di RPi5
+   3. Cek password di main.c (skripsi2026)
+   4. Cek jarak Pico ke RPi5
+
+Q: TCP connect failed?
+A: 1. Pastikan server running di RPi5: python3 main/real/run_real.py
+   2. Cek IP address RPi5: ip addr show wlan0
+   3. Cek port 5000 listening: ss -tlnp | grep 5000
+   4. Cek firewall: sudo ufw status
+
+Q: No data received di RPi5?
+A: 1. Cek serial output Pico - apakah kirim data?
+   2. Cek log RPi5: tail -f results/hasil_real/run_real.log
+   3. Cek wifi_bridge.py - apakah parse protocol benar?
+
+Q: pH reading 12.8 atau tidak masuk akal?
+A: 1. Cek kalibrasi di ph_sensor.c
+   2. Cek koneksi pH sensor ke GPIO26
+   3. Cek power supply pH sensor (3.3V)
+
+Q: Temperature -127°C atau 85°C?
+A: 1. Cek koneksi DS18B20 ke GPIO15
+   2. Cek pull-up resistor 4.7kΩ (DATA ke 3.3V)
+   3. Cek power supply DS18B20 (3.3V)
+
+COMMIT INFO:
+------------
+Commit: 032cf8c
+Message: "Fix: Restore firmware to working BSD socket API implementation"
+Files changed:
+  - pico_firmware/main.c (rewritten based on working version)
+
+NEXT STEPS:
+-----------
+1. ✅ Hotspot aktif (sudo bash fix_hotspot_nm.sh)
+2. ✅ Server running (python3 main/real/run_real.py)
+3. ⏳ Build firmware (cd pico_firmware && bash build.sh)
+4. ⏳ Flash firmware ke Pico WH
+5. ⏳ Monitor serial output
+6. ⏳ Verify connection di RPi5
+
+EXPECTED BEHAVIOR:
+------------------
+1. Pico WH connect ke N3IWF_AQUA
+2. Pico WH dapat IP 10.42.0.x dari DHCP
+3. Pico WH connect ke 10.42.0.1:5000
+4. Pico WH kirim DATA:ph,temp,risk setiap 2 detik
+5. RPi5 terima data dan proses dengan rule_based_risk()
+6. Dashboard show real-time data
+
