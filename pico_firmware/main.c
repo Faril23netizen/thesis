@@ -201,9 +201,15 @@ int main(void) {
   cyw43_arch_enable_sta_mode();
 
   /* ── Initialize sensors ───────────────────────────────────────────────── */
+  printf("# Initializing pH sensor...\r\n");
   ph_sensor_init();
+  printf("# pH sensor OK\r\n");
+  
+  printf("# Initializing DS18B20 on GPIO%d...\r\n", TEMP_GPIO_PIN);
   if (!ds18b20_init(&g_ds18b20, TEMP_GPIO_PIN)) {
-    printf("# [WARN] DS18B20 not detected on GPIO%d\r\n", TEMP_GPIO_PIN);
+    printf("# [WARN] DS18B20 not detected - will use dummy data\r\n");
+  } else {
+    printf("# DS18B20 OK\r\n");
   }
 
   printf("# Sensors initialized.\r\n");
@@ -211,14 +217,25 @@ int main(void) {
 
   /* ── Connect Wi-Fi ────────────────────────────────────────────────────── */
   printf("# Connecting to Wi-Fi: %s ...\r\n", WIFI_SSID);
+  int wifi_retry = 0;
   while (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD,
                                             CYW43_AUTH_WPA2_AES_PSK,
                                             30000) != 0) {
-    printf("# Wi-Fi connection failed, retrying in 5s...\r\n");
+    wifi_retry++;
+    printf("# Wi-Fi connection failed (attempt %d), retrying in 5s...\r\n", wifi_retry);
     sleep_ms(5000);
+    if (wifi_retry >= 10) {
+      printf("# [ERROR] Wi-Fi connection failed after 10 attempts\r\n");
+      printf("# Check: SSID=%s, Password=%s\r\n", WIFI_SSID, WIFI_PASSWORD);
+      printf("# Continuing anyway for testing...\r\n");
+      break;
+    }
   }
-  printf("# Wi-Fi connected! IP: %s\r\n",
-         ip4addr_ntoa(netif_ip4_addr(netif_default)));
+  
+  if (wifi_retry < 10) {
+    printf("# Wi-Fi connected! IP: %s\r\n",
+           ip4addr_ntoa(netif_ip4_addr(netif_default)));
+  }
 
   /* ── Initialize TCP client ────────────────────────────────────────────── */
   g_client = tcp_client_init();
@@ -270,12 +287,25 @@ int main(void) {
 
       /* ── 2. Read pH sensor (parallel with DS18B20 conversion) ──────────── */
       int32_t ph_x1000 = ph_read(&PH_CAL_DEFAULT);
+      /* Sanity check */
+      if (ph_x1000 < 0 || ph_x1000 > 14000) {
+        printf("# [WARN] Invalid pH reading: %ld, using default\r\n", (long)ph_x1000);
+        ph_x1000 = 7000; /* Default pH 7.0 */
+      }
 
       /* ── 3. Wait for DS18B20 conversion to complete ────────────────────── */
       sleep_ms(800);
 
       /* ── 4. Read temperature ───────────────────────────────────────────── */
-      int32_t temp_x100 = ds18b20_read_raw(&g_ds18b20);
+      int32_t temp_x100 = 2500; /* Default 25°C if sensor fails */
+      if (g_ds18b20.found) {
+        temp_x100 = ds18b20_read_raw(&g_ds18b20);
+        /* Sanity check */
+        if (temp_x100 < -5000 || temp_x100 > 8500) {
+          printf("# [WARN] Invalid temp reading: %ld, using default\r\n", (long)temp_x100);
+          temp_x100 = 2500;
+        }
+      }
 
       /* ── 5. Calculate NH3 and risk level ───────────────────────────────── */
       int32_t nh3_x100000 = calc_nh3_x100000(ph_x1000, temp_x100);
