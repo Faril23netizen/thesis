@@ -338,8 +338,11 @@ static bool tcp_client_send_data(tcp_client_t *state, int32_t ph_x1000, int32_t 
 /*                              MAIN                                          */
 /* ══════════════════════════════════════════════════════════════════════════ */
 int main(void) {
+  // Initialize stdio with timeout - don't wait for USB serial
   stdio_init_all();
-  sleep_ms(2000);
+  
+  // Give USB serial a chance to connect, but don't block forever
+  sleep_ms(500);
 
   printf("\r\n");
   printf("============================================================\r\n");

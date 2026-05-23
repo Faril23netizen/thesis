@@ -36,6 +36,11 @@ pico_enable_stdio_usb(risk_monitor 1)
 # UART is also enabled for additional debug output
 pico_enable_stdio_uart(risk_monitor 1)
 
+# Don't wait forever for USB serial connection - timeout after 500ms
+target_compile_definitions(risk_monitor PRIVATE
+    PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=500
+)
+
 # Add current directory to include path for lwipopts.h
 target_include_directories(risk_monitor PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
