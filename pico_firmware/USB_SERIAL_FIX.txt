@@ -1,0 +1,72 @@
+USB SERIAL TIMEOUT FIX
+======================
+Date: May 24, 2026
+Commit: 4d28979
+
+PROBLEM:
+--------
+Pico WH tidak mau connect ke RPi5 kecuali serial monitor dibuka di Windows.
+Firmware menunggu USB serial connection sebelum melanjutkan ke WiFi.
+
+ROOT CAUSE:
+-----------
+- pico_enable_stdio_usb() default behavior: WAIT for USB connection
+- stdio_init_all() blocks sampai USB serial ready
+- Tanpa serial monitor, firmware stuck di initialization
+
+SOLUTION:
+---------
+Added to CMakeLists.txt:
+  target_compile_definitions(risk_monitor PRIVATE
+      PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=500
+  )
+
+Changed in main.c:
+  - Reduced sleep from 2000ms to 500ms
+  - Added comment explaining non-blocking behavior
+
+HOW IT WORKS:
+-------------
+1. Firmware starts
+2. Waits max 500ms for USB serial
+3. If no USB connection → continues anyway
+4. If USB connected → printf works normally
+5. WiFi initialization proceeds regardless
+
+BENEFITS:
+---------
+✓ Pico can run standalone (no serial monitor needed)
+✓ Serial monitor still works when connected
+✓ Faster boot time (500ms vs 2000ms)
+✓ Production-ready deployment
+
+TESTING:
+--------
+Test 1: Without serial monitor
+  - Flash firmware
+  - Power Pico from USB or external power
+  - Should connect to WiFi and RPi5 automatically
+  - No serial output visible (but working internally)
+
+Test 2: With serial monitor
+  - Flash firmware
+  - Open serial monitor (COM10, 115200 baud)
+  - Should see all printf output
+  - Should connect to WiFi and RPi5
+  - Serial output visible
+
+FLASH NEW FIRMWARE:
+-------------------
+1. Build: pico_firmware/build/risk_monitor.uf2
+2. Hold BOOTSEL button on Pico WH
+3. Connect USB to Windows
+4. Copy risk_monitor.uf2 to RPI-RP2 drive
+5. Pico reboots automatically
+6. Should connect to RPi5 without serial monitor!
+
+VERIFY:
+-------
+On RPi5, check connection:
+  tail -f /home/ubuntu/thesis/results/hasil_real/pico_monitor.log
+
+Should see data coming in even without Windows serial monitor open.
