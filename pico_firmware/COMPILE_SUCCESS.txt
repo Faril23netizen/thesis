@@ -1,0 +1,42 @@
+PICO WH FIRMWARE - COMPILE SUCCESS
+===================================
+Date: May 24, 2026
+Commit: 37eeadc
+
+ISSUE FIXED:
+- Forward declaration of tcp_client_close() was placed BEFORE the tcp_client_t type definition
+- Moved forward declaration AFTER the type definition
+
+BUILD OUTPUT:
+✓ Compiled successfully with ninja
+✓ Output: build/risk_monitor.uf2 (716,288 bytes)
+
+NEXT STEPS:
+1. Flash firmware to Pico WH:
+   - Hold BOOTSEL button on Pico WH
+   - Connect USB to Windows computer
+   - Copy build/risk_monitor.uf2 to RPI-RP2 drive
+   - Pico will reboot automatically
+
+2. On RPi5, delete old Q-table to start fresh:
+   sudo ./stop_all.sh
+   rm /home/ubuntu/thesis/results/hasil_real/qtable.json
+   rm /home/ubuntu/thesis/results/hasil_real/dqn_buffer.json
+   sudo ./start_all.sh
+
+3. Monitor serial output (COM10 on Windows):
+   - Should see WiFi connection to N3IWF_AQUA
+   - Should see TCP connection to 10.42.0.1:5000
+   - Should see data transmission: DATA:ph_x1000,temp_x100,risk
+   - Should see mode indicator: (RB) for Rule-Based or (FQL) for Q-table mode
+   - Should see Q-table reception and ACK response
+
+FIRMWARE FEATURES:
+✓ WiFi: N3IWF_AQUA / skripsi2026
+✓ Server: 10.42.0.1:5000
+✓ Protocol: DATA:ph_x1000,temp_x100,risk\n
+✓ Risk levels: 0=SAFE, 1=CAUTION, 2=WARNING, 3=CRITICAL
+✓ Q-table receive capability (9x4 float array)
+✓ ACK response: ACK:QTABLE_LOADED\n or ACK:QTABLE_ERROR\n
+✓ Progressive learning: Rule-Based → FQL → DQN
+✓ Mode display in serial: (RB) or (FQL)
