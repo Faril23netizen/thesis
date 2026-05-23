@@ -1,0 +1,219 @@
+================================================================================
+SYSTEM ARCHITECTURE - Aquaculture NH3 Monitoring with N3IWF
+================================================================================
+Updated: May 23, 2026
+
+OVERVIEW
+========
+Progressive Hybrid Learning System: Rule-Based → FQL → DQN
+- Rule-Based: Berjalan di Pico WH (firmware C)
+- FQL & DQN: Berjalan di RPi5 (Python)
+
+HARDWARE COMPONENTS
+===================
+
+1. PICO WH (RP2040 + WiFi)
+   - Firmware: pico_firmware/main.c (sudah di-flash)
+   - Sensors:
+     * pH Sensor → ADC0 (GPIO26)
+     * DS18B20 Temperature → GPIO15 (1-Wire)
+   - Actuator:
+     * Relay A → GPIO16 (bit 0)
+     * Relay B → GPIO17 (bit 1)
+   - WiFi: Connect ke RPi5 hotspot "N3IWF_AQUA"
+   - Function:
+     * Baca sensor setiap 2 detik
+     * Rule-Based inference (lokal di Pico)
+     * Kirim data ke RPi5: "DATA:ph_x1000,temp_x100,action\n"
+     * Terima Q-table dari RPi5: "QTABLE:[[...]]\n"
+     * FQL inference (jika Q-table sudah loaded)
+
+2. RPI5 (N3IWF Server)
+   - OS: Ubuntu/Raspberry Pi OS
+   - WiFi Hotspot: "N3IWF_AQUA" (password: aquaculture2026)
+   - IP: 10.42.0.1
+   - Function:
+     * Terima data dari Pico via TCP port 5005
+     * FQL training (Python)
+     * DQN training (Python)
+     * Kirim Q-table ke Pico
+     * Dashboard (Flask, port 5000)
+
+SOFTWARE ARCHITECTURE
+=====================
+
+PICO WH (C Firmware)
+--------------------
+pico_firmware/
+├── main.c              # Main loop, WiFi, TCP, Rule-Based
+├── ph_sensor.h/c       # pH sensor driver (ADC)
+├── ds18b20.h/c         # DS18B20 driver (1-Wire)
+├── fql_inference.h/c   # FQL Q-table inference
+└── CMakeLists.txt      # Build config
+
+Rule-Based Logic (C):
+```c
+static uint8_t safety_action(int32_t ph_x1000, int32_t temp_x100) {
+  if (ph_x1000 < 6000 || ph_x1000 > 9500)
+    return ACTION_HIGH; /* DANGER_PH   */
+  if (temp_x100 > 3500)
+    return ACTION_HIGH; /* DANGER_TEMP */
+  if (ph_x1000 < 6500 || ph_x1000 > 8500)
+    return ACTION_MED; /* WARNING     */
+  if (temp_x100 > 3000)
+    return ACTION_MED; /* WARNING     */
+  return ACTION_LOW;   /* SAFE        */
+}
+```
+
+RPI5 (Python)
+-------------
+├── rb/                 # Rule-Based agent (Python mirror untuk comparison)
+│   ├── __init__.py
+│   └── rb_agent.py     # RuleBasedAgent class
+├── fql/                # Fuzzy Q-Learning
+│   ├── __init__.py
+│   ├── fql_agent.py    # FQLAgent class
+│   └── pretrain_fql.py
+├── dqn/                # Deep Q-Network
+│   ├── __init__.py
+│   ├── dqn_agent.py    # DQNAgent class
+│   └── train_dqn.py
+├── main/
+│   ├── simulasi/       # Simulation (virtual testing)
+│   │   ├── run_simulasi.py
+│   │   └── plot_extras.py
+│   └── real/           # Real implementation
+│       ├── run_real.py         # Main controller
+│       ├── wifi_bridge.py      # WiFi TCP bridge
+│       ├── dashboard.py        # Flask dashboard
+│       └── analyze_results.py
+├── n3iwf/              # N3IWF components
+│   ├── server.py               # N3IWF server (alternative)
+│   ├── callbox_simulator.py   # 5G Callbox simulator
+│   └── n3iwf_client.py         # N3IWF client (IPsec)
+└── results/            # Output data
+    ├── simulation/     # Simulation results
+    ├── hasil_real/     # Real implementation results
+    └── n3iwf_real/     # N3IWF real results
+
+PROTOCOL
+========
+
+Pico → RPi5 (Data)
+------------------
+Format: "DATA:ph_x1000,temp_x100,action\n"
+Example: "DATA:7250,2850,1\n"
+- pH = 7.250
+- T = 28.50°C
+- Action = 1 (LOW)
+
+RPi5 → Pico (Q-table)
+---------------------
+Format: "QTABLE:[[q00,q01,q02,q03],[q10,...],...]\n"
+- 9 states (pH bins × T bins)
+- 4 actions (OFF, LOW, MED, HIGH)
+
+Pico → RPi5 (ACK)
+-----------------
+Format: "ACK:QTABLE_LOADED\n" or "ACK:QTABLE_ERROR\n"
+
+PROGRESSIVE LEARNING PHASES
+============================
+
+PHASE 1: Rule-Based (Pico)
+---------------------------
+- Pico baca sensor
+- Rule-Based inference di Pico (C code)
+- Kirim data ke RPi5
+- RPi5 collect data untuk training
+
+PHASE 2: FQL (RPi5 + Pico)
+---------------------------
+- RPi5 training FQL dari data real
+- FQL converge → kirim Q-table ke Pico
+- Pico load Q-table → FQL inference lokal
+- Rule-Based tetap aktif sebagai safety gate
+
+PHASE 3: DQN (RPi5 + Pico)
+---------------------------
+- RPi5 training DQN dari buffer data
+- DQN converge → kirim Q-table ke Pico
+- Pico load Q-table → DQN inference lokal
+- Rule-Based tetap aktif sebagai safety gate
+
+COMPARISON
+==========
+System compare 3 metode:
+1. Rule-Based (dari Pico) - Baseline
+2. FQL (training di RPi5) - Medium accuracy
+3. DQN (training di RPi5) - Highest accuracy
+
+Metrics:
+- Accuracy: % correct risk prediction
+- Reward: +1.0 correct, -0.5 off by 1, -1.0 off by 2+
+- Latency: Time from sensor read to action
+
+DEPLOYMENT
+==========
+
+1. Flash Pico WH
+   ```bash
+   cd pico_firmware/build
+   cmake ..
+   make
+   # Copy aquaculture.uf2 to Pico (BOOTSEL mode)
+   ```
+
+2. Setup RPi5
+   ```bash
+   # Install dependencies
+   pip3 install numpy torch flask
+   
+   # Setup WiFi hotspot "N3IWF_AQUA"
+   # IP: 10.42.0.1
+   
+   # Run system
+   python3 main/real/run_real.py
+   ```
+
+3. Monitor
+   ```bash
+   # Dashboard
+   http://10.42.0.1:5000
+   
+   # Logs
+   tail -f results/hasil_real/fql.log
+   tail -f results/hasil_real/pico_monitor.log
+   ```
+
+FILES STRUCTURE
+===============
+
+IMPORTANT FILES:
+✓ pico_firmware/main.c          - Pico firmware (Rule-Based C code)
+✓ rb/rb_agent.py                - Rule-Based Python (untuk comparison)
+✓ fql/fql_agent.py              - FQL agent
+✓ dqn/dqn_agent.py              - DQN agent
+✓ main/real/run_real.py         - Main controller RPi5
+✓ main/simulasi/run_simulasi.py - Simulation testing
+
+DOCUMENTATION:
+✓ README.md                     - Quick start
+✓ CARA_JALANKAN_REAL.txt        - Step-by-step guide
+✓ SYSTEM_ARCHITECTURE.txt       - This file
+✓ pico_firmware/README.md       - Pico firmware guide
+
+SCRIPTS:
+✓ start_all.sh                  - Start all services
+✓ stop_all.sh                   - Stop all services
+✓ analyze_all.py                - Generate analysis
+
+NOTES
+=====
+- Pico firmware sudah di-flash, tidak perlu build ulang kecuali ada perubahan
+- Rule-Based code di Pico (C) dan rb/rb_agent.py (Python) harus identik
+- WiFi credentials: SSID="N3IWF_AQUA", Password="aquaculture2026"
+- RPi5 IP harus 10.42.0.1 (sesuai config di Pico firmware)
+
+================================================================================

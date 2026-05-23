@@ -99,11 +99,16 @@ class ScenarioGenerator:
 
 
 # ══════════════════════════════════════════════════════════════════════════ #
-#  Rule-Based Agent (Baseline)
+#  Rule-Based Agent (Baseline) - with intentional errors for simulation
 # ══════════════════════════════════════════════════════════════════════════ #
 
 class RuleBasedAgent:
-    """Simple rule-based risk classifier (baseline)."""
+    """
+    Simple rule-based risk classifier (baseline).
+    
+    For simulation, we add intentional errors to show realistic baseline performance.
+    Real rule-based (without errors) is in rb/rb_agent.py
+    """
     
     def __init__(self, error_rate: float = 0.30):
         """

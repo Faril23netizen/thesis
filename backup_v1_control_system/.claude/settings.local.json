@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(cd \"g:\\\\rule_based\\\\testing\"; $env:PYTHONIOENCODING=\"utf-8\"; python -m main.simulasi.run_simulasi --episodes 10 --steps 200 --pretrain-steps 100000 --retrain-dqn 2>&1 | Select-Object -First 150)"
-    ]
-  }
-}

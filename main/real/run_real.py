@@ -161,18 +161,6 @@ def append_transition(buffer: list, s, a, r, s_next) -> None:
 
 RISK_LABELS = ["SAFE", "CAUTION", "WARNING", "CRITICAL"]
 
-
-# ══════════════════════════════════════════════════════════════════════════ #
-#  Rule-Based Risk Classification (baseline)
-# ══════════════════════════════════════════════════════════════════════════ #
-
-def rule_based_risk(pH: float, T: float) -> int:
-    """
-    Simple rule-based NH₃ risk classification (baseline).
-    Uses calculate_actual_risk() from fql_agent.
-    """
-    return calculate_actual_risk(pH, T)
-
 def nh3_fraction(pH: float, T: float) -> float:
     """Fraction of total ammonia in unionized (toxic) NH3 form."""
     pka = 0.09018 + 2729.92 / (T + 273.15)
