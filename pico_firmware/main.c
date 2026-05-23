@@ -55,9 +55,6 @@ static bool g_qtable_loaded = false;
 static char g_recv_buf[2048];
 static int g_recv_len = 0;
 
-/* ── Forward declarations ────────────────────────────────────────────────── */
-static err_t tcp_client_close(tcp_client_t *state);
-
 /* ── TCP Client State ────────────────────────────────────────────────────── */
 typedef struct {
     struct tcp_pcb *tcp_pcb;
@@ -66,6 +63,9 @@ typedef struct {
 } tcp_client_t;
 
 static tcp_client_t *g_client = NULL;
+
+/* ── Forward declarations ────────────────────────────────────────────────── */
+static err_t tcp_client_close(tcp_client_t *state);
 
 /* ── NH3 calculation ─────────────────────────────────────────────────────── */
 static int32_t calc_nh3_x100000(int32_t ph_x1000, int32_t temp_x100) {
