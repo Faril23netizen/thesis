@@ -1,13 +1,8 @@
 """
-DQN Agent — Risk Classification (Inference Only)
-=================================================
-Loads a trained DQN model and provides predict_risk(pH, T).
+DQN Agent — inference only
+===========================
+Loads a trained DQN model and provides select_action(pH, T).
 Supports both PyTorch (.pt) and numpy fallback (_meta.json + _W*.npy).
-
-MONITORING SYSTEM v2:
-- Predicts NH₃ risk level (Safe/Caution/Warning/Critical)
-- No aerator control, pure monitoring
-- Output: 4 risk level probabilities
 """
 
 import json
@@ -16,13 +11,7 @@ import numpy as np
 
 PH_MIN, PH_MAX = 5.5,  9.5
 T_MIN,  T_MAX  = 17.5, 35.0
-N_RISK_LEVELS  = 4
-
-# Risk level constants
-RISK_SAFE     = 0
-RISK_CAUTION  = 1
-RISK_WARNING  = 2
-RISK_CRITICAL = 3
+N_ACTIONS      = 4
 
 
 def _normalize(ph: float, t: float) -> np.ndarray:
@@ -36,20 +25,14 @@ def _relu(x):
     return np.maximum(0.0, x)
 
 
-def _softmax(x):
-    """Softmax function for converting logits to probabilities"""
-    exp_x = np.exp(x - np.max(x))  # numerical stability
-    return exp_x / np.sum(exp_x)
-
-
 class DQNAgent:
     """
-    Loaded DQN for real-time risk prediction.
+    Loaded DQN for real-time inference.
 
     Usage:
         agent = DQNAgent()
         if agent.load(model_path):
-            risk_level = agent.predict_risk(pH, T)
+            action = agent.select_action(pH, T)
     """
 
     def __init__(self):
@@ -87,7 +70,7 @@ class DQNAgent:
                     self.net = nn.Sequential(
                         nn.Linear(2, hidden), nn.ReLU(),
                         nn.Linear(hidden, hidden), nn.ReLU(),
-                        nn.Linear(hidden, N_RISK_LEVELS),
+                        nn.Linear(hidden, N_ACTIONS),
                     )
                 def forward(self, x):
                     return self.net(x)
@@ -126,37 +109,28 @@ class DQNAgent:
     def ready(self) -> bool:
         return self._ready
 
-    def risk_logits(self, ph: float, t: float) -> list:
-        """Return logits for all 4 risk levels."""
+    def q_values(self, ph: float, t: float) -> list:
+        """Return Q-values for all 4 actions."""
         if not self._ready:
-            return [0.0] * N_RISK_LEVELS
+            return [0.0] * N_ACTIONS
         x = _normalize(ph, t)
         if self._backend == "torch":
             import torch
             with torch.no_grad():
-                logits = self._net(torch.tensor(x).unsqueeze(0)).squeeze(0).numpy()
-            return logits.tolist()
+                q = self._net(torch.tensor(x).unsqueeze(0)).squeeze(0).numpy()
+            return q.tolist()
         else:
             w = self._net
             h1 = _relu(x @ w["W1"] + w["b1"][0])
             h2 = _relu(h1 @ w["W2"] + w["b2"][0])
-            logits = h2 @ w["W3"] + w["b3"][0]
-            return logits.tolist()
+            q  = h2 @ w["W3"] + w["b3"][0]
+            return q.tolist()
 
-    def risk_probabilities(self, ph: float, t: float) -> list:
-        """Return probabilities for all 4 risk levels using softmax."""
-        logits = self.risk_logits(ph, t)
-        probs = _softmax(np.array(logits))
-        return probs.tolist()
-
-    def predict_risk(self, ph: float, t: float) -> int:
-        """
-        Predict NH₃ risk level (0=Safe, 1=Caution, 2=Warning, 3=Critical).
-        
-        Returns: risk level (0-3)
-        """
-        logits = self.risk_logits(ph, t)
-        return int(np.argmax(logits))
+    def select_action(self, ph: float, t: float) -> int:
+        """Greedy action selection (OFF is banned)."""
+        q = self.q_values(ph, t)
+        # Aerator must not be OFF (index 0). Only pick from 1 (LOW), 2 (MED), 3 (HIGH)
+        return int(np.argmax(q[1:])) + 1
 
     def to_qtable_string(self) -> str:
         """
@@ -172,7 +146,7 @@ class DQNAgent:
         rows = []
         for ph in ph_centers:
             for t in t_centers:
-                logits = self.risk_logits(ph, t)
-                vals = ",".join(f"{v:.4f}" for v in logits)
+                q = self.q_values(ph, t)
+                vals = ",".join(f"{v:.4f}" for v in q)
                 rows.append(f"[{vals}]")
         return "QTABLE:[" + ",".join(rows) + "]\n"

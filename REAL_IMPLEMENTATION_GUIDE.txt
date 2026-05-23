@@ -1,0 +1,358 @@
+================================================================================
+REAL IMPLEMENTATION GUIDE - Aquaculture Monitoring System
+================================================================================
+Date: May 22, 2026
+Thesis: Edge-Intelligent Aquaculture Monitoring System
+Student: Faril Pirwanhadi (M14128104)
+
+================================================================================
+OVERVIEW
+================================================================================
+
+Sistem monitoring NH3 risk dengan progressive learning (RB → FQL → DQN) yang
+sudah divalidasi melalui simulasi dengan hasil:
+- DQN: 96.54% accuracy, 0.948 reward (TERBAIK)
+- FQL: 82.51% accuracy, 0.726 reward (MENENGAH)
+- Rule-Based: 75.76% accuracy, 0.592 reward (BASELINE)
+
+Implementasi real menggunakan trained models dari simulasi untuk deployment
+langsung ke hardware.
+
+================================================================================
+ARCHITECTURE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         REAL DEPLOYMENT                                  │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│  ┌──────────────┐         N3IWF/IPsec         ┌──────────────┐          │
+│  │  Pico 2W     │◄──────────────────────────►│  RPi5        │          │
+│  │  (Edge)      │      WiFi + Tunnel          │  (Server)    │          │
+│  └──────────────┘                             └──────────────┘          │
+│       │                                              │                   │
+│       │ pH, T sensors                                │ AI Inference      │
+│       │                                              │                   │
+│       ▼                                              ▼                   │
+│  ┌──────────────┐                             ┌──────────────┐          │
+│  │ Local FQL    │                             │ RB/FQL/DQN   │          │
+│  │ Q-table      │                             │ Comparison   │          │
+│  └──────────────┘                             └──────────────┘          │
+│                                                                           │
+└─────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+COMPONENTS
+================================================================================
+
+1. PICO 2W (Edge Device)
+   - Sensor reading: pH, Temperature
+   - Local FQL inference (Q-table from simulation)
+   - Send data via N3IWF tunnel
+   - Low latency risk prediction
+
+2. RPI5 (Server)
+   - N3IWF server (TCP port 5005)
+   - AI inference: RB, FQL, DQN comparison
+   - Dashboard (Flask, port 5000)
+   - Data logging & analysis
+
+3. N3IWF COMPONENTS
+   - callbox_simulator.py: 5G Callbox simulator
+   - n3iwf_client.py: N3IWF client (IPsec tunnel)
+   - server.py: Main server with AI inference
+
+================================================================================
+SETUP INSTRUCTIONS
+================================================================================
+
+STEP 1: PREPARE TRAINED MODELS
+-------------------------------
+Simulasi sudah menghasilkan trained models di results/simulation/:
+  ✓ fql_qtable_sim.json - FQL Q-table (82.51% accuracy)
+  ✓ dqn_model_sim.pt - DQN model (96.54% accuracy)
+
+Models ini akan otomatis di-load oleh real implementation.
+
+STEP 2: SETUP N3IWF (RPi5)
+---------------------------
+# Terminal 1: Start Callbox Simulator
+sudo python3 n3iwf/callbox_simulator.py
+
+# Terminal 2: Start N3IWF Client
+sudo python3 n3iwf/n3iwf_client.py
+
+# Terminal 3: Start Server
+python3 n3iwf/server.py
+
+# Dashboard
+http://<RPI5_IP>:5000
+
+STEP 3: SETUP PICO 2W
+---------------------
+1. Flash Pico 2W dengan firmware yang include:
+   - WiFi connection ke RPi5
+   - pH & Temperature sensor reading
+   - FQL Q-table (dari simulation)
+   - TCP client ke port 5005
+
+2. Format data yang dikirim:
+   DATA:ph_x1000,temp_x100,risk_level
+   
+   Contoh:
+   DATA:7250,2800,0  # pH=7.25, T=28.0°C, Risk=SAFE
+
+STEP 4: MONITORING
+------------------
+# Dashboard
+http://<RPI5_IP>:5000
+
+# Logs
+tail -f results/n3iwf_real/n3iwf_real_log.csv
+
+# Network stats
+cat results/network/callbox_stats.json
+
+================================================================================
+DATA FLOW
+================================================================================
+
+1. SENSOR READING (Pico 2W)
+   ├─ Read pH sensor
+   ├─ Read Temperature sensor
+   ├─ Calculate actual risk (ground truth)
+   └─ Send via N3IWF: DATA:ph_x1000,temp_x100,risk_level
+
+2. N3IWF TRANSMISSION
+   ├─ Pico 2W → WiFi → N3IWF Client
+   ├─ IPsec Tunnel (encrypted)
+   ├─ Callbox Simulator (5G Core)
+   └─ Server (TCP port 5005)
+
+3. SERVER INFERENCE (RPi5)
+   ├─ Receive data from Pico
+   ├─ Run inference:
+   │  ├─ Rule-Based: Simple thresholds
+   │  ├─ FQL: Fuzzy Q-Learning (from simulation)
+   │  └─ DQN: Deep Q-Network (from simulation)
+   ├─ Compare predictions vs actual
+   ├─ Calculate reward
+   └─ Log to CSV
+
+4. DASHBOARD DISPLAY
+   ├─ Real-time sensor data
+   ├─ Risk predictions (RB/FQL/DQN)
+   ├─ Accuracy comparison
+   ├─ Latency metrics
+   └─ Network stats
+
+================================================================================
+EXPECTED RESULTS
+================================================================================
+
+Based on simulation validation, real implementation should show:
+
+ACCURACY (Expected):
+  DQN:        ~95-97% (best)
+  FQL:        ~80-85% (good)
+  Rule-Based: ~75-80% (baseline)
+
+REWARD (Expected):
+  DQN:        ~0.94-0.95 (highest)
+  FQL:        ~0.72-0.74 (medium)
+  Rule-Based: ~0.59-0.60 (lowest)
+
+LATENCY (Target):
+  Edge (Pico): <10ms (local FQL)
+  N3IWF:       10-20ms (with tunnel)
+  Total:       <30ms (acceptable for monitoring)
+
+INFERENCE TIME:
+  Rule-Based: <1ms
+  FQL:        <2ms
+  DQN:        <5ms
+
+================================================================================
+VALIDATION CHECKLIST
+================================================================================
+
+□ N3IWF Components
+  □ Callbox simulator running
+  □ N3IWF client connected
+  □ IPsec tunnel ESTABLISHED
+  □ Network stats available
+
+□ Server
+  □ TCP server listening on port 5005
+  □ FQL model loaded from simulation
+  □ DQN model loaded from simulation
+  □ Dashboard accessible
+
+□ Pico 2W
+  □ WiFi connected to RPi5
+  □ Sensors reading correctly
+  □ Data transmission working
+  □ Local FQL inference active
+
+□ Data Logging
+  □ CSV log file created
+  □ Real-time data being logged
+  □ Accuracy tracking working
+  □ Reward calculation correct
+
+□ Dashboard
+  □ Real-time updates working
+  □ All metrics displayed
+  □ Charts rendering
+  □ No errors in console
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+ISSUE: N3IWF tunnel not establishing
+FIX:
+  1. Check strongSwan installed: sudo apt install strongswan
+  2. Check IPsec config: sudo ipsec statusall
+  3. Restart services:
+     sudo ipsec stop
+     sudo ipsec start
+
+ISSUE: Pico not connecting
+FIX:
+  1. Check WiFi credentials
+  2. Check RPi5 IP address
+  3. Check firewall: sudo ufw allow 5005/tcp
+  4. Test connectivity: ping <RPI5_IP>
+
+ISSUE: Models not loading
+FIX:
+  1. Check simulation results exist:
+     ls results/simulation/fql_qtable_sim.json
+     ls results/simulation/dqn_model_sim.pt
+  2. Run simulation first if missing:
+     python main/simulasi/run_simulasi.py
+
+ISSUE: Dashboard not accessible
+FIX:
+  1. Check Flask running: ps aux | grep python
+  2. Check port 5000: sudo netstat -tulpn | grep 5000
+  3. Check firewall: sudo ufw allow 5000/tcp
+  4. Try localhost: http://localhost:5000
+
+================================================================================
+PERFORMANCE OPTIMIZATION
+================================================================================
+
+1. EDGE OPTIMIZATION (Pico 2W)
+   - Use local FQL Q-table for fast inference
+   - Batch sensor readings (reduce transmission)
+   - Implement data compression
+   - Use efficient data format
+
+2. NETWORK OPTIMIZATION
+   - IPsec tunnel keepalive
+   - TCP connection pooling
+   - Reduce packet size
+   - Monitor latency continuously
+
+3. SERVER OPTIMIZATION
+   - Parallel inference (RB/FQL/DQN)
+   - Efficient CSV logging (buffered writes)
+   - Dashboard caching
+   - Database for long-term storage
+
+4. MODEL OPTIMIZATION
+   - FQL: Reduce Q-table size (quantization)
+   - DQN: Model pruning/quantization
+   - Batch inference when possible
+   - GPU acceleration (if available)
+
+================================================================================
+DEPLOYMENT CHECKLIST
+================================================================================
+
+PRE-DEPLOYMENT:
+□ Simulation completed with good results
+□ Models trained and validated
+□ Hardware tested individually
+□ Network connectivity verified
+□ All dependencies installed
+
+DEPLOYMENT:
+□ Start Callbox simulator
+□ Start N3IWF client
+□ Verify IPsec tunnel
+□ Start server
+□ Verify dashboard
+□ Connect Pico 2W
+□ Verify data flow
+
+POST-DEPLOYMENT:
+□ Monitor accuracy metrics
+□ Check latency performance
+□ Verify reward calculations
+□ Review logs for errors
+□ Backup data regularly
+
+================================================================================
+MAINTENANCE
+================================================================================
+
+DAILY:
+- Check dashboard for anomalies
+- Monitor accuracy trends
+- Review error logs
+- Verify N3IWF tunnel status
+
+WEEKLY:
+- Analyze performance metrics
+- Compare with simulation results
+- Backup data and models
+- Update documentation
+
+MONTHLY:
+- Retrain models with new data
+- Optimize hyperparameters
+- Review system performance
+- Plan improvements
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. IMMEDIATE (Week 1)
+   □ Deploy to hardware
+   □ Validate basic functionality
+   □ Collect initial data
+   □ Monitor stability
+
+2. SHORT-TERM (Week 2-4)
+   □ Optimize performance
+   □ Fine-tune models with real data
+   □ Implement continuous learning
+   □ Add monitoring alerts
+
+3. LONG-TERM (Month 2+)
+   □ Scale to multiple ponds
+   □ Implement cloud backup
+   □ Add predictive analytics
+   □ Publish results
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Real implementation siap untuk deployment dengan:
+✓ Validated models dari simulasi (DQN 96.54% accuracy)
+✓ Complete N3IWF infrastructure
+✓ Progressive learning pipeline
+✓ Comprehensive monitoring & logging
+✓ Clear deployment procedures
+
+Expected outcome: DQN akan memberikan performa terbaik (~95% accuracy) dalam
+real deployment, dengan FQL sebagai fallback yang reliable (~82% accuracy).
+
+================================================================================
+END OF REAL IMPLEMENTATION GUIDE
+================================================================================

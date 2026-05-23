@@ -1,58 +1,41 @@
 """
-FQL Agent — Fuzzy Q-Learning for Risk Classification
-=====================================================
-Thesis : Edge-Intelligent Aquaculture Monitoring System
+FQL Agent — Fuzzy Q-Learning for RPi 4
+========================================
+Thesis : Edge-Intelligent Aquaculture Aerator Control
          Using Progressive Hybrid FQL-DQN with N3IWF LES
 Student: Faril Pirwanhadi (M14128104)
 
-MONITORING SYSTEM v2:
-- Predicts NH₃ risk level (Safe/Caution/Warning/Critical)
-- No aerator control, pure monitoring
-- Reward based on prediction accuracy
+Update rule reference: Er & Deng, IEEE SMC 2004 — Dynamic FQL
 """
 
 import json
 import math
 import random
 
-# ── Risk Level constants ─────────────────────────────────────────────────── #
-RISK_SAFE     = 0
-RISK_CAUTION  = 1
-RISK_WARNING  = 2
-RISK_CRITICAL = 3
-N_RISK_LEVELS = 4
-N_PH_SETS     = 5
-N_T_SETS      = 5
-N_RULES       = N_PH_SETS * N_T_SETS   # 25
+# ── Action constants ─────────────────────────────────────────────────────── #
+ACTION_OFF  = 0
+ACTION_LOW  = 1
+ACTION_MED  = 2
+ACTION_HIGH = 3
+N_ACTIONS   = 4
+N_PH_SETS   = 5
+N_T_SETS    = 5
+N_RULES     = N_PH_SETS * N_T_SETS   # 25
+
+# Energy cost per action for reward
+# OFF is effectively banned — aerator must always run for DO safety
+ENERGY_COST = {
+    ACTION_OFF:  100.0, # banned — DO depletion risk, FQL will never choose this
+    ACTION_LOW:  0.0,   # baseline optimal in safe conditions
+    ACTION_MED:  0.5,
+    ACTION_HIGH: 1.0,
+}
 
 
 def _nh3_fraction(pH: float, T: float) -> float:
     """Fraction of total ammonia in unionized (toxic) NH3 form (0.0–1.0)."""
     pka = 0.09018 + 2729.92 / (T + 273.15)
     return 1.0 / (1.0 + 10 ** (pka - pH))
-
-
-def calculate_actual_risk(pH: float, T: float) -> int:
-    """
-    Calculate actual NH₃ risk level (ground truth).
-    
-    Risk thresholds based on NH₃ fraction:
-    - Safe:     NH₃ < 1%   (0.01)
-    - Caution:  NH₃ 1-5%   (0.01-0.05)
-    - Warning:  NH₃ 5-10%  (0.05-0.10)
-    - Critical: NH₃ > 10%  (0.10+)
-    
-    Returns: 0=Safe, 1=Caution, 2=Warning, 3=Critical
-    """
-    nh3_frac = _nh3_fraction(pH, T)
-    if nh3_frac < 0.01:
-        return RISK_SAFE
-    elif nh3_frac < 0.05:
-        return RISK_CAUTION
-    elif nh3_frac < 0.10:
-        return RISK_WARNING
-    else:
-        return RISK_CRITICAL
 
 
 # ═══════════════════════════════════════════════════════════════════════════ #
@@ -111,18 +94,19 @@ class FuzzyMembership:
 
 
 # ═══════════════════════════════════════════════════════════════════════════ #
-#  FQL Agent - Risk Classification
+#  FQL Agent
 # ═══════════════════════════════════════════════════════════════════════════ #
 
 class FQLAgent:
     """
-    Fuzzy Q-Learning agent for NH₃ risk classification.
+    Fuzzy Q-Learning agent.
 
-    25 rules → each predicts risk level (0-3).
-    Learns online from actual NH₃ risk (ground truth).
+    9 rules × 4 actions = 36 Q-values.
+    Learns online from Rule-Based data sent by the Pico.
     """
 
     # Rule order: (pH_set, T_set) — row-major 5×5
+    # Must match C code: phi[i*5 + j] = mu_ph[i] * mu_t[j]
     _PH_SETS = ["VeryAcidic", "Acidic", "Normal", "Alkaline", "VeryAlkaline"]
     _T_SETS  = ["VeryCold", "Cold", "Optimal", "Hot", "VeryHot"]
     _RULE_ORDER = [
@@ -136,7 +120,7 @@ class FQLAgent:
     def __init__(self,
                  alpha: float = 0.1,
                  gamma: float = 0.95,
-                 eps_start: float = 0.3,
+                 eps_start: float = 1.0,
                  eps_min:   float = 0.05,
                  eps_decay: float = 0.9995):
         self.alpha     = alpha
@@ -145,41 +129,46 @@ class FQLAgent:
         self.eps_min   = eps_min
         self.eps_decay = eps_decay
 
-        # Q-table: 25 rules × 4 risk levels
-        # Initialize with domain knowledge based on NH₃ risk
+        # Q-table: 25×4. Initialized per (pH, T) fuzzy-rule zone.
+        # Each of the 25 rules maps to SAFE/WARNING/DANGER based on its center.
         # pH centers: 5.75, 6.25, 7.25, 8.25, 9.25
         # T  centers: 17.75, 21.0, 27.0, 32.5, 34.5
+        # SAFE    (6.5≤pH≤8.5 AND T≤30): LOW best  → [OFF=-100, LOW=+1, MED= 0, HIGH=-0.5]
         _PH_C = [5.75, 6.25, 7.25, 8.25, 9.25]
         _T_C  = [17.75, 21.0, 27.0, 32.5, 34.5]
 
-        def _init_risk_q(ph, t):
-            """Initialize Q-values based on expected risk level"""
-            actual_risk = calculate_actual_risk(ph, t)
-            # Give higher Q-value to correct risk level
-            q = [0.0, 0.0, 0.0, 0.0]
-            q[actual_risk] = 1.0
-            return q
+        def _zone_q(ph, t):
+            # Domain-knowledge warm start:
+            # SAFE -> LOW, DANGER -> HIGH, WARNING -> MED
+            if 6.5 <= ph <= 8.5 and t <= 30.0:          # SAFE
+                return [-10.0,  1.0,  0.0, -0.5]
+            elif ph < 6.0 or ph > 9.5 or t > 34.0:      # DANGER -> HIGH
+                return [-10.0, -1.0,  0.0,  1.0]
+            else:                                         # WARNING -> MED
+                return [-10.0, -0.3,  1.0,  0.0]
 
         self.qtable = [
-            _init_risk_q(_PH_C[r // N_T_SETS], _T_C[r % N_T_SETS])
+            _zone_q(_PH_C[r // N_T_SETS], _T_C[r % N_T_SETS])
             for r in range(N_RULES)
         ]
 
         self.total_steps      = 0
         self.converged        = False
-        self.converged_sent   = False
+        self.converged_sent   = False   # flag — Q-table has been sent to Pico
 
-        # Accuracy tracking for convergence
-        self._accuracy_window:    list[float] = []   # buffer of last 100 steps
-        self._avg_accuracy_history: list[float] = [] # average per 100-step window
+        # Reward history for convergence detection
+        self._reward_window:    list[float] = []   # buffer of last 100 steps
+        self._avg_reward_history: list[float] = [] # average per 100-step window
+
+        self._prev_action: int | None = None
 
     # ── Firing strength ─────────────────────────────────────────────────── #
 
     def compute_firing_strengths(self, pH: float, T: float) -> list:
         """
-        Compute firing strength phi_r for all 25 rules.
+        Compute firing strength phi_r for all 9 rules.
         phi_r = mu_pH(pH) × mu_T(T)
-        Returns: list of length 25.
+        Returns: list of length 9.
         """
         mu_ph = FuzzyMembership.compute_pH_memberships(pH)
         mu_t  = FuzzyMembership.compute_T_memberships(T)
@@ -190,162 +179,183 @@ class FQLAgent:
 
     # ── Q-value FQL ─────────────────────────────────────────────────────── #
 
-    def compute_Q_FQL(self, firing_strengths: list, risk_level: int) -> float:
+    def compute_Q_FQL(self, firing_strengths: list, action: int) -> float:
         """
-        Q_FQL(s, risk) = sum_r [phi_r(s) × Q_r(risk)]
+        Q_FQL(s, a) = sum_r [phi_r(s) × Q_r(a)]
         """
         return sum(
-            firing_strengths[r] * self.qtable[r][risk_level]
+            firing_strengths[r] * self.qtable[r][action]
             for r in range(N_RULES)
         )
 
     def compute_all_Q_FQL(self, firing_strengths: list) -> list:
         """
-        Compute Q_FQL for all 4 risk levels.
+        Compute Q_FQL for all 4 actions.
         Returns: list of length 4.
         """
         return [
-            self.compute_Q_FQL(firing_strengths, risk)
-            for risk in range(N_RISK_LEVELS)
+            self.compute_Q_FQL(firing_strengths, a)
+            for a in range(N_ACTIONS)
         ]
 
-    # ── Risk prediction ──────────────────────────────────────────────────── #
+    # ── Action selection ─────────────────────────────────────────────────── #
 
-    def predict_risk(self, pH: float, T: float) -> int:
+    # Actions available for selection — OFF is permanently excluded
+    _VALID_ACTIONS = [ACTION_LOW, ACTION_MED, ACTION_HIGH]
+
+    def select_action(self, pH: float, T: float) -> int:
         """
-        Predict NH₃ risk level (0=Safe, 1=Caution, 2=Warning, 3=Critical).
-        
-        Uses epsilon-greedy for exploration during training:
-        - With probability epsilon: random prediction
-        - Otherwise: argmax Q_FQL(s, risk)
-        
-        Returns: risk level (0-3)
+        Epsilon-greedy action selection. OFF is never selected or updated —
+        aerator must always run for dissolved oxygen safety.
         """
         if random.random() < self.epsilon:
-            return random.randint(0, N_RISK_LEVELS - 1)
-        
+            return random.choice(self._VALID_ACTIONS)
         firing = self.compute_firing_strengths(pH, T)
         q_vals = self.compute_all_Q_FQL(firing)
-        return int(q_vals.index(max(q_vals)))
+        return max(self._VALID_ACTIONS, key=lambda a: q_vals[a])
 
     # ── Reward function ──────────────────────────────────────────────────── #
 
-    def compute_reward(self, predicted_risk: int, actual_risk: int) -> float:
+    def compute_reward(self, pH: float, T: float, action: int,
+                       pH_next: float, T_next: float,
+                       prev_action: int | None = None) -> float:
         """
-        Reward based on prediction accuracy.
-        
-        - Correct prediction: +1.0
-        - Off by 1 level:     -0.5
-        - Off by 2+ levels:   -1.0
-        
-        Args:
-            predicted_risk: Predicted risk level (0-3)
-            actual_risk: Actual risk level from calculate_actual_risk()
-        
-        Returns: reward value
+        Outcome-based reward — zone-conditional energy penalty.
+
+        Components:
+          1. State quality of next state (+2 SAFE, 0 WARNING, -2 DANGER)
+          2. Energy penalty — full in SAFE, tiny in stress zones
+          3. NH3 toxicity penalty
         """
-        error = abs(predicted_risk - actual_risk)
-        if error == 0:
-            return +1.0  # Perfect prediction
-        elif error == 1:
-            return -0.5  # Close
-        else:
-            return -1.0  # Far off
+        if action == ACTION_OFF:
+            return -10.0
+
+        def _zone(ph, t):
+            if 6.5 <= ph <= 8.5 and t <= 30.0:
+                return "SAFE"
+            elif ph < 6.0 or ph > 9.5 or t > 34.0 or t < 18.0:
+                return "DANGER"
+            return "WARNING"
+
+        zone_now  = _zone(pH, T)
+        zone_next = _zone(pH_next, T_next)
+
+        # 1. State Quality of next state
+        r_state = {"SAFE": 2.0, "WARNING": 0.0, "DANGER": -2.0}[zone_next]
+
+        # 2. Energy penalty — graduated by zone severity
+        _cost = {ACTION_LOW: 0.0, ACTION_MED: 0.3, ACTION_HIGH: 0.7}
+        if zone_now == "SAFE":
+            energy = _cost.get(action, 0.0)
+        elif zone_now == "WARNING":
+            energy = _cost.get(action, 0.0) * 0.40
+        else:  # DANGER
+            energy = _cost.get(action, 0.0) * 0.05
+
+        # 3. NH3 Toxicity Penalty
+        pka = 0.09018 + 2729.92 / (T_next + 273.15)
+        nh3_frac = 1.0 / (1.0 + 10 ** (pka - pH_next))
+        r_nh3 = nh3_frac * 5.0
+
+        return r_state - energy - r_nh3
 
     # ── Q-table update ───────────────────────────────────────────────────── #
 
-    def update(self, pH: float, T: float, predicted_risk: int,
-               actual_risk: int) -> float:
+    def update(self, pH: float, T: float, action: int,
+               reward: float, pH_next: float, T_next: float) -> float:
         """
-        Update Q-table using supervised learning approach.
-        
-        For correct prediction: increase Q-value
-        For wrong prediction: decrease Q-value
-        
-        Q_r(predicted) += alpha × phi_r(s) × reward
-        
-        Args:
-            pH: Current pH
-            T: Current temperature
-            predicted_risk: Risk level predicted by agent
-            actual_risk: Actual risk level (ground truth)
-        
-        Returns: reward value
-        """
-        firing = self.compute_firing_strengths(pH, T)
-        reward = self.compute_reward(predicted_risk, actual_risk)
+        Update Q-table using TD error (Er & Deng, 2004).
 
-        # Update Q-values for all active rules
+        Q_r(a) += alpha × phi_r(s) × TD_error
+        TD_error = r + gamma × max_a Q_FQL(s') − Q_FQL(s, a)
+
+        Returns: TD_error
+        """
+        if action == ACTION_OFF:
+            return 0.0  # OFF is forbidden — never update its Q-values
+
+        firing      = self.compute_firing_strengths(pH, T)
+        q_now       = self.compute_Q_FQL(firing, action)
+
+        firing_next = self.compute_firing_strengths(pH_next, T_next)
+        q_next_max  = max(self.compute_all_Q_FQL(firing_next))
+
+        td_error = reward + self.gamma * q_next_max - q_now
+
+        # Update all active rules (phi_r > 0)
         for r in range(N_RULES):
             if firing[r] > 0.0:
-                # Increase Q for correct prediction, decrease for wrong
-                if predicted_risk == actual_risk:
-                    self.qtable[r][predicted_risk] += self.alpha * firing[r] * reward
-                else:
-                    # Decrease Q for wrong prediction
-                    self.qtable[r][predicted_risk] += self.alpha * firing[r] * reward
-                    # Increase Q for correct answer
-                    self.qtable[r][actual_risk] += self.alpha * firing[r] * abs(reward)
+                self.qtable[r][action] += self.alpha * firing[r] * td_error
 
         # Epsilon decay
         self.epsilon = max(self.eps_min, self.epsilon * self.eps_decay)
 
-        # Track accuracy for convergence
-        accuracy = 1.0 if predicted_risk == actual_risk else 0.0
-        self._accuracy_window.append(accuracy)
-        if len(self._accuracy_window) >= 100:
-            avg = sum(self._accuracy_window) / len(self._accuracy_window)
-            self._avg_accuracy_history.append(avg)
-            self._accuracy_window.clear()
+        # Record reward for convergence monitoring
+        self._reward_window.append(reward)
+        if len(self._reward_window) >= 100:
+            avg = sum(self._reward_window) / len(self._reward_window)
+            self._avg_reward_history.append(avg)
+            self._reward_window.clear()
 
-        self.total_steps += 1
-        return reward
+        self.total_steps  += 1
+        self._prev_action  = action
+        return td_error
 
     # ── Convergence ──────────────────────────────────────────────────────── #
 
-    CONV_MIN_STEPS   = 2_000   # minimum training steps
-    CONV_MIN_WINDOWS = 5       # consecutive 100-step windows needed
-    CONV_MIN_ACCURACY = 0.75   # minimum accuracy to declare converged
+    # Convergence thresholds — deliberately strict so FQL learns long enough
+    CONV_MIN_STEPS   = 5_000   # minimum training steps
+    CONV_MIN_WINDOWS = 8       # consecutive 100-step reward windows needed
+    CONV_MAX_DELTA   = 0.005   # max |avg[-1] - avg[-2]| to declare stable
+    CONV_MIN_REWARD  = 0.15    # final window avg reward must exceed this
 
     def check_convergence(self) -> bool:
         """
-        Converged when:
-          1. total_steps >= CONV_MIN_STEPS
-          2. accuracy windows >= CONV_MIN_WINDOWS
-          3. avg_accuracy[-1] >= CONV_MIN_ACCURACY
+        Converged only when ALL four conditions hold (strict):
+          1. total_steps >= CONV_MIN_STEPS      (enough experience)
+          2. reward windows >= CONV_MIN_WINDOWS  (sustained stability)
+          3. |avg[-1] - avg[-2]| < CONV_MAX_DELTA (reward stable)
+          4. avg_reward[-1] >= CONV_MIN_REWARD   (actually performing well)
         """
         if self.converged:
             return True
         if self.total_steps < self.CONV_MIN_STEPS:
             return False
-        hist = self._avg_accuracy_history
+        hist = self._avg_reward_history
         if len(hist) < self.CONV_MIN_WINDOWS:
             return False
-        if hist[-1] < self.CONV_MIN_ACCURACY:
+        if abs(hist[-1] - hist[-2]) >= self.CONV_MAX_DELTA:
+            return False
+        if hist[-1] < self.CONV_MIN_REWARD:
             return False
         self.converged = True
         return True
 
     def convergence_progress(self) -> dict:
-        """Return convergence progress (0.0–1.0 = done)."""
-        hist = self._avg_accuracy_history
-        acc  = hist[-1] if hist else 0.0
+        """Return how close each convergence condition is (0.0–1.0 = done)."""
+        hist = self._avg_reward_history
+        avg  = hist[-1] if hist else 0.0
+        delta = abs(hist[-1] - hist[-2]) if len(hist) >= 2 else float("inf")
         return {
             "steps":      min(self.total_steps / self.CONV_MIN_STEPS,   1.0),
             "windows":    min(len(hist)         / self.CONV_MIN_WINDOWS, 1.0),
-            "accuracy":   min(acc / self.CONV_MIN_ACCURACY, 1.0),
+            "delta":      min(self.CONV_MAX_DELTA / max(delta, 1e-9),    1.0),
+            "reward":     min(max(avg, 0) / self.CONV_MIN_REWARD,        1.0),
             "converged":  self.converged,
         }
 
     # ── Policy evaluation ────────────────────────────────────────────────── #
 
-    _PH_CENTERS = [5.75, 6.25, 7.25, 8.25, 9.25]
-    _T_CENTERS  = [17.75, 21.0, 27.0, 32.5, 34.5]
+    # Representative center-point for each fuzzy set
+    _PH_CENTERS = [5.75, 6.25, 7.25, 8.25, 9.25]  # VeryAcidic..VeryAlkaline
+    _T_CENTERS  = [17.75, 21.0, 27.0, 32.5, 34.5]  # VeryCold..VeryHot
 
     def evaluate_policy(self) -> list[list[int]]:
         """
-        Greedy risk prediction for all 25 fuzzy regions.
-        Returns 5x5 list: [row=pH][col=T] -> risk level.
+        Greedy policy for all 25 fuzzy regions (no epsilon).
+        Returns 5x5 list: [row=pH][col=T] -> action index.
+        Rows 0-4: VeryAcidic / Acidic / Normal / Alkaline / VeryAlkaline
+        Cols 0-4: VeryCold / Cold / Optimal / Hot / VeryHot
         """
         policy = []
         for ph in self._PH_CENTERS:
@@ -359,10 +369,25 @@ class FQLAgent:
 
     def format_policy_map(self) -> str:
         """
-        Render risk prediction policy as 5x5 table.
+        Render policy as a readable 5x5 table with domain-knowledge reference.
+
+        Expected good policy for aquaculture:
+          VeryAcidic  : HIGH everywhere (urgent pH correction)
+          Acidic      : HIGH (raise pH via CO2 stripping)
+          Normal+VCold: LOW  (good conditions, save energy, don't cool more)
+          Normal+Cold : LOW
+          Normal+Opt  : LOW  (ideal, minimal intervention)
+          Normal+Hot  : MED  (some cooling needed)
+          Normal+VHot : HIGH (cool urgently)
+          Alkaline+VCold: LOW (cold keeps NH3 low despite high pH)
+          Alkaline+Cold : LOW
+          Alkaline+Opt  : MED (moderate NH3 risk)
+          Alkaline+Hot  : HIGH (NH3 danger rising)
+          Alkaline+VHot : HIGH
+          VeryAlkaline  : HIGH everywhere (urgent, worst NH3 risk)
         """
         policy = self.evaluate_policy()
-        names  = ["SAFE", "CAUT", "WARN", "CRIT"]
+        names  = ["OFF ", "LOW ", "MED ", "HIGH"]
         ph_lbl = ["VeryAcid", "Acidic  ", "Normal  ", "Alkaline", "VeryAlk "]
         t_lbl  = ["VCold", "Cold ", "Opt  ", "Hot  ", "VHot "]
 
@@ -370,14 +395,24 @@ class FQLAgent:
         sep    = "  " + "-" * 42
         lines  = [
             "=" * 56,
-            "  FQL Risk Prediction Map (5x5)",
+            "  FQL Policy Map — greedy action per fuzzy region (5x5)",
             f"              {header}",
             sep,
         ]
         for i, ph in enumerate(ph_lbl):
-            risks = "  ".join(names[policy[i][j]] for j in range(5))
-            lines.append(f"  {ph}:  {risks}")
-        lines.append("=" * 56)
+            acts = "  ".join(names[policy[i][j]] for j in range(5))
+            lines.append(f"  {ph}:  {acts}")
+
+        lines += [
+            sep,
+            "  Expected (domain knowledge):",
+            "  VeryAcid:  HIGH  HIGH  HIGH  HIGH  HIGH",
+            "  Acidic  :  HIGH  HIGH  HIGH  HIGH  HIGH",
+            "  Normal  :  LOW   LOW   LOW   MED   HIGH",
+            "  Alkaline:  LOW   LOW   MED   HIGH  HIGH",
+            "  VeryAlk :  HIGH  HIGH  HIGH  HIGH  HIGH",
+            "=" * 56,
+        ]
         return "\n".join(lines)
 
     # ── Serialization ────────────────────────────────────────────────────── #
@@ -397,7 +432,10 @@ class FQLAgent:
             print(f"[fql] Failed to save qtable: {e}")
 
     def load_qtable(self, filename: str) -> bool:
-        """Load Q-table from JSON file."""
+        """
+        Load Q-table from JSON file.
+        Returns True on success, False if file is missing or corrupted.
+        """
         try:
             with open(filename) as f:
                 data = json.load(f)
@@ -412,11 +450,11 @@ class FQLAgent:
     def get_qtable_string(self) -> str:
         """
         Serialize Q-table to string format for transmission to Pico.
-        Format: "QTABLE:[[q00,q01,q02,q03],...,[q24_0,q24_1,q24_2,q24_3]]\\n"
+        Format: "QTABLE:[[q00,q01,q02,q03],...,[q80,q81,q82,q83]]\\n"
         """
         rows = []
         for r in range(N_RULES):
-            vals = ",".join(f"{self.qtable[r][risk]:.4f}" for risk in range(N_RISK_LEVELS))
+            vals = ",".join(f"{self.qtable[r][a]:.4f}" for a in range(N_ACTIONS))
             rows.append(f"[{vals}]")
         return "QTABLE:[" + ",".join(rows) + "]\n"
 
@@ -424,16 +462,19 @@ class FQLAgent:
 
     def get_stats(self) -> dict:
         """Return agent statistics dictionary for logging."""
-        acc_now = (self._avg_accuracy_history[-1]
-                   if self._avg_accuracy_history else 0.0)
-        acc_prev = (self._avg_accuracy_history[-2]
-                    if len(self._avg_accuracy_history) >= 2 else 0.0)
+        avg_now = (self._avg_reward_history[-1]
+                   if self._avg_reward_history else 0.0)
+        avg_prev = (self._avg_reward_history[-2]
+                    if len(self._avg_reward_history) >= 2 else 0.0)
+        avg_prev2 = (self._avg_reward_history[-3]
+                     if len(self._avg_reward_history) >= 3 else 0.0)
         return {
             "total_steps":        self.total_steps,
             "epsilon":            round(self.epsilon, 4),
-            "avg_accuracy_100":   round(acc_now,  4),
-            "avg_accuracy_prev":  round(acc_prev, 4),
+            "avg_reward_100":     round(avg_now,  4),
+            "avg_reward_prev_100":round(avg_prev, 4),
+            "avg_reward_prev2":   round(avg_prev2, 4),
             "converged":          self.converged,
             "converged_sent":     self.converged_sent,
-            "n_windows":          len(self._avg_accuracy_history),
+            "n_windows":          len(self._avg_reward_history),
         }

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aquaculture Edge AI — N3IWF Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:#0d1117; --card:#161b22; --card2:#1c2128; --border:#30363d;
+      --text:#e6edf3; --muted:#7d8590;
+      --green:#3fb950; --red:#f85149; --blue:#58a6ff;
+      --yellow:#d29922; --purple:#bc8cff; --orange:#e3b341;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:20px;}
+
+    .header{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+    .header h1{font-size:1.3rem;font-weight:800;}
+    .header p{font-size:.77rem;color:var(--muted);}
+    .badge-live{margin-left:auto;display:flex;align-items:center;gap:7px;background:var(--card2);
+      border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:.74rem;color:var(--muted);}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+    .grid-main{display:grid;grid-template-columns:290px 1fr;gap:16px;}
+    .col-l,.col-r{display:flex;flex-direction:column;gap:14px;}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:17px;}
+    .card-title{font-size:.69rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.08em;margin-bottom:13px;}
+
+    /* Status */
+    .status-row{display:flex;flex-direction:column;gap:7px;}
+    .status-item{display:flex;align-items:center;justify-content:space-between;
+      padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;}
+    .slabel{font-size:.77rem;color:var(--muted);}
+    .sval{font-size:.77rem;font-family:'JetBrains Mono',monospace;color:var(--blue);}
+    .badge{display:inline-flex;align-items:center;gap:5px;font-size:.71rem;font-weight:700;
+      padding:3px 9px;border-radius:10px;}
+    .badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+    .g{background:rgba(63,185,80,.15);color:var(--green);}
+    .r{background:rgba(248,81,73,.15);color:var(--red);}
+
+    /* Sensor */
+    .sensor-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .sensor-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;
+      padding:18px;text-align:center;}
+    .sensor-val{font-family:'JetBrains Mono',monospace;font-size:2.2rem;font-weight:700;line-height:1;}
+    .sensor-unit{font-size:.68rem;color:var(--muted);margin-top:5px;}
+    .sensor-label{font-size:.7rem;font-weight:600;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+
+    /* pH color coding */
+    .ph-safe{color:var(--green);}
+    .ph-warn{color:var(--yellow);}
+    .ph-danger{color:var(--red);}
+    .temp-ok{color:var(--orange);}
+    .temp-warn{color:var(--yellow);}
+    .temp-danger{color:var(--red);}
+
+    /* Progressive AI */
+    .prog-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+    .prog-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;
+      padding:14px;text-align:center;transition:border-color .3s,box-shadow .3s;}
+    .prog-box.best{border-color:var(--green);box-shadow:0 0 14px rgba(63,185,80,.2);}
+    .prog-algo{font-size:.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
+    .prog-action{font-size:1.3rem;font-weight:800;margin-bottom:4px;}
+    .prog-ms{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);}
+    .prog-avail{font-size:.65rem;margin-top:4px;}
+
+    /* Metrics */
+    .metrics-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:9px;}
+    .metrics-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+    .metric-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:13px;}
+    .metric-val{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;
+      line-height:1;margin-bottom:4px;}
+    .metric-name{font-size:.66rem;color:var(--muted);}
+
+    /* Network */
+    .net-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+    .net-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;
+      padding:11px;text-align:center;}
+    .net-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;
+      color:var(--blue);margin-bottom:3px;}
+    .net-name{font-size:.63rem;color:var(--muted);}
+
+    /* IPsec */
+    .ipsec-detail{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--muted);
+      background:var(--bg);border:1px solid var(--border);border-radius:8px;
+      padding:10px;word-break:break-all;min-height:42px;margin-top:9px;}
+
+    /* Log */
+    .log-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;
+      padding:11px;height:160px;overflow-y:auto;
+      font-family:'JetBrains Mono',monospace;font-size:.69rem;color:var(--muted);}
+    .log-entry{padding:2px 0;border-bottom:1px solid #1c2128;}
+    .ts{color:var(--green);margin-right:7px;}
+
+    /* Charts */
+    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
+    .chart-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
+    .chart-box canvas{max-height:180px;}
+    @media(max-width:900px){.grid-main{grid-template-columns:1fr;}.chart-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🐟 Aquaculture Edge AI — N3IWF Monitoring Dashboard</h1>
+    <p>Sensor pH & Suhu → Pico 2W → RPi5 (RB → FQL → DQN) → IPsec N3IWF → Callbox 5G</p>
+  </div>
+  <div class="badge-live"><div class="dot"></div>LIVE</div>
+</div>
+
+<div class="grid-main">
+
+  <!-- ── LEFT ── -->
+  <div class="col-l">
+
+    <!-- Sensor Readings -->
+    <div class="card">
+      <div class="card-title">🌡️ Sensor Readings — Pico 2W</div>
+      <div class="sensor-row">
+        <div class="sensor-box">
+          <div class="sensor-label">pH Level</div>
+          <div class="sensor-val ph-safe" id="s-ph">--</div>
+          <div class="sensor-unit">range aman: 6.5 – 8.5</div>
+        </div>
+        <div class="sensor-box">
+          <div class="sensor-label">Suhu Air</div>
+          <div class="sensor-val temp-ok" id="s-temp">--</div>
+          <div class="sensor-unit">°C &nbsp;|&nbsp; aman: ≤ 30°C</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="card">
+      <div class="card-title">🔌 System Status</div>
+      <div class="status-row">
+        <div class="status-item">
+          <span class="slabel">run_real.py</span>
+          <span class="badge r" id="runreal-badge"><span class="badge-dot"></span>STOPPED</span>
+        </div>
+        <div class="status-item">
+          <span class="slabel">IPsec / N3IWF</span>
+          <span class="badge r" id="ipsec-badge"><span class="badge-dot"></span>DOWN</span>
+        </div>
+        <div class="status-item">
+          <span class="slabel">Phase AI</span>
+          <span class="sval" id="ai-phase">--</span>
+        </div>
+        <div class="status-item">
+          <span class="slabel">Real Steps</span>
+          <span class="sval" id="real-steps">0</span>
+        </div>
+        <div class="status-item">
+          <span class="slabel">FQL &epsilon;</span>
+          <span class="sval" id="fql-eps">--</span>
+        </div>
+        <div class="status-item">
+          <span class="slabel">DQN Buffer</span>
+          <span class="sval" id="buf-size">0</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT ── -->
+  <div class="col-r">
+
+    <!-- Progressive AI -->
+    <div class="card">
+      <div class="card-title">🤖 Progressive AI Inference — Rule-Based → FQL → DQN</div>
+      <div class="prog-grid">
+
+        <div class="prog-box" id="rb-box">
+          <div class="prog-algo">Phase 1 — Rule-Based</div>
+          <div class="prog-action" id="rb-action" style="color:var(--red)">--</div>
+          <div class="prog-ms" id="rb-ms">-- ms</div>
+          <div class="prog-avail" id="rb-avail"></div>
+        </div>
+
+        <div class="prog-box" id="fql-box">
+          <div class="prog-algo">Phase 2 — FQL</div>
+          <div class="prog-action" id="fql-action" style="color:var(--yellow)">--</div>
+          <div class="prog-ms" id="fql-ms">-- ms</div>
+          <div class="prog-avail" id="fql-avail"></div>
+        </div>
+
+        <div class="prog-box best" id="dqn-box">
+          <div class="prog-algo">Phase 3 — DQN ⭐</div>
+          <div class="prog-action" id="dqn-action" style="color:var(--green)">--</div>
+          <div class="prog-ms" id="dqn-ms">-- ms</div>
+          <div class="prog-avail" id="dqn-avail"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Session Metrics -->
+    <div class="card">
+      <div class="card-title">📊 Progressive AI Metrics</div>
+      <div class="metrics-4">
+        <div class="metric-box">
+          <div class="metric-val" style="color:var(--blue)" id="m-phase">--</div>
+          <div class="metric-name">Current Phase</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val" style="color:var(--green)" id="m-steps">0</div>
+          <div class="metric-name">Real Steps</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val" style="color:var(--yellow)" id="m-reward">--</div>
+          <div class="metric-name">Last Reward</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val" style="color:var(--purple)" id="m-buffer">0</div>
+          <div class="metric-name">DQN Buffer</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+        <div class="metric-box" style="text-align:center">
+          <div style="font-size:.65rem;color:var(--muted)">RB Avg Reward</div>
+          <div style="font-family:monospace;font-size:1rem;color:var(--red)" id="rb-avg">--</div>
+          <div style="font-size:.63rem;color:var(--muted)" id="rb-steps">0 steps</div>
+        </div>
+        <div class="metric-box" style="text-align:center">
+          <div style="font-size:.65rem;color:var(--muted)">FQL Avg Reward</div>
+          <div style="font-family:monospace;font-size:1rem;color:var(--yellow)" id="fql-avg">--</div>
+          <div style="font-size:.63rem;color:var(--muted)" id="fql-steps-lbl">0 steps</div>
+        </div>
+        <div class="metric-box" style="text-align:center">
+          <div style="font-size:.65rem;color:var(--muted)">DQN Avg Reward</div>
+          <div style="font-family:monospace;font-size:1rem;color:var(--green)" id="dqn-avg">--</div>
+          <div style="font-size:.63rem;color:var(--muted)" id="dqn-steps-lbl">0 steps</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5G Network -->
+    <div class="card">
+      <div class="card-title">📡 5G N3IWF Network Performance (IPsec Tunnel)</div>
+      <div class="net-grid">
+        <div class="net-box"><div class="net-val" id="net-min">--</div><div class="net-name">Min RTT (ms)</div></div>
+        <div class="net-box"><div class="net-val" id="net-avg">--</div><div class="net-name">Avg RTT (ms)</div></div>
+        <div class="net-box"><div class="net-val" id="net-max">--</div><div class="net-name">Max RTT (ms)</div></div>
+        <div class="net-box"><div class="net-val" id="net-jitter">--</div><div class="net-name">Jitter (ms)</div></div>
+        <div class="net-box"><div class="net-val" id="net-pdr" style="color:var(--green)">--</div><div class="net-name">PDR (%)</div></div>
+      </div>
+      <div class="ipsec-detail" id="ipsec-detail">Checking IPsec tunnel...</div>
+    </div>
+
+    <!-- Edge AI Inference Time -->
+    <div class="card">
+      <div class="card-title">⏱️ Edge AI Inference Time di RPi5</div>
+      <div class="metrics-3">
+        <div class="metric-box">
+          <div class="metric-val" style="color:var(--red)" id="t-rb">--</div>
+          <div class="metric-name">Rule-Based (ms)</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val" style="color:var(--yellow)" id="t-fql">--</div>
+          <div class="metric-name">FQL (ms)</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val" style="color:var(--green)" id="t-dqn">--</div>
+          <div class="metric-name">DQN (ms)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+      <div class="card-title">📋 Live Data Log</div>
+      <div class="log-box" id="log"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Charts Section ── -->
+<div class="chart-grid" style="margin-top:16px">
+  <div class="chart-box">
+    <div class="card-title">📈 pH Over Time</div>
+    <canvas id="chartPH"></canvas>
+  </div>
+  <div class="chart-box">
+    <div class="card-title">🌡️ Suhu Over Time</div>
+    <canvas id="chartTemp"></canvas>
+  </div>
+  <div class="chart-box">
+    <div class="card-title">🤖 AI Decision Comparison (Real-time)</div>
+    <canvas id="chartAI"></canvas>
+  </div>
+  <div class="chart-box">
+    <div class="card-title">⏱️ Inference Time Comparison (ms)</div>
+    <canvas id="chartInfer"></canvas>
+  </div>
+  <div class="chart-box" style="grid-column:1/-1">
+    <div class="card-title">📡 N3IWF Live Latency — RPi5 → Callbox (Ping setiap 3 detik)</div>
+    <canvas id="chartLatency" style="max-height:160px"></canvas>
+  </div>
+  <div class="chart-box" style="grid-column:1/-1">
+    <div class="card-title">📈 Progressive AI Convergence — RB vs FQL vs DQN Reward (dari comparison.csv)</div>
+    <canvas id="chartConv" style="max-height:180px"></canvas>
+  </div>
+</div>
+
+
+<script>
+  // ── Chart.js Setup ──────────────────────────────────────────────────────
+  const MAX_POINTS = 60;
+  const chartOpts = (label, color, yLabel) => ({
+    type: 'line',
+    data: { labels: [], datasets: [{ label, data: [], borderColor: color,
+      backgroundColor: color+'22', fill: true, tension: 0.4, pointRadius: 2,
+      borderWidth: 2 }] },
+    options: { animation: false, responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color:'#e6edf3', font:{size:11} } } },
+      scales: {
+        x: { ticks:{color:'#7d8590',maxTicksLimit:8}, grid:{color:'#21262d'} },
+        y: { ticks:{color:'#7d8590'}, grid:{color:'#21262d'}, title:{display:true,text:yLabel,color:'#7d8590'} }
+      }
+    }
+  });
+
+  const phChart   = new Chart(document.getElementById('chartPH'),   chartOpts('pH','#58a6ff','pH'));
+  const tmpChart  = new Chart(document.getElementById('chartTemp'),  chartOpts('Suhu (°C)','#e3b341','°C'));
+
+  const aiChart = new Chart(document.getElementById('chartAI'), {
+    type: 'bar',
+    data: { labels: ['Rule-Based','FQL','DQN'],
+      datasets: [{ label: 'Action (0=OFF 1=LOW 2=MED 3=HIGH)',
+        data: [0,0,0], backgroundColor:['#f85149aa','#d29922aa','#3fb950aa'],
+        borderColor:['#f85149','#d29922','#3fb950'], borderWidth:2 }] },
+    options: { animation:false, responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:'#e6edf3'}}},
+      scales:{ x:{ticks:{color:'#7d8590'},grid:{color:'#21262d'}},
+               y:{min:0,max:3,ticks:{color:'#7d8590',stepSize:1,
+                  callback:v=>['OFF','LOW','MED','HIGH'][v]||v},
+                  grid:{color:'#21262d'}} } }
+  });
+
+  const inferChart = new Chart(document.getElementById('chartInfer'), {
+    type: 'bar',
+    data: { labels: ['Rule-Based','FQL','DQN'],
+      datasets:[{ label:'Inference (ms)',
+        data:[0,0,0], backgroundColor:['#f85149aa','#d29922aa','#3fb950aa'],
+        borderColor:['#f85149','#d29922','#3fb950'], borderWidth:2 }] },
+    options:{ animation:false, responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:'#e6edf3'}}},
+      scales:{ x:{ticks:{color:'#7d8590'},grid:{color:'#21262d'}},
+               y:{ticks:{color:'#7d8590'},grid:{color:'#21262d'},
+                  title:{display:true,text:'ms',color:'#7d8590'}} } }
+  });
+
+  function pushChart(chart, label, value, maxPts=MAX_POINTS){
+    chart.data.labels.push(label);
+    chart.data.datasets[0].data.push(value);
+    if(chart.data.labels.length > maxPts){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+    chart.update();
+  }
+
+  const latencyChart = new Chart(document.getElementById('chartLatency'), {
+    type: 'line',
+    data: { labels: [], datasets: [{
+      label: 'RTT ke Callbox (ms)', data: [],
+      borderColor: '#bc8cff', backgroundColor: '#bc8cff22',
+      fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2
+    }]},
+    options: { animation: false, responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color:'#e6edf3', font:{size:11} } } },
+      scales: {
+        x: { ticks:{color:'#7d8590',maxTicksLimit:10}, grid:{color:'#21262d'} },
+        y: { ticks:{color:'#7d8590'}, grid:{color:'#21262d'},
+             title:{display:true,text:'RTT (ms)',color:'#7d8590'}, min:0 }
+      }
+    }
+  });
+
+  // Poll latency history every 3s
+  async function fetchLatency(){
+    try{
+      const pts = await (await fetch('/api/latency_history')).json();
+      latencyChart.data.labels = pts.map(p=>p.ts);
+      latencyChart.data.datasets[0].data = pts.map(p=>p.rtt);
+      latencyChart.update();
+    } catch(e){}
+  }
+  setInterval(fetchLatency, 3000);
+  fetchLatency();
+
+  const ACTION_NUM = {OFF:0, LOW:1, MED:2, HIGH:3};
+  let sessionStart=null, prevConn=null, prevPH=null;
+  const log=document.getElementById('log');
+
+  function addLog(msg, color){
+    const now=new Date().toLocaleTimeString();
+    const d=document.createElement('div'); d.className='log-entry';
+    d.innerHTML=`<span class="ts">${now}</span><span style="color:${color||'inherit'}">${msg}</span>`;
+    log.prepend(d); if(log.children.length>80) log.removeChild(log.lastChild);
+  }
+
+  function phColor(ph){
+    if(ph===null||ph==='--') return '';
+    if(ph>=6.5&&ph<=8.5) return 'ph-safe';
+    if(ph>=6.0&&ph<=9.0) return 'ph-warn';
+    return 'ph-danger';
+  }
+  function tempColor(t){
+    if(t===null||t==='--') return 'temp-ok';
+    if(t<=30) return 'temp-ok';
+    if(t<=34) return 'temp-warn';
+    return 'temp-danger';
+  }
+
+  async function fetchState(){
+    try{
+      const d=await (await fetch('/api/state')).json();
+
+      // Sensor values
+      const phEl=document.getElementById('s-ph');
+      const tEl =document.getElementById('s-temp');
+      if(d.pH!=null){ phEl.textContent=d.pH.toFixed(2); phEl.className='sensor-val '+phColor(d.pH); }
+      else           { phEl.textContent='--'; phEl.className='sensor-val ph-safe'; }
+      if(d.T!=null)  { tEl.textContent=d.T.toFixed(1);  tEl.className='sensor-val '+tempColor(d.T); }
+      else           { tEl.textContent='--'; tEl.className='sensor-val temp-ok'; }
+
+      // run_real.py badge
+      const rb=document.getElementById('runreal-badge');
+      if(d.run_real_active){
+        rb.className='badge g'; rb.innerHTML='<span class="badge-dot"></span>RUNNING';
+        if(prevConn===false){ addLog('run_real.py connected — data streaming','#3fb950'); sessionStart=Date.now(); }
+      } else {
+        rb.className='badge r'; rb.innerHTML='<span class="badge-dot"></span>STOPPED';
+        if(prevConn===true) addLog('run_real.py stopped','#f85149');
+      }
+      prevConn=d.run_real_active;
+
+      // IPsec badge
+      const ib=document.getElementById('ipsec-badge');
+      ib.className=d.ipsec?'badge g':'badge r';
+      ib.innerHTML=d.ipsec?'<span class="badge-dot"></span>ESTABLISHED':'<span class="badge-dot"></span>DOWN';
+      document.getElementById('ipsec-detail').textContent=d.ipsec_detail;
+
+      // System status sidebar
+      document.getElementById('ai-phase').textContent   = d.phase||'--';
+      document.getElementById('real-steps').textContent = d.real_steps||0;
+      document.getElementById('fql-eps').textContent    = d.fql_eps!=null ? d.fql_eps.toFixed(3) : '--';
+      document.getElementById('buf-size').textContent   = d.buffer_size||0;
+
+      // Progressive AI metrics card
+      document.getElementById('m-phase').textContent  = d.phase||'--';
+      document.getElementById('m-steps').textContent  = d.real_steps||0;
+      document.getElementById('m-reward').textContent = d.reward!=null ? d.reward.toFixed(4) : '--';
+      document.getElementById('m-buffer').textContent = d.buffer_size||0;
+
+      // Avg rewards per phase (from comparison.csv, polled by csv_reader)
+      document.getElementById('rb-avg').textContent       = d.rb_avg_reward!=null  ? d.rb_avg_reward.toFixed(4)  : '--';
+      document.getElementById('fql-avg').textContent      = d.fql_avg_reward!=null ? d.fql_avg_reward.toFixed(4) : '--';
+      document.getElementById('dqn-avg').textContent      = d.dqn_avg_reward!=null ? d.dqn_avg_reward.toFixed(4) : '--';
+      document.getElementById('rb-steps').textContent     = `${d.rb_steps||0} steps`;
+      document.getElementById('fql-steps-lbl').textContent= `${d.fql_steps||0} steps`;
+      document.getElementById('dqn-steps-lbl').textContent= `${d.dqn_steps||0} steps`;
+
+      // Network stats
+      if(d.net_avg_ms!=='--'){
+        document.getElementById('net-min').textContent   =d.net_min_ms;
+        document.getElementById('net-avg').textContent   =d.net_avg_ms;
+        document.getElementById('net-max').textContent   =d.net_max_ms;
+        document.getElementById('net-jitter').textContent=d.net_jitter;
+        document.getElementById('net-pdr').textContent   =`${d.net_pdr}%`;
+      }
+
+      // Progressive AI phase panels
+      const phase = d.phase||'';
+      const act   = d.action||'--';
+      document.getElementById('rb-action').textContent  = (phase==='Rule-Based') ? act : (d.rb_avg_reward!=null?'trained':'--');
+      document.getElementById('fql-action').textContent = (phase==='FQL')         ? act : (d.fql_avg_reward!=null?'trained':'--');
+      document.getElementById('dqn-action').textContent = (phase==='DQN')         ? act : (d.dqn_avg_reward!=null?'trained':'--');
+      document.getElementById('rb-ms').textContent      = '--';
+      document.getElementById('fql-ms').textContent     = '--';
+      document.getElementById('dqn-ms').textContent     = '--';
+      document.getElementById('rb-avail').textContent   = '✅ Always';
+      document.getElementById('fql-avail').textContent  = d.fql_avg_reward!=null ? '✅ Trained' : '⏳ Training';
+      document.getElementById('dqn-avail').textContent  = d.dqn_avg_reward!=null ? '✅ Trained' : '⏳ Waiting';
+
+      // Highlight active phase box
+      ['rb-box','fql-box','dqn-box'].forEach(id=>document.getElementById(id).classList.remove('best'));
+      const pmap={'Rule-Based':'rb-box','FQL':'fql-box','DQN':'dqn-box'};
+      if(pmap[phase]) document.getElementById(pmap[phase]).classList.add('best');
+
+      // Sensor line charts
+      if(d.run_real_active && d.pH!=null && d.pH!==prevPH){
+        const ts=new Date().toLocaleTimeString();
+        pushChart(phChart,  ts, d.pH);
+        pushChart(tmpChart, ts, d.T);
+        // AI Decision bar chart (action of current phase)
+        aiChart.data.datasets[0].data=[
+          ACTION_NUM[d.action]||0,
+          ACTION_NUM[d.action]||0,
+          ACTION_NUM[d.action]||0
+        ]; aiChart.update();
+        prevPH=d.pH;
+        addLog(`[${phase}] pH=${d.pH?.toFixed(2)} T=${d.T?.toFixed(1)}°C → ${act} | r=${d.reward?.toFixed(3)}`,'#58a6ff');
+      }
+
+    } catch(e){ addLog('Error: '+e.message,'#f85149'); }
+  }
+
+  // Convergence chart (RB vs FQL vs DQN reward over time)
+  const convChart = new Chart(document.getElementById('chartConv'), {
+    type:'line',
+    data:{ labels:[], datasets:[
+      {label:'Rule-Based',data:[],borderColor:'#f85149',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5},
+      {label:'FQL',       data:[],borderColor:'#d29922',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5},
+      {label:'DQN',       data:[],borderColor:'#3fb950',fill:false,tension:0.3,pointRadius:0,borderWidth:2},
+    ]},
+    options:{ animation:false, responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:'#e6edf3',font:{size:10}}}},
+      scales:{
+        x:{ticks:{color:'#7d8590',maxTicksLimit:8},grid:{color:'#21262d'}},
+        y:{ticks:{color:'#7d8590'},grid:{color:'#21262d'},title:{display:true,text:'Reward',color:'#7d8590'}}
+      }
+    }
+  });
+
+  async function fetchComparison(){
+    try{
+      const rows=await (await fetch('/api/comparison')).json();
+      const rb=[],fql=[],dqn=[],lbls=[];
+      rows.forEach(r=>{
+        lbls.push(r.step||'');
+        rb.push( r.mode==='RB' ?parseFloat(r.reward):null);
+        fql.push(r.mode==='FQL'?parseFloat(r.reward):null);
+        dqn.push(r.mode==='DQN'?parseFloat(r.reward):null);
+      });
+      convChart.data.labels=lbls;
+      convChart.data.datasets[0].data=rb;
+      convChart.data.datasets[1].data=fql;
+      convChart.data.datasets[2].data=dqn;
+      convChart.update();
+    } catch(e){}
+  }
+  setInterval(fetchComparison,5000);
+  fetchComparison();
+
+  setInterval(fetchState,500);
+  fetchState();
+  addLog('Dashboard started. Menunggu run_real.py...','#d29922');
+</script>
+</body>
+</html>
+
+

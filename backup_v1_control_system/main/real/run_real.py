@@ -1,22 +1,20 @@
 """
-Main FQL — Raspberry Pi 4 (Monitoring System v2)
-=================================================
-NH₃ Risk Monitoring System - NO AERATOR CONTROL
-
-Phases:
-  PHASE A -> Wait for Pico connection
-  PHASE B -> FQL learns risk prediction from real data
-  PHASE C -> FQL converges -> send risk model to Pico
+Main FQL — Raspberry Pi 4
+==========================
+Auto-start via systemd. Phases:
+  PHASE A -> Wait for Pico connection (virtual simulator runs during wait)
+  PHASE B -> FQL learns from BOTH real Pico data AND virtual simulator
+  PHASE C -> FQL converges -> send Q-table to Pico
   PHASE D -> DQN buffer sufficient -> ready for DQN training
-  PHASE E -> Continuous risk monitoring
+  PHASE E -> Continuous monitoring (virtual sim keeps running)
 
-Progressive Learning:
-  - Rule-Based: Simple NH₃ risk thresholds
-  - FQL: Learns risk patterns from field data
-  - DQN: Deep learning for accurate risk prediction
+Real + virtual learning run interleaved in the same loop:
+  - Every real Pico transition  -> 1 FQL update
+  - Every real step             -> VIRTUAL_STEPS_PER_REAL virtual updates
+  - Virtual simulator cycles through all 7 scenario types automatically
 
 Manual run:
-  python3 main/real/run_real.py
+  python3 main_fql.py
 
 Install as service:
   sudo cp aquaculture.service /etc/systemd/system/
@@ -34,10 +32,12 @@ import time
 
 import numpy as np
 
-from fql.fql_agent import FQLAgent, calculate_actual_risk, RISK_SAFE, RISK_CAUTION, RISK_WARNING, RISK_CRITICAL
+from fql.fql_agent import FQLAgent, ACTION_OFF, ACTION_LOW, ACTION_MED, ACTION_HIGH
 from main.real.wifi_bridge import WiFiBridge, _setup_pico_monitor_log
 # Fallback import if USB Serial is needed instead of Wi-Fi:
 # from main.real.serial_bridge import SerialBridge, _setup_pico_monitor_log
+from main.env.pond_simulator import PondSimulator, ScenarioType, SimConfig
+from main.env.aerator_sim import AeratorSim
 from dqn.dqn_agent import DQNAgent
 
 # Import Home Assistant Bridge
@@ -77,8 +77,27 @@ LOG_INTERVAL           = 10       # detailed log every N real steps
 SUMMARY_INTERVAL       = 100      # summary log every N real steps
 RECONNECT_DELAY        = 2        # seconds between reconnect attempts
 
-# MONITORING SYSTEM v2 - No aerator simulation needed
-# System only monitors and predicts risk, does not control aerator
+# Aerator simulation — set False when real aerator is connected (prevents double-counting)
+USE_AERATOR_SIM        = False  # False for real physical deployment
+
+# Virtual simulator settings
+VIRTUAL_STEPS_PER_REAL = 10       # virtual steps per real Pico step
+VIRTUAL_EPISODE_LEN    = 300      # steps before switching to next scenario
+VIRTUAL_PHASE_A_BATCH  = 50       # virtual steps per iteration while waiting
+
+# Scenario rotation order — NORMAL gets 4/10 = 40% to teach LOW in safe conditions
+_SCENARIO_ORDER = [
+    ScenarioType.NORMAL,
+    ScenarioType.NORMAL,
+    ScenarioType.ACID_CRASH,
+    ScenarioType.NORMAL,
+    ScenarioType.ALKALINE,
+    ScenarioType.COLD_STRESS,
+    ScenarioType.NORMAL,
+    ScenarioType.HEAT_STRESS,
+    ScenarioType.HIGH_NH3,
+    ScenarioType.MULTI_STRESS,
+]
 
 
 # ══════════════════════════════════════════════════════════════════════════ #
@@ -156,27 +175,75 @@ def append_transition(buffer: list, s, a, r, s_next) -> None:
 
 
 # ══════════════════════════════════════════════════════════════════════════ #
-#  Risk Level Labels
+#  Virtual simulator state machine
 # ══════════════════════════════════════════════════════════════════════════ #
 
-RISK_LABELS = ["SAFE", "CAUTION", "WARNING", "CRITICAL"]
-
-
-# ══════════════════════════════════════════════════════════════════════════ #
-#  Rule-Based Risk Classification (baseline)
-# ══════════════════════════════════════════════════════════════════════════ #
-
-def rule_based_risk(pH: float, T: float) -> int:
+class VirtualEnv:
     """
-    Simple rule-based NH₃ risk classification (baseline).
-    Uses calculate_actual_risk() from fql_agent.
+    Wraps PondSimulator with automatic scenario rotation.
+    Keeps its own prev_action so FQL gets proper stability reward.
     """
-    return calculate_actual_risk(pH, T)
+
+    def __init__(self):
+        self.sim          = PondSimulator(SimConfig())
+        self._scen_idx    = 0
+        self._steps_left  = 0
+        self._prev_action = None
+        self._ph:   float = 7.5
+        self._temp: float = 28.0
+        self._new_episode()
+
+    def _new_episode(self):
+        scenario       = _SCENARIO_ORDER[self._scen_idx % len(_SCENARIO_ORDER)]
+        self._ph, self._temp = self.sim.reset(scenario)
+        self._steps_left  = VIRTUAL_EPISODE_LEN
+        self._prev_action = None
+        self._scen_idx   += 1
+
+    def step(self, fql: FQLAgent, buffer_dqn: list) -> None:
+        """Run one virtual step: select action, step sim, update FQL + buffer."""
+        if self._steps_left <= 0:
+            self._new_episode()
+
+        action                   = fql.select_action(self._ph, self._temp)
+        ph_next, temp_next       = self.sim.step(action)
+        reward                   = fql.compute_reward(
+            self._ph, self._temp, action,
+            ph_next, temp_next,
+            self._prev_action
+        )
+        fql.update(self._ph, self._temp, action, reward, ph_next, temp_next)
+        append_transition(buffer_dqn,
+                          s      = [self._ph, self._temp],
+                          a      = action,
+                          r      = reward,
+                          s_next = [ph_next, temp_next])
+
+        self._prev_action = action
+        self._ph, self._temp = ph_next, temp_next
+        self._steps_left -= 1
+
+    def current_scenario(self) -> str:
+        idx = (self._scen_idx - 1) % len(_SCENARIO_ORDER)
+        return PondSimulator.label(_SCENARIO_ORDER[idx])
+
+
+# ══════════════════════════════════════════════════════════════════════════ #
+#  Rule-Based shadow (mirrors safety_action() in Pico C code)
+# ══════════════════════════════════════════════════════════════════════════ #
+
+def rule_based_action(pH: float, T: float) -> int:
+    """Exact mirror of safety_action() in main.c — for shadow comparison."""
+    if pH < 6.0 or pH > 9.5 or T > 35.0: return ACTION_HIGH
+    if pH < 6.5 or pH > 8.5 or T > 30.0: return ACTION_MED
+    return ACTION_LOW
 
 def nh3_fraction(pH: float, T: float) -> float:
     """Fraction of total ammonia in unionized (toxic) NH3 form."""
     pka = 0.09018 + 2729.92 / (T + 273.15)
     return 1.0 / (1.0 + 10 ** (pka - pH))
+
+_ACTION_COST = {ACTION_OFF: 0.0, ACTION_LOW: 0.3, ACTION_MED: 0.6, ACTION_HIGH: 1.0}
 
 # ── Comparison CSV writer ────────────────────────────────────────────────── #
 
@@ -193,14 +260,13 @@ def _init_comparison_csv() -> None:
         _csv_writer.writerow([
             "timestamp", "real_step",
             "pH", "T_C", "NH3_pct",
-            "mode",              # RB, FQL, or DQN
-            "actual_risk",       # ground truth risk level
-            "rb_risk",           # Rule-Based prediction
-            "fql_risk",          # FQL prediction
-            "dqn_risk",          # DQN prediction (if active)
-            "rb_correct",        # 1 if RB correct, 0 if wrong
-            "fql_correct",       # 1 if FQL correct, 0 if wrong
-            "dqn_correct",       # 1 if DQN correct, 0 if wrong
+            "mode",        # RB or FQL
+            "real_action", # action actually sent to relay (from Pico)
+            "rb_action",   # what Rule-Based would have done
+            "fql_action",  # what FQL would have done (greedy)
+            "reward",
+            "rb_reward",   # reward if RB had been used
+            "energy_real", "energy_rb", "energy_fql",
             "fql_steps", "epsilon",
         ])
         _csv_file.flush()
@@ -257,31 +323,27 @@ def _log_ha_comparison(real_step: int,
     _ha_csv_file.flush()
 
 def _log_comparison(real_step: int, pH: float, T: float,
-                    mode: str, fql: FQLAgent, dqn: DQNAgent,
-                    dqn_active: bool) -> None:
+                    mode: str, real_action: int,
+                    fql: FQLAgent, reward: float,
+                    pH_prev: float, T_prev: float) -> None:
     if _csv_writer is None:
         return
-    
-    # Calculate actual risk (ground truth)
-    actual_risk = calculate_actual_risk(pH, T)
-    
-    # Get predictions from each agent
-    rb_risk = rule_based_risk(pH, T)
-    fql_risk = fql.predict_risk(pH, T)
-    dqn_risk = dqn.predict_risk(pH, T) if dqn_active and dqn.ready else -1
-    
-    # Check correctness
-    rb_correct = 1 if rb_risk == actual_risk else 0
-    fql_correct = 1 if fql_risk == actual_risk else 0
-    dqn_correct = 1 if dqn_risk == actual_risk else 0 if dqn_active else -1
-    
-    nh3 = nh3_fraction(pH, T) * 100.0
+    rb_act  = rule_based_action(pH_prev, T_prev)
+    fql_act = fql.select_action(pH_prev, T_prev) if fql.converged else real_action
+
+    # Compute what reward would have been if RB acted instead
+    rb_reward = fql.compute_reward(pH_prev, T_prev, rb_act, pH, T)
+
+    nh3 = nh3_fraction(pH_prev, T_prev) * 100.0
 
     _csv_writer.writerow([
         time.strftime("%Y-%m-%d %H:%M:%S"), real_step,
-        round(pH, 4), round(T, 2), round(nh3, 4),
-        mode, actual_risk, rb_risk, fql_risk, dqn_risk,
-        rb_correct, fql_correct, dqn_correct,
+        round(pH_prev, 4), round(T_prev, 2), round(nh3, 4),
+        mode, real_action, rb_act, fql_act,
+        round(reward, 5), round(rb_reward, 5),
+        round(_ACTION_COST[real_action], 2),
+        round(_ACTION_COST[rb_act], 2),
+        round(_ACTION_COST[fql_act], 2),
         fql.total_steps, round(fql.epsilon, 4),
     ])
     _csv_file.flush()
@@ -316,9 +378,9 @@ def main():
     use_ha = "--with-ha" in sys.argv
     
     logger.info("=" * 65)
-    logger.info("Aquaculture NH₃ Risk Monitoring System — Raspberry Pi 4")
-    logger.info("  Mode: MONITORING ONLY (no aerator control)")
-    logger.info("  Progressive Learning: Rule-Based → FQL → DQN")
+    logger.info("Aquaculture FQL Controller — Raspberry Pi 4")
+    logger.info(f"  Virtual sim   : {VIRTUAL_STEPS_PER_REAL} steps per real step")
+    logger.info(f"  Episode length: {VIRTUAL_EPISODE_LEN} steps per scenario")
     if use_ha and HA_AVAILABLE:
         logger.info(f"  Home Assistant: ENABLED (comparison mode)")
     logger.info("=" * 65)
@@ -333,7 +395,12 @@ def main():
     # _setup_pico_monitor_log(RESULTS_REAL)
     # bridge = SerialBridge(baudrate=115200)
 
+    venv       = VirtualEnv()
     buffer_dqn: list = []
+    aerator_sim = AeratorSim() if USE_AERATOR_SIM else None
+    if USE_AERATOR_SIM:
+        logger.info("Aerator sim : ENABLED (typical 5-30W aquaculture pump)")
+        logger.info("             Set USE_AERATOR_SIM=False when real aerator connected")
     
     # ── Initialize Home Assistant Bridge (if enabled) ────────────────────── #
     ha_bridge = None
@@ -362,13 +429,15 @@ def main():
         logger.warning("[HA] Home Assistant requested but module not available")
 
     dqn_ready_logged      = False
-    dqn_model_ready       = False  # DQN trained but not yet active
-    dqn_active            = False  # DQN model sent to Pico
+    dqn_model_ready       = False  # DQN trained but not yet controlling Pico
+    dqn_active            = False  # DQN Q-table sent to Pico — DQN controls
     dqn                   = DQNAgent()
     last_qtable_retry     = 0.0
     last_qtable_update    = 0      # real_steps count of last Q-table update
     last_dqn_retrain      = 0      # real_steps count of last DQN retraining
     fql_mode_start        = None   # real_steps when FQL mode first activated
+    rb_rewards: list      = []     # reward history during RB phase
+    fql_rewards: list     = []     # reward history during FQL phase
     real_steps            = 0
 
     # ── Load Q-table (if previous session exists) ───────────────────────── #
@@ -384,30 +453,51 @@ def main():
         if buffer_dqn:
             logger.info(f"DQN buffer loaded: {len(buffer_dqn)} transitions")
 
-    # ── PHASE A: Wait for Pico ──────────────────────────────────────────── #
-    logger.info("PHASE A — Waiting for Pico WH connection...")
+    # ── PHASE A: Wait for Pico (virtual sim runs here too) ──────────────── #
+    logger.info("PHASE A — Waiting for Pico WH connection "
+                "(virtual sim running in background)...")
     while not _shutdown:
+        # Keep learning from virtual environment while waiting for Pico
+        for _ in range(VIRTUAL_PHASE_A_BATCH):
+            venv.step(fql, buffer_dqn)
+
+        if fql.total_steps % 1000 == 0 and fql.total_steps > 0:
+            stats = fql.get_stats()
+            logger.info(
+                f"[Phase A] virtual steps={fql.total_steps} | "
+                f"scenario={venv.current_scenario()} | "
+                f"eps={stats['epsilon']:.3f} | "
+                f"AvgR={stats['avg_reward_100']:+.3f} | "
+                f"Buffer={len(buffer_dqn)}"
+            )
+
         if bridge.connect():
             logger.info("Pico connected!")
             break
+
         time.sleep(RECONNECT_DELAY)
 
     if _shutdown:
         _cleanup(fql, buffer_dqn)
         return
 
-    # ── Main loop — real data monitoring ─────────────────────────────────── #
-    logger.info("PHASE B — FQL learning risk prediction from real Pico data...")
+    # ── Main loop — real + virtual interleaved ───────────────────────────── #
+    logger.info("PHASE B — FQL learning from real Pico data + virtual sim...")
+
+    prev_data: dict | None = None
+    reward = 0.0
 
     while not _shutdown:
         # ── Real: receive data from Pico ─────────────────────────────────── #
         data = bridge.read_data_line()
         if data is None:
-            time.sleep(0.1)
+            # Even when no real data, run a virtual step to keep learning
+            venv.step(fql, buffer_dqn)
             continue
 
-        pH = data["pH"]
-        T  = data["T"]
+        pH_real = data["pH"]
+        T_real  = data["T"]
+        action  = data["action"]
         real_steps += 1
         
         # Get latency from bridge (time since last packet)
@@ -417,12 +507,12 @@ def main():
         iot_pH, iot_T, iot_latency = None, None, 0
         if ha_bridge is not None:
             iot_pH, iot_T, iot_latency = ha_bridge.get_sensor_data()
-            _log_ha_comparison(real_steps, pH, T, 
+            _log_ha_comparison(real_steps, pH_real, T_real, 
                              iot_pH, iot_T, real_latency, iot_latency)
             
             if iot_pH is not None and iot_T is not None:
-                pH_diff = abs(pH - iot_pH)
-                T_diff = abs(T - iot_T)
+                pH_diff = abs(pH_real - iot_pH)
+                T_diff = abs(T_real - iot_T)
                 if real_steps % LOG_INTERVAL == 0:
                     logger.info(
                         f"[HA] IoT: pH={iot_pH:.3f} T={iot_T:.1f}°C | "
@@ -430,33 +520,48 @@ def main():
                         f"Latency: Real={real_latency:.1f}ms IoT={iot_latency:.1f}ms"
                     )
 
-        # ── Calculate actual risk (ground truth) ─────────────────────────── #
-        actual_risk = calculate_actual_risk(pH, T)
-        
-        # ── Get risk predictions from agents ─────────────────────────────── #
-        rb_risk = rule_based_risk(pH, T)
-        fql_risk = fql.predict_risk(pH, T)
-        dqn_risk = dqn.predict_risk(pH, T) if dqn_active and dqn.ready else -1
-        
-        # ── Update FQL with actual risk ──────────────────────────────────── #
-        fql.update(pH, T, fql_risk, actual_risk)
-        
-        # ── Track accuracy per phase ─────────────────────────────────────── #
-        if dqn_active:
-            mode = "DQN"
-        elif fql.converged_sent:
-            mode = "FQL"
+        # Apply aerator sim using the action that was running last step
+        action_for_sim = prev_data["action"] if prev_data else ACTION_LOW
+        if aerator_sim is not None:
+            pH, T = aerator_sim.update(pH_real, T_real, action_for_sim)
         else:
-            mode = "RB"
-        
-        _log_comparison(real_steps, pH, T, mode, fql, dqn, dqn_active)
-        
-        # ── Store transition for DQN training ────────────────────────────── #
-        append_transition(buffer_dqn,
-                          s      = [pH, T],
-                          a      = actual_risk,  # Use actual risk as "action"
-                          r      = 1.0 if fql_risk == actual_risk else -1.0,
-                          s_next = [pH, T])  # Same state (no dynamics)
+            pH, T = pH_real, T_real
+
+        # ── Real: update FQL from real transition ─────────────────────────── #
+        if prev_data is not None:
+            pH_prev     = prev_data["pH"]
+            T_prev      = prev_data["T"]
+            action_prev = prev_data["action"]
+            prev_action_before = prev_data.get("prev_action")
+
+            reward = fql.compute_reward(
+                pH_prev, T_prev, action_prev,
+                pH, T,
+                prev_action_before
+            )
+            fql.update(pH_prev, T_prev, action_prev, reward, pH, T)
+
+            # Track rewards per phase for FQL-vs-RB comparison
+            if dqn_active:
+                mode = "DQN"
+            elif fql.converged_sent:
+                mode = "FQL"
+                fql_rewards.append(reward)
+            else:
+                mode = "RB"
+                rb_rewards.append(reward)
+            _log_comparison(real_steps, pH, T, mode, action_prev,
+                            fql, reward, pH_prev, T_prev)
+
+            append_transition(buffer_dqn,
+                              s      = [pH_prev, T_prev],
+                              a      = action_prev,
+                              r      = reward,
+                              s_next = [pH, T])
+
+        # ── Virtual: run interleaved simulation steps ─────────────────────── #
+        for _ in range(VIRTUAL_STEPS_PER_REAL):
+            venv.step(fql, buffer_dqn)
 
         # ── Auto-save buffer ─────────────────────────────────────────────── #
         if len(buffer_dqn) % BUFFER_AUTOSAVE == 0 and len(buffer_dqn) > 0:
@@ -466,6 +571,7 @@ def main():
         fql_real_elapsed = (real_steps - fql_mode_start) if fql_mode_start else 0
 
         # ── PHASE D: Train DQN as soon as buffer ready + FQL converged ──────── #
+        # DQN trains in background — Pico stays on FQL during this phase
         if (len(buffer_dqn) >= DQN_BUFFER_READY
                 and fql.converged_sent
                 and not dqn_model_ready
@@ -473,7 +579,7 @@ def main():
             dqn_ready_logged = True
             logger.info("=" * 65)
             logger.info(f"PHASE D — DQN training: {len(buffer_dqn)} transitions "
-                        f"— Pico stays on FQL during training")
+                        f"(real + virtual) — Pico stays on FQL during training")
             logger.info("=" * 65)
             save_buffer(buffer_dqn, BUFFER_FILE)
             try:
@@ -486,8 +592,8 @@ def main():
                     dqn_model_ready = True
                     last_dqn_retrain = real_steps
                     logger.info("[DQN] Model trained and ready. "
-                                f"Waiting for {FQL_MIN_REAL_STEPS} FQL steps "
-                                f"({fql_real_elapsed}/{FQL_MIN_REAL_STEPS}).")
+                                f"Waiting for FQL to prove better than RB "
+                                f"({fql_real_elapsed}/{FQL_MIN_REAL_STEPS} real steps in FQL).")
                 else:
                     logger.warning("DQN model failed to load — will retry later.")
             except Exception as e:
@@ -496,16 +602,28 @@ def main():
         # ── PHASE E: Activate DQN only after FQL proves better than RB ──────── #
         elif (dqn_model_ready
               and not dqn_active
-              and fql_real_elapsed >= FQL_MIN_REAL_STEPS):
-            logger.info("=" * 65)
-            logger.info(f"PHASE E — [DQN] activating after {fql_real_elapsed} FQL steps")
-            logger.info("=" * 65)
-            dqn_active = True
-            if bridge.send_qtable(dqn.to_qtable_string()):
-                logger.info("[DQN] Q-table sent to Pico — DQN now predicts risk.")
+              and fql_real_elapsed >= FQL_MIN_REAL_STEPS
+              and len(fql_rewards) >= 50):
+            fql_avg = float(np.mean(fql_rewards))
+            rb_avg  = float(np.mean(rb_rewards)) if len(rb_rewards) >= 50 else None
+            # If RB baseline unavailable (restarted with saved qtable), activate by step count
+            if rb_avg is None or fql_avg > rb_avg:
+                reason = (f"FQL avg={fql_avg:+.4f} > RB avg={rb_avg:+.4f}"
+                          if rb_avg is not None
+                          else f"no RB baseline (restarted), FQL ran {fql_real_elapsed} steps")
+                logger.info("=" * 65)
+                logger.info(f"PHASE E — [DQN] activating: {reason}")
+                logger.info("=" * 65)
+                dqn_active = True
+                if bridge.send_qtable(dqn.to_qtable_string()):
+                    logger.info("[DQN] Q-table sent to Pico — DQN now controls.")
+                else:
+                    logger.warning("[DQN] Failed to send Q-table — retrying next cycle.")
+                    dqn_active = False
             else:
-                logger.warning("[DQN] Failed to send Q-table — retrying next cycle.")
-                dqn_active = False
+                if real_steps % SUMMARY_INTERVAL == 0:
+                    logger.info(f"[DQN] Waiting: FQL avg={fql_avg:+.4f} vs "
+                                f"RB avg={rb_avg:+.4f} — FQL not yet better than RB.")
 
         # ── Periodic DQN retraining with growing buffer ───────────────────── #
         elif (dqn_active
@@ -536,7 +654,8 @@ def main():
                 f"  Convergence progress: "
                 f"steps {prog['steps']*100:.0f}% | "
                 f"windows {prog['windows']*100:.0f}% | "
-                f"accuracy {prog['accuracy']*100:.0f}%"
+                f"stability {prog['delta']*100:.0f}% | "
+                f"reward {prog['reward']*100:.0f}%"
             )
             logger.info(fql.format_policy_map())
 
@@ -547,7 +666,7 @@ def main():
             logger.info(f"=== FQL CONVERGED === "
                         f"Step: {stats['total_steps']} | "
                         f"Real: {real_steps} | "
-                        f"Avg Accuracy: {stats['avg_accuracy_100']:.2%} ===")
+                        f"Avg Reward: {stats['avg_reward_prev_100']:.4f} ===")
             logger.info("=" * 65)
             logger.info(fql.format_policy_map())
 
@@ -595,15 +714,13 @@ def main():
         if real_steps % LOG_INTERVAL == 0:
             stats = fql.get_stats()
             _mode_label = "DQN" if dqn_active else ("FQL" if fql.converged_sent else "RB")
-            nh3_pct = nh3_fraction(pH, T) * 100.0
             logger.info(
-                f"[{_mode_label}][Step:{real_steps:5d}] "
-                f"pH:{pH:.3f} T:{T:.1f}°C NH₃:{nh3_pct:.2f}% | "
-                f"Risk: Actual={RISK_LABELS[actual_risk]} "
-                f"RB={RISK_LABELS[rb_risk]} "
-                f"FQL={RISK_LABELS[fql_risk]} "
-                f"{'DQN=' + RISK_LABELS[dqn_risk] if dqn_active else ''} | "
-                f"Acc:{stats['avg_accuracy_100']:.2%} "
+                f"[{_mode_label}][R:{real_steps:5d} V:{fql.total_steps:6d}] "
+                f"pH:{pH:.3f} T:{T:.1f}C "
+                f"Action:{action} "
+                f"eps:{stats['epsilon']:.3f} "
+                f"AvgR:{stats['avg_reward_100']:+.3f} "
+                f"Scenario:{venv.current_scenario()} "
                 f"Buffer:{len(buffer_dqn)}"
             )
 
@@ -613,8 +730,9 @@ def main():
             logger.info("-" * 65)
             logger.info(
                 f"[{_mode_label}] Real steps: {real_steps} | "
-                f"FQL steps: {stats['total_steps']} | "
-                f"Avg Accuracy: {stats['avg_accuracy_100']:.2%} | "
+                f"Total (real+virtual): {stats['total_steps']} | "
+                f"Avg Reward: {stats['avg_reward_prev_100']:+.4f} | "
+                f"Delta: {abs(stats['avg_reward_prev_100'] - stats['avg_reward_prev2']):.4f} | "
                 f"Converged: {stats['converged']} | "
                 f"DQN Buffer: {len(buffer_dqn)}"
             )
@@ -626,18 +744,22 @@ def main():
                 )
             logger.info("-" * 65)
 
+        # Store current data for next iteration
+        prev_data = {
+            "pH":          pH,
+            "T":           T,
+            "action":      action,
+            "prev_action": prev_data["action"] if prev_data else None,
+        }
+
         # ── Dashboard state dump ──────────────────────────────────────────── #
         state_dump = {
             "pH": round(pH, 3),
             "T": round(T, 2),
-            "nh3_pct": round(nh3_fraction(pH, T) * 100.0, 2),
-            "actual_risk": RISK_LABELS[actual_risk],
-            "rb_risk": RISK_LABELS[rb_risk],
-            "fql_risk": RISK_LABELS[fql_risk],
-            "dqn_risk": RISK_LABELS[dqn_risk] if dqn_active and dqn_risk >= 0 else "N/A",
+            "action": ["OFF", "LOW", "MED", "HIGH"][action] if action in [0,1,2,3] else "UNKNOWN",
             "phase": "DQN" if dqn_active else ("FQL" if fql.converged_sent else "Rule-Based"),
             "buffer_size": len(buffer_dqn),
-            "accuracy": round(stats['avg_accuracy_100'], 4),
+            "reward": round(reward, 4) if prev_data else 0.0,
             "real_steps": real_steps,
             "fql_eps": round(fql.epsilon, 3)
         }
