@@ -49,42 +49,52 @@ def check_wifi_hotspot():
     log("=" * 70)
     
     try:
-        # Check if hostapd is running
+        # First check NetworkManager (modern approach)
+        result = subprocess.run(["nmcli", "connection", "show", "--active"], 
+                              capture_output=True, text=True)
+        if "N3IWF_AQUA" in result.stdout and "wlan0" in result.stdout:
+            log("✅ N3IWF_AQUA hotspot is active (NetworkManager)", "OK")
+            return True
+        
+        # Fallback: check hostapd (legacy approach)
         result = subprocess.run(["systemctl", "is-active", "hostapd"], 
                               capture_output=True, text=True)
         if result.returncode == 0:
             log("✅ hostapd service is active", "OK")
-        else:
-            log("❌ hostapd service is NOT active", "ERROR")
-            log("   Run: sudo systemctl start hostapd", "HINT")
-            return False
+            
+            # Check if dnsmasq is running
+            result = subprocess.run(["systemctl", "is-active", "dnsmasq"], 
+                                  capture_output=True, text=True)
+            if result.returncode == 0:
+                log("✅ dnsmasq service is active", "OK")
+            else:
+                log("❌ dnsmasq service is NOT active", "ERROR")
+                log("   Run: sudo systemctl start dnsmasq", "HINT")
+                return False
+            
+            # Check hostapd config
+            if os.path.exists("/etc/hostapd/hostapd.conf"):
+                with open("/etc/hostapd/hostapd.conf", "r") as f:
+                    config = f.read()
+                    if "ssid=N3IWF_AQUA" in config:
+                        log("✅ SSID configured as N3IWF_AQUA", "OK")
+                    else:
+                        log("❌ SSID is NOT N3IWF_AQUA", "ERROR")
+                        return False
+                    
+                    if "wpa_passphrase=skripsi2026" in config:
+                        log("✅ Password configured correctly", "OK")
+                    else:
+                        log("⚠️  Password might be different", "WARN")
+            
+            return True
         
-        # Check if dnsmasq is running
-        result = subprocess.run(["systemctl", "is-active", "dnsmasq"], 
-                              capture_output=True, text=True)
-        if result.returncode == 0:
-            log("✅ dnsmasq service is active", "OK")
-        else:
-            log("❌ dnsmasq service is NOT active", "ERROR")
-            log("   Run: sudo systemctl start dnsmasq", "HINT")
-            return False
+        # Neither method found active hotspot
+        log("❌ WiFi hotspot is NOT active", "ERROR")
+        log("   NetworkManager: sudo bash fix_hotspot_nm.sh", "HINT")
+        log("   OR hostapd: sudo systemctl start hostapd", "HINT")
+        return False
         
-        # Check hostapd config
-        if os.path.exists("/etc/hostapd/hostapd.conf"):
-            with open("/etc/hostapd/hostapd.conf", "r") as f:
-                config = f.read()
-                if "ssid=N3IWF_AQUA" in config:
-                    log("✅ SSID configured as N3IWF_AQUA", "OK")
-                else:
-                    log("❌ SSID is NOT N3IWF_AQUA", "ERROR")
-                    return False
-                
-                if "wpa_passphrase=skripsi2026" in config:
-                    log("✅ Password configured correctly", "OK")
-                else:
-                    log("⚠️  Password might be different", "WARN")
-        
-        return True
     except Exception as e:
         log(f"❌ Error checking hotspot: {e}", "ERROR")
         return False

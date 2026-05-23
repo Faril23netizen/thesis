@@ -199,7 +199,7 @@ echo -e "${BLUE}   Log: $RESULTS_DIR/run_real.log${NC}"
 sleep 2
 
 # Start dashboard as real user
-sudo -u "$REAL_USER" PYTHONPATH="$SCRIPT_DIR" python3 "$SCRIPT_DIR/main/real/dashboard.py" > "$RESULTS_DIR/dashboard.log" 2>&1 &
+sudo -u "$REAL_USER" PYTHONPATH="$SCRIPT_DIR" python3 "$SCRIPT_DIR/n3iwf/dashboard.py" > "$RESULTS_DIR/dashboard.log" 2>&1 &
 DASHBOARD_PID=$!
 echo "$DASHBOARD_PID" >> "$PIDS_FILE"
 echo -e "${GREEN}✅ Dashboard started (PID: $DASHBOARD_PID)${NC}"
@@ -221,8 +221,8 @@ echo -e "  4. Dashboard            (PID: $DASHBOARD_PID)"
 echo ""
 echo -e "${YELLOW}Access Points:${NC}"
 echo -e "  Dashboard:  ${GREEN}http://$(hostname -I | awk '{print $1}'):5000${NC}"
-echo -e "              ${BLUE}(Usually: http://10.42.0.1:5000 via USB tethering)${NC}"
-echo -e "  TCP Port:   ${GREEN}5005${NC} (Pico 2W)"
+echo -e "              ${BLUE}(Usually: http://10.42.0.1:5000 via hotspot)${NC}"
+echo -e "  TCP Port:   ${GREEN}5000${NC} (Pico WH)"
 echo ""
 echo -e "${YELLOW}Logs:${NC}"
 echo -e "  Callbox:    tail -f $RESULTS_DIR/callbox.log"
