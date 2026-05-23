@@ -55,6 +55,9 @@ static bool g_qtable_loaded = false;
 static char g_recv_buf[2048];
 static int g_recv_len = 0;
 
+/* ── Forward declarations ────────────────────────────────────────────────── */
+static err_t tcp_client_close(tcp_client_t *state);
+
 /* ── TCP Client State ────────────────────────────────────────────────────── */
 typedef struct {
     struct tcp_pcb *tcp_pcb;
