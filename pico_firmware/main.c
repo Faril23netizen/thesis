@@ -45,6 +45,16 @@
 /* ── Global sensor instances ─────────────────────────────────────────────── */
 static DS18B20_t g_ds18b20;
 
+/* ── Q-table storage ─────────────────────────────────────────────────────── */
+#define QTABLE_ROWS 9
+#define QTABLE_COLS 4
+static float g_qtable[QTABLE_ROWS][QTABLE_COLS];
+static bool g_qtable_loaded = false;
+
+/* ── Receive buffer ──────────────────────────────────────────────────────── */
+static char g_recv_buf[2048];
+static int g_recv_len = 0;
+
 /* ── TCP Client State ────────────────────────────────────────────────────── */
 typedef struct {
     struct tcp_pcb *tcp_pcb;
@@ -81,7 +91,152 @@ static const char *risk_str(uint8_t r) {
   }
 }
 
+/* ── Q-table parsing ─────────────────────────────────────────────────────── */
+static bool parse_qtable(const char *line) {
+    /* Expected format: QTABLE:[[row0],[row1],...,[row8]] */
+    if (strncmp(line, "QTABLE:", 7) != 0) {
+        return false;
+    }
+    
+    const char *p = line + 7;
+    
+    /* Skip opening [[ */
+    while (*p && (*p == '[' || *p == ' ')) p++;
+    
+    /* Parse 9 rows x 4 cols */
+    for (int i = 0; i < QTABLE_ROWS; i++) {
+        for (int j = 0; j < QTABLE_COLS; j++) {
+            /* Skip whitespace and commas */
+            while (*p && (*p == ' ' || *p == ',' || *p == '[')) p++;
+            
+            /* Parse float */
+            char *endp;
+            g_qtable[i][j] = strtof(p, &endp);
+            if (p == endp) {
+                printf("# [ERROR] Q-table parse failed at [%d][%d]\n", i, j);
+                return false;
+            }
+            p = endp;
+            
+            /* Skip closing bracket */
+            while (*p && (*p == ' ' || *p == ']')) p++;
+        }
+    }
+    
+    g_qtable_loaded = true;
+    printf("# Q-table loaded successfully\n");
+    return true;
+}
+
+static uint8_t qtable_predict_risk(int32_t ph_x1000, int32_t temp_x100) {
+    if (!g_qtable_loaded) {
+        /* Fallback to rule-based */
+        return calc_risk_level(calc_nh3_x100000(ph_x1000, temp_x100));
+    }
+    
+    /* Fuzzy state mapping (simplified) */
+    /* pH zones: VeryAcid(<6.0), Acidic(6.0-6.5), Normal(6.5-8.5), Alkaline(8.5-9.5), VeryAlk(>9.5) */
+    /* Temp zones: VCold(<20), Cold(20-25), Opt(25-30), Hot(30-35), VHot(>35) */
+    
+    int ph_zone = 2; /* Default: Normal */
+    if (ph_x1000 < 6000) ph_zone = 0;
+    else if (ph_x1000 < 6500) ph_zone = 1;
+    else if (ph_x1000 <= 8500) ph_zone = 2;
+    else if (ph_x1000 <= 9500) ph_zone = 3;
+    else ph_zone = 4;
+    
+    int temp_zone = 2; /* Default: Opt */
+    if (temp_x100 < 2000) temp_zone = 0;
+    else if (temp_x100 < 2500) temp_zone = 1;
+    else if (temp_x100 <= 3000) temp_zone = 2;
+    else if (temp_x100 <= 3500) temp_zone = 3;
+    else temp_zone = 4;
+    
+    /* Map to Q-table index (5 pH zones × 5 temp zones = 25 states, but we have 9x4 Q-table) */
+    /* Simplified mapping: use pH zone as row (0-4 mapped to 0-8), temp zone as col (0-4 mapped to 0-3) */
+    int row = (ph_zone * 9) / 5; /* Scale 0-4 to 0-8 */
+    int col = (temp_zone * 4) / 5; /* Scale 0-4 to 0-3 */
+    
+    if (row >= QTABLE_ROWS) row = QTABLE_ROWS - 1;
+    if (col >= QTABLE_COLS) col = QTABLE_COLS - 1;
+    
+    /* Find action with max Q-value */
+    float max_q = g_qtable[row][0];
+    uint8_t best_risk = 0;
+    for (int a = 1; a < QTABLE_COLS; a++) {
+        if (g_qtable[row][a] > max_q) {
+            max_q = g_qtable[row][a];
+            best_risk = a;
+        }
+    }
+    
+    return best_risk;
+}
+
 /* ── TCP callbacks ───────────────────────────────────────────────────────── */
+static err_t tcp_client_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+    tcp_client_t *state = (tcp_client_t*)arg;
+    
+    if (!p) {
+        /* Connection closed */
+        printf("# Connection closed by server\n");
+        tcp_client_close(state);
+        return ERR_OK;
+    }
+    
+    if (err != ERR_OK) {
+        pbuf_free(p);
+        return err;
+    }
+    
+    /* Copy data to receive buffer */
+    if (g_recv_len + p->tot_len < sizeof(g_recv_buf) - 1) {
+        pbuf_copy_partial(p, g_recv_buf + g_recv_len, p->tot_len, 0);
+        g_recv_len += p->tot_len;
+        g_recv_buf[g_recv_len] = '\0';
+    }
+    
+    /* Process complete lines */
+    char *nl;
+    while ((nl = strchr(g_recv_buf, '\n')) != NULL) {
+        *nl = '\0';
+        
+        /* Check if it's a Q-table */
+        if (strncmp(g_recv_buf, "QTABLE:", 7) == 0) {
+            printf("# Receiving Q-table...\n");
+            if (parse_qtable(g_recv_buf)) {
+                /* Send ACK */
+                const char *ack = "ACK:QTABLE_LOADED\n";
+                cyw43_arch_lwip_begin();
+                tcp_write(tpcb, ack, strlen(ack), TCP_WRITE_FLAG_COPY);
+                tcp_output(tpcb);
+                cyw43_arch_lwip_end();
+                printf("# ACK sent\n");
+            } else {
+                /* Send error ACK */
+                const char *ack = "ACK:QTABLE_ERROR\n";
+                cyw43_arch_lwip_begin();
+                tcp_write(tpcb, ack, strlen(ack), TCP_WRITE_FLAG_COPY);
+                tcp_output(tpcb);
+                cyw43_arch_lwip_end();
+                printf("# ACK error sent\n");
+            }
+        } else {
+            printf("# [RX] %s\n", g_recv_buf);
+        }
+        
+        /* Shift remaining data */
+        int consumed = (nl - g_recv_buf) + 1;
+        g_recv_len -= consumed;
+        memmove(g_recv_buf, nl + 1, g_recv_len);
+        g_recv_buf[g_recv_len] = '\0';
+    }
+    
+    tcp_recved(tpcb, p->tot_len);
+    pbuf_free(p);
+    return ERR_OK;
+}
+
 static err_t tcp_client_close(tcp_client_t *state) {
     err_t err = ERR_OK;
     if (state->tcp_pcb) {
@@ -132,6 +287,7 @@ static bool tcp_client_open(tcp_client_t *state) {
 
     tcp_arg(state->tcp_pcb, state);
     tcp_err(state->tcp_pcb, tcp_client_err);
+    tcp_recv(state->tcp_pcb, tcp_client_recv);
 
     cyw43_arch_lwip_begin();
     err_t err = tcp_connect(state->tcp_pcb, &state->remote_addr, N3IWF_PORT, tcp_client_connected);
@@ -309,7 +465,14 @@ int main(void) {
 
       /* ── 5. Calculate NH3 and risk level ───────────────────────────────── */
       int32_t nh3_x100000 = calc_nh3_x100000(ph_x1000, temp_x100);
-      uint8_t risk = calc_risk_level(nh3_x100000);
+      
+      /* Use Q-table if loaded, otherwise use rule-based */
+      uint8_t risk;
+      if (g_qtable_loaded) {
+        risk = qtable_predict_risk(ph_x1000, temp_x100);
+      } else {
+        risk = calc_risk_level(nh3_x100000);
+      }
 
       /* ── 6. Send data to RPi5 via Wi-Fi TCP ────────────────────────────── */
       if (!tcp_client_send_data(g_client, ph_x1000, temp_x100, risk)) {
@@ -329,10 +492,11 @@ int main(void) {
 
       /* ── 7. Print to serial monitor ────────────────────────────────────── */
       const char *bars[] = {"[----]", "[#---]", "[##--]", "[####]"};
-      printf("> %4lu | %7.1fs | %6.3f | %5.2f | %6.3f%% | %s %s\r\n",
+      const char *mode = g_qtable_loaded ? "FQL" : "RB";
+      printf("> %4lu | %7.1fs | %6.3f | %5.2f | %6.3f%% | %s %s (%s)\r\n",
              (unsigned long)sample_num, now_ms / 1000.0f, ph_x1000 / 1000.0f,
              temp_x100 / 100.0f, nh3_x100000 / 1000.0f, bars[risk],
-             risk_str(risk));
+             risk_str(risk), mode);
     }
 
     /* ── Blink LED to show alive ──────────────────────────────────────────── */
