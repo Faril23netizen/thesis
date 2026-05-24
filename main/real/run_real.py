@@ -58,8 +58,8 @@ QTABLE_FILE     = ""
 BUFFER_FILE     = ""
 DQN_MODEL_FILE  = ""
 
-LOG_FILE        = os.path.join(RESULTS_REAL, "fql.log")
-LOG_ERROR_FILE  = os.path.join(RESULTS_REAL, "fql_error.log")
+LOG_FILE        = ""  # Di-set dinamis per sesi
+LOG_ERROR_FILE  = ""  # Di-set dinamis per sesi
 STATE_JSON_FILE = os.path.join(RESULTS_REAL, "state.json")
 
 # ── Constants ────────────────────────────────────────────────────────────── #
@@ -95,27 +95,33 @@ def setup_logging() -> logging.Logger:
     logger = logging.getLogger("aquaculture")
     logger.setLevel(logging.DEBUG)
 
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.INFO)
-    ch.setFormatter(fmt)
-    logger.addHandler(ch)
+    if not any(isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler) for h in logger.handlers):
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(fmt)
+        logger.addHandler(ch)
 
-    fh = logging.FileHandler(LOG_FILE)
+    return logger
+
+def attach_file_loggers(logger: logging.Logger, session_dir: str):
+    fmt = logging.Formatter(
+        "[%(asctime)s] [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    for h in logger.handlers[:]:
+        if isinstance(h, logging.FileHandler):
+            logger.removeHandler(h)
+            h.close()
+    
+    fh = logging.FileHandler(os.path.join(session_dir, "fql.log"))
     fh.setLevel(logging.INFO)
     fh.setFormatter(fmt)
     logger.addHandler(fh)
 
-    eh = logging.FileHandler(LOG_ERROR_FILE)
+    eh = logging.FileHandler(os.path.join(session_dir, "fql_error.log"))
     eh.setLevel(logging.WARNING)
     eh.setFormatter(fmt)
     logger.addHandler(eh)
-
-    _setup_pico_monitor_log(RESULTS_REAL)
-    logger.info(f"Pico monitor log: {os.path.join(RESULTS_REAL, 'pico_monitor.log')}")
-    logger.info("  Run in second terminal: tail -f results/hasil_real/pico_monitor.log")
-
-    return logger
-
 
 # ══════════════════════════════════════════════════════════════════════════ #
 #  DQN buffer helpers
@@ -429,6 +435,10 @@ def main():
         session_ts = time.strftime("%Y%m%d_%H%M%S")
         session_dir = os.path.join(RESULTS_REAL, f"session_{session_ts}")
         os.makedirs(session_dir, exist_ok=True)
+        
+        # Attach file loggers to the new session
+        attach_file_loggers(logger, session_dir)
+        _setup_pico_monitor_log(session_dir)
         
         # Set path file AI ke dalam folder sesi
         QTABLE_FILE    = os.path.join(session_dir, "qtable.json")

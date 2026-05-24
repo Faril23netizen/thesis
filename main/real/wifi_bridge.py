@@ -25,9 +25,10 @@ _pico_log.setLevel(logging.DEBUG)
 _pico_log.propagate = False  # don't mix into main aquaculture log
 
 def _setup_pico_monitor_log(log_dir: str) -> None:
-    """Call once at startup to wire up the pico_monitor file handler."""
-    if _pico_log.handlers:
-        return  # already configured
+    """Call once per session to wire up the pico_monitor file handler."""
+    for h in _pico_log.handlers[:]:
+        _pico_log.removeHandler(h)
+        h.close()
     os.makedirs(log_dir, exist_ok=True)
     fh = logging.FileHandler(os.path.join(log_dir, "pico_monitor.log"))
     fh.setFormatter(logging.Formatter(
