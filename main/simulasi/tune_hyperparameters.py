@@ -51,9 +51,9 @@ FQL_CONFIGS = [
 
 DQN_CONFIGS = [
     # epochs
-    (500,),   
-    (1000,),  
-    (1500,),  
+    (10,),   
+    (30,),  
+    (50,),  
 ]
 
 
@@ -88,7 +88,7 @@ def evaluate_config(fql_config, dqn_config, config_id):
             actual_risk = calculate_actual_risk(pH, T)
             predicted_risk = fql_agent.predict_risk(pH, T)
             fql_agent.update(pH, T, predicted_risk, actual_risk)
-            append_transition(dqn_buffer, s=[pH, T], a=actual_risk, 
+            append_transition(dqn_buffer, s=[pH, T], a=predicted_risk, 
                               r=1.0 if predicted_risk == actual_risk else -1.0, 
                               s_next=[pH, T])
     
@@ -137,16 +137,16 @@ def evaluate_config(fql_config, dqn_config, config_id):
             "epochs": dqn_epochs
         },
         "accuracies": {
-            "rb": rb_acc,
-            "fql": fql_acc,
-            "dqn": dqn_acc
+            "rb": float(rb_acc),
+            "fql": float(fql_acc),
+            "dqn": float(dqn_acc)
         },
         "gaps": {
-            "fql_rb": fql_rb_gap,
-            "dqn_fql": dqn_fql_gap,
-            "total": total_gap
+            "fql_rb": float(fql_rb_gap),
+            "dqn_fql": float(dqn_fql_gap),
+            "total": float(dqn_acc - rb_acc)
         },
-        "ranking_correct": ranking_correct,
+        "ranking_correct": bool(ranking_correct),
         "metrics": {
             "rb": rb_metrics,
             "fql": fql_metrics,

@@ -141,37 +141,44 @@ def train_pytorch(buffer: list, epochs: int, model_path: str):
 
     t_start = time.time()
     losses  = []
+    steps_per_epoch = max(1, N // BATCH_SIZE)
 
     for epoch in range(1, epochs + 1):
-        # Sample mini-batch
-        idx    = np.random.randint(0, N, BATCH_SIZE)
-        s      = torch.tensor(states[idx])
-        a      = torch.tensor(actions[idx])
-        r      = torch.tensor(rewards[idx])
-        s_next = torch.tensor(next_states[idx])
+        epoch_loss = 0.0
+        for step in range(steps_per_epoch):
+            # Sample mini-batch
+            idx    = np.random.randint(0, N, BATCH_SIZE)
+            s      = torch.tensor(states[idx])
+            a      = torch.tensor(actions[idx])
+            r      = torch.tensor(rewards[idx])
+            s_next = torch.tensor(next_states[idx])
 
-        # Bellman target: y = r + γ × max_a Q_target(s')
-        with torch.no_grad():
-            q_next = target_net(s_next).max(dim=1).values
-            y      = r + GAMMA * q_next
+            # Bellman target: y = r + γ × max_a Q_target(s')
+            with torch.no_grad():
+                q_next = target_net(s_next).max(dim=1).values
+                y      = r + GAMMA * q_next
 
-        # Current Q(s, a)
-        q_pred = online_net(s).gather(1, a.unsqueeze(1)).squeeze(1)
+            # Current Q(s, a)
+            q_pred = online_net(s).gather(1, a.unsqueeze(1)).squeeze(1)
 
-        loss = loss_fn(q_pred, y)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        losses.append(loss.item())
+            loss = loss_fn(q_pred, y)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+            epoch_loss += loss.item()
 
-        # Sync target network
+        avg_loss = epoch_loss / steps_per_epoch
+        losses.append(avg_loss)
+
+        # Update target net periodically
         if epoch % TARGET_UPDATE_FREQ == 0:
             target_net.load_state_dict(online_net.state_dict())
 
-        if epoch % 50 == 0:
-            avg_loss = np.mean(losses[-50:])
-            print(f"  Epoch {epoch:4d}/{epochs} | loss={avg_loss:.5f} | "
-                  f"elapsed={time.time()-t_start:.1f}s")
+        # Logging
+        if epoch % max(1, epochs // 10) == 0 or epoch == epochs:
+            elapsed = time.time() - t_start
+            print(f"  Epoch {epoch:4d}/{epochs} | loss={avg_loss:.5f} | elapsed={elapsed:.1f}s")
 
     # Save model
     torch.save({
@@ -232,9 +239,9 @@ class DQNNumpy:
         self.W3 = np.random.randn(64, N_ACTIONS).astype(np.float32) * 0.1
         self.b3 = np.zeros((1, N_ACTIONS), dtype=np.float32)
         # Target network weights
-        self._sync_target()
+        self.update_target()
 
-    def _sync_target(self):
+    def update_target(self):
         self.tW1, self.tb1 = self.W1.copy(), self.b1.copy()
         self.tW2, self.tb2 = self.W2.copy(), self.b2.copy()
         self.tW3, self.tb3 = self.W3.copy(), self.b3.copy()
@@ -267,30 +274,30 @@ class DQNNumpy:
         q_target = q.copy()
         for i, ai in enumerate(a):
             q_target[i, ai] = y[i, 0]
+        
+        return q, q_target, s, h1, h2
 
-        # Huber loss gradient (simplified MSE)
-        delta = q - q_target  # (B, 4)
+    def backward(self, s, a, q_target):
+        # Forward again to get h1, h2, q for gradient calculation
+        h1 = relu(s @ self.W1 + self.b1)
+        h2 = relu(h1 @ self.W2 + self.b2)
+        q  = h2 @ self.W3 + self.b3
+        
+        delta = q - q_target
         loss  = np.mean(delta ** 2)
-
-        # Backprop W3
+        
         dW3 = h2.T @ (2 * delta) / len(s)
         db3 = (2 * delta).mean(axis=0, keepdims=True)
-
-        # Backprop W2
         d2  = (2 * delta) @ self.W3.T * (h2 > 0)
         dW2 = h1.T @ d2 / len(s)
         db2 = d2.mean(axis=0, keepdims=True)
-
-        # Backprop W1
         d1  = d2 @ self.W2.T * (h1 > 0)
         dW1 = s.T @ d1 / len(s)
         db1 = d1.mean(axis=0, keepdims=True)
-
-        # Gradient descent
+        
         self.W3 -= self.lr * dW3;  self.b3 -= self.lr * db3
         self.W2 -= self.lr * dW2;  self.b2 -= self.lr * db2
         self.W1 -= self.lr * dW1;  self.b1 -= self.lr * db1
-
         return loss
 
     def save(self, path: str, buffer_size: int, epochs: int):
@@ -322,20 +329,29 @@ def train_numpy(buffer: list, epochs: int, model_path: str):
 
     t_start = time.time()
     losses  = []
+    steps_per_epoch = max(1, N // BATCH_SIZE)
 
     for epoch in range(1, epochs + 1):
-        idx    = np.random.randint(0, N, BATCH_SIZE)
-        loss   = net.train_step(states[idx], actions[idx],
-                                rewards[idx], next_states[idx])
-        losses.append(loss)
+        epoch_loss = 0.0
+        for step in range(steps_per_epoch):
+            idx    = np.random.randint(0, N, BATCH_SIZE)
+            s, a, r, s_next = states[idx], actions[idx], rewards[idx], next_states[idx]
+            q_target, q_t, s_in, h1, h2 = net.train_step(s, a, r, s_next)
+            
+            # Backprop
+            loss = net.backward(s, a, q_target)
+            
+            epoch_loss += loss
+
+        avg_loss = epoch_loss / steps_per_epoch
+        losses.append(avg_loss)
 
         if epoch % TARGET_UPDATE_FREQ == 0:
-            net._sync_target()
+            net.update_target()
 
-        if epoch % 50 == 0:
-            avg_loss = np.mean(losses[-50:])
-            print(f"  Epoch {epoch:4d}/{epochs} | loss={avg_loss:.5f} | "
-                  f"elapsed={time.time()-t_start:.1f}s")
+        if epoch % max(1, epochs // 10) == 0 or epoch == epochs:
+            elapsed = time.time() - t_start
+            print(f"  Epoch {epoch:4d}/{epochs} | loss={avg_loss:.5f} | elapsed={elapsed:.1f}s")
 
     net.save(model_path, N, epochs)
 

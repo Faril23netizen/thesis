@@ -334,7 +334,7 @@ def main():
             fql_agent.update(pH, T, predicted_risk, actual_risk)
             
             # Store in DQN buffer
-            append_transition(dqn_buffer, s=[pH, T], a=actual_risk, 
+            append_transition(dqn_buffer, s=[pH, T], a=predicted_risk, 
                               r=1.0 if predicted_risk == actual_risk else -1.0, 
                               s_next=[pH, T])
                               
@@ -349,10 +349,10 @@ def main():
     
     if TORCH_AVAILABLE:
         print("Backend: PyTorch")
-        train_pytorch(dqn_buffer, epochs=1500, model_path=dqn_model_path)
+        train_pytorch(dqn_buffer, epochs=30, model_path=dqn_model_path)
     else:
         print("Backend: Numpy")
-        train_numpy(dqn_buffer, epochs=1500, model_path=dqn_model_path)
+        train_numpy(dqn_buffer, epochs=30, model_path=dqn_model_path)
         
     # Load trained model into DQNAgent
     dqn_agent = DQNAgent()
