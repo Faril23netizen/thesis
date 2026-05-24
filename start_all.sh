@@ -139,12 +139,21 @@ sleep 2
 if kill -0 "$RUNREAL_PID" 2>/dev/null; then
     echo -e "${GREEN}✅ run_real.py berjalan${NC}  ${GRAY}(PID $RUNREAL_PID)${NC}"
     echo -e "${CYAN}   TCP Port : ${WHITE}5000${NC}  ← Pico WH konek ke sini"
-    echo -e "${CYAN}   Log file : ${WHITE}results/logs/run_real.log${NC}"
 else
     echo -e "${RED}❌ run_real.py gagal start! Cek error:${NC}"
     tail -20 "$RUNREAL_LOG"
     exit 1
 fi
+
+# Start dashboard (port 8080)
+DASH_LOG="$LOG_DIR/dashboard.log"
+sudo -u "$REAL_USER" PYTHONPATH="$SCRIPT_DIR" python3 \
+    "$SCRIPT_DIR/main/real/dashboard.py" > "$DASH_LOG" 2>&1 &
+DASH_PID=$!
+echo "$DASH_PID" >> "$PIDS_FILE"
+sleep 1
+echo -e "${GREEN}✅ Dashboard berjalan${NC}  ${GRAY}(PID $DASH_PID)${NC}"
+echo -e "${CYAN}   URL : ${WHITE}http://$RPI_IP:8080${NC}  ← buka di browser"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════ #

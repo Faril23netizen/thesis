@@ -475,20 +475,12 @@ HTML_TEMPLATE = """
             }
         };
 
-        const ctx = document.getElementById('waterChart').getContext('2d');
-        const waterChart = new Chart(ctx, chartConfig);
-
         const maxDataPoints = 50;
 
-        // Dashboard uses server-side rendering with auto-refresh
-        // No JavaScript fetch needed - page reloads every 2 seconds via meta refresh
-        
-        // Chart.js for pH & Temperature (optional - will work on refresh)
+        // Dashboard uses server-side rendering with auto-refresh every 2s
+        // Chart.js renders pH & Temperature (data resets on each page refresh)
         const ctx = document.getElementById('waterChart').getContext('2d');
         const waterChart = new Chart(ctx, chartConfig);
-        
-        // Note: Chart data will reset on each refresh
-        // For persistent chart, we would need to store data in localStorage or use fetch API
     </script>
 </body>
 </html>
@@ -679,10 +671,10 @@ if __name__ == '__main__':
     print("\n" + "="*70)
     print("  🐟 Aquaculture Professional Dashboard")
     print("="*70)
-    print(f"  Dashboard  : http://{local_ip}:5000")
+    print(f"  Dashboard  : http://{local_ip}:8080")
     print(f"  Features   : Real-time charts, Network monitoring, 5G Core status")
     print()
     print("  Make sure system is running: sudo ./start_all.sh")
     print("="*70 + "\n")
     
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=8080, debug=False)
