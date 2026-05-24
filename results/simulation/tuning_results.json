@@ -1,0 +1,25 @@
+[
+  {
+    "config_id": 1,
+    "fql_config": {
+      "alpha": 0.05,
+      "gamma": 0.9,
+      "eps_start": 0.5,
+      "eps_min": 0.05,
+      "eps_decay": 0.995,
+      "train_episodes": 100
+    },
+    "dqn_config": {
+      "epochs": 500
+    },
+    "accuracies": {
+      "rb": 0.2527,
+      "fql": 0.8664,
+      "dqn": 0.4057
+    },
+    "gaps": {
+      "fql_rb": 0.6136999999999999,
+      "dqn_fql": -0.46069999999999994,
+      "total": 0.15300000000000002
+    },
+    "ranking_correct": 

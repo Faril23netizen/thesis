@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from main.simulasi.run_simulasi import (
     TraditionalRuleBased, ScenarioGenerator, calculate_metrics, evaluate_agent,
     append_transition, calculate_actual_risk,
-    N_EPISODES, STEPS_PER_EPISODE
+    TEST_EPISODES, STEPS_PER_EPISODE
 )
 from fql.fql_agent import FQLAgent
 from dqn.dqn_agent import DQNAgent
@@ -64,7 +64,7 @@ def evaluate_config(fql_config, dqn_config, config_id):
     
     print(f"\n{'='*70}")
     print(f"CONFIG #{config_id}")
-    print(f"FQL: α={alpha}, γ={gamma}, ε={eps_start}→{eps_min}, decay={eps_decay}, episodes={train_eps}")
+    print(f"FQL: alpha={alpha}, gamma={gamma}, eps={eps_start}->{eps_min}, decay={eps_decay}, episodes={train_eps}")
     print(f"DQN: epochs={dqn_epochs}")
     print(f"{'='*70}")
     
@@ -80,7 +80,7 @@ def evaluate_config(fql_config, dqn_config, config_id):
     dqn_buffer = []
     
     # Train FQL
-    episode_types = ["safe", "acidic", "alkaline", "cold", "hot", "multi", "random"]
+    episode_types = ScenarioGenerator.EPISODE_TYPES
     for ep in range(train_eps):
         ep_type = episode_types[ep % len(episode_types)]
         trajectory = ScenarioGenerator.generate_episode(ep_type, STEPS_PER_EPISODE)
@@ -107,9 +107,9 @@ def evaluate_config(fql_config, dqn_config, config_id):
     fql_agent.epsilon = 0.0 # greedy for eval
     
     # Evaluate all agents
-    rb_metrics = evaluate_agent(rb_agent, "RB", N_EPISODES)
-    fql_metrics = evaluate_agent(fql_agent, "FQL", N_EPISODES)
-    dqn_metrics = evaluate_agent(dqn_agent, "DQN", N_EPISODES)
+    rb_metrics = evaluate_agent(rb_agent, "RB", TEST_EPISODES)
+    fql_metrics = evaluate_agent(fql_agent, "FQL", TEST_EPISODES)
+    dqn_metrics = evaluate_agent(dqn_agent, "DQN", TEST_EPISODES)
     
     rb_acc = rb_metrics["accuracy"]
     fql_acc = fql_metrics["accuracy"]
@@ -134,8 +134,7 @@ def evaluate_config(fql_config, dqn_config, config_id):
             "train_episodes": train_eps
         },
         "dqn_config": {
-            "epochs": dqn_epochs,
-            "hidden_size": dqn_hidden
+            "epochs": dqn_epochs
         },
         "accuracies": {
             "rb": rb_acc,
@@ -157,9 +156,9 @@ def evaluate_config(fql_config, dqn_config, config_id):
     
     print(f"\n[RESULT #{config_id}]")
     print(f"  RB:  {rb_acc:.2%}")
-    print(f"  FQL: {fql_acc:.2%} (Δ={fql_rb_gap:+.2%})")
-    print(f"  DQN: {dqn_acc:.2%} (Δ={dqn_fql_gap:+.2%})")
-    print(f"  Ranking: {'✅ CORRECT' if ranking_correct else '❌ INCORRECT'}")
+    print(f"  FQL: {fql_acc:.2%} (gap={fql_rb_gap:+.2%})")
+    print(f"  DQN: {dqn_acc:.2%} (gap={dqn_fql_gap:+.2%})")
+    print(f"  Ranking: {'[OK] CORRECT' if ranking_correct else '[X] INCORRECT'}")
     
     return result
 
@@ -174,8 +173,6 @@ def main():
     all_configs = list(product(FQL_CONFIGS, DQN_CONFIGS))
     print(f"\nTotal configurations to test: {len(all_configs)}")
     print(f"Estimated time: ~{len(all_configs) * 2} minutes\n")
-    
-    input("Press Enter to start tuning...")
     
     results = []
     
@@ -197,14 +194,14 @@ def main():
     valid_results = [r for r in results if r["ranking_correct"]]
     
     if not valid_results:
-        print("\n❌ No configuration achieved correct ranking!")
+        print("\n[X] No configuration achieved correct ranking!")
         print("   Try expanding search space or adjusting thresholds.")
         return
     
     # Sort by total gap (DQN - RB)
     best = max(valid_results, key=lambda r: r["gaps"]["total"])
     
-    print(f"\n✅ BEST CONFIGURATION FOUND:")
+    print(f"\n[OK] BEST CONFIGURATION FOUND:")
     print(f"   Config ID: #{best['config_id']}")
     print(f"\n   FQL Hyperparameters:")
     for k, v in best["fql_config"].items():
@@ -214,8 +211,8 @@ def main():
         print(f"     {k}: {v}")
     print(f"\n   Accuracies:")
     print(f"     Rule-Based: {best['accuracies']['rb']:.2%}")
-    print(f"     FQL:        {best['accuracies']['fql']:.2%} (Δ={best['gaps']['fql_rb']:+.2%})")
-    print(f"     DQN:        {best['accuracies']['dqn']:.2%} (Δ={best['gaps']['dqn_fql']:+.2%})")
+    print(f"     FQL:        {best['accuracies']['fql']:.2%} (gap={best['gaps']['fql_rb']:+.2%})")
+    print(f"     DQN:        {best['accuracies']['dqn']:.2%} (gap={best['gaps']['dqn_fql']:+.2%})")
     print(f"     Total Gap:  {best['gaps']['total']:.2%}")
     
     # Save best config

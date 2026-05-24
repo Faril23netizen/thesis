@@ -31,9 +31,9 @@ except ImportError:
     print("Warning: DQN training module not found. Please ensure dqn/train_dqn.py exists.")
 
 # ── Simulation Parameters ────────────────────────────────────────────────── #
-TRAIN_EPISODES = 150     # FQL training episodes (gathering data)
+TRAIN_EPISODES = 200     # Diperbanyak agar memori DQN sangat kaya
 TEST_EPISODES  = 50      # Testing episodes for evaluation
-STEPS_PER_EPISODE = 200
+STEPS_PER_EPISODE = 300  # Langkah per skenario diperpanjang (total 60.000 data)
 
 PH_RANGE = (5.5, 9.5)
 T_RANGE = (17.5, 35.0)
@@ -44,41 +44,85 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════ #
-#  Scenario Generator
+#  Scenario Generator (Enhanced for Deep Learning Oversampling)
 # ══════════════════════════════════════════════════════════════════════════ #
 
 class ScenarioGenerator:
     """Generate diverse pH and Temperature scenarios for testing."""
+    
+    # 10 Skenario Cuaca yang dirancang untuk menyeimbangkan (Oversampling) status bahaya
+    EPISODE_TYPES = [
+        "optimal_safe",       # pH 7.0-7.5, T 25-28
+        "borderline_caution", # pH 7.8-8.2, T 28-30
+        "warning_hot",        # pH 8.0-8.5, T 30-33
+        "critical_extreme",   # pH 8.8-9.5, T 32-35 (Untuk menyeimbangkan data Kritis)
+        "acidic_stress",      # pH 5.5-6.5, T 20-30
+        "cold_stress",        # pH 6.5-8.5, T 17.5-22
+        "swing_alkaline",     # pH berayun dari 7.5 ke 9.0
+        "swing_temp",         # Suhu berayun dari 25 ke 34
+        "random_chaos",       # Acak total di seluruh spektrum
+        "critical_chaos"      # Acak total difokuskan pada spektrum bahaya
+    ]
+
     @staticmethod
     def generate_episode(episode_type: str, steps: int) -> list:
         trajectory = []
-        if episode_type == "safe":
-            pH_base, T_base = 7.5, 26.0
-            pH_noise, T_noise = 0.3, 1.0
-        elif episode_type == "acidic":
-            pH_base, T_base = 6.0, 26.0
-            pH_noise, T_noise = 0.3, 1.0
-        elif episode_type == "alkaline":
-            pH_base, T_base = 9.0, 26.0
-            pH_noise, T_noise = 0.3, 1.0
-        elif episode_type == "cold":
-            pH_base, T_base = 7.5, 20.0
-            pH_noise, T_noise = 0.3, 1.0
-        elif episode_type == "hot":
-            pH_base, T_base = 7.5, 32.0
-            pH_noise, T_noise = 0.3, 1.0
-        elif episode_type == "multi":
-            pH_base, T_base = 9.0, 32.0
-            pH_noise, T_noise = 0.3, 1.0
-        else:  # random
-            pH_base = np.random.uniform(6.0, 9.0)
-            T_base = np.random.uniform(20.0, 32.0)
-            pH_noise, T_noise = 0.5, 2.0
         
-        for _ in range(steps):
-            pH = np.clip(pH_base + np.random.normal(0, pH_noise), *PH_RANGE)
-            T = np.clip(T_base + np.random.normal(0, T_noise), *T_RANGE)
-            trajectory.append((pH, T))
+        # Penentuan titik awal (Base)
+        if episode_type == "optimal_safe":
+            pH_base, T_base = np.random.uniform(7.0, 7.5), np.random.uniform(25.0, 28.0)
+            pH_noise, T_noise = 0.1, 0.5
+        elif episode_type == "borderline_caution":
+            pH_base, T_base = np.random.uniform(7.8, 8.2), np.random.uniform(28.0, 30.0)
+            pH_noise, T_noise = 0.2, 1.0
+        elif episode_type == "warning_hot":
+            pH_base, T_base = np.random.uniform(8.0, 8.5), np.random.uniform(30.0, 33.0)
+            pH_noise, T_noise = 0.2, 1.0
+        elif episode_type == "critical_extreme":
+            pH_base, T_base = np.random.uniform(8.8, 9.5), np.random.uniform(32.0, 35.0)
+            pH_noise, T_noise = 0.3, 1.5
+        elif episode_type == "acidic_stress":
+            pH_base, T_base = np.random.uniform(5.5, 6.5), np.random.uniform(25.0, 30.0)
+            pH_noise, T_noise = 0.3, 1.0
+        elif episode_type == "cold_stress":
+            pH_base, T_base = np.random.uniform(7.0, 8.0), np.random.uniform(17.5, 22.0)
+            pH_noise, T_noise = 0.2, 1.0
+        elif episode_type == "swing_alkaline":
+            pH_base, T_base = 7.5, 28.0
+            pH_noise, T_noise = 0.2, 1.0
+        elif episode_type == "swing_temp":
+            pH_base, T_base = 8.0, 25.0
+            pH_noise, T_noise = 0.2, 1.0
+        elif episode_type == "critical_chaos":
+            pH_base, T_base = np.random.uniform(8.2, 9.5), np.random.uniform(28.0, 35.0)
+            pH_noise, T_noise = 0.5, 2.0
+        else:  # random_chaos
+            pH_base = np.random.uniform(5.5, 9.5)
+            T_base = np.random.uniform(17.5, 35.0)
+            pH_noise, T_noise = 0.6, 2.5
+        
+        # Proses simulasi pergerakan dinamis (Random Walk)
+        pH, T = pH_base, T_base
+        for i in range(steps):
+            # Simulasi ayunan ekstrem (Swing)
+            if episode_type == "swing_alkaline":
+                pH += (9.0 - 7.5) / steps # Perlahan naik ke 9.0
+            elif episode_type == "swing_temp":
+                T += (34.0 - 25.0) / steps # Perlahan naik ke 34.0
+            else:
+                pH += np.random.normal(0, pH_noise * 0.1)
+                T += np.random.normal(0, T_noise * 0.1)
+                
+            # Boundary drift (kalau keluar batas, pantulkan kembali)
+            if pH > pH_base + pH_noise or pH < pH_base - pH_noise:
+                pH = pH_base + np.random.normal(0, pH_noise * 0.5)
+            if T > T_base + T_noise or T < T_base - T_noise:
+                T = T_base + np.random.normal(0, T_noise * 0.5)
+                
+            pH_clip = np.clip(pH, *PH_RANGE)
+            T_clip = np.clip(T, *T_RANGE)
+            trajectory.append((pH_clip, T_clip))
+            
         return trajectory
 
 
@@ -156,7 +200,7 @@ def calculate_metrics(predictions: list, actuals: list) -> dict:
 def evaluate_agent(agent, agent_name: str, n_episodes: int) -> dict:
     print(f"\n[{agent_name}] Evaluating on {n_episodes} test episodes...")
     all_predictions, all_actuals, all_rewards, episode_rewards = [], [], [], []
-    episode_types = ["safe", "acidic", "alkaline", "cold", "hot", "multi", "random"]
+    episode_types = ScenarioGenerator.EPISODE_TYPES
     
     scenario_stats = defaultdict(lambda: {"correct": 0, "total": 0})
     
@@ -279,7 +323,7 @@ def main():
     
     # ── 2. Train FQL & Collect Data ───────────────────────────────────────── #
     print(f"\n[PHASE 1] Training FQL and collecting IoT Data for {TRAIN_EPISODES} episodes...")
-    episode_types = ["safe", "acidic", "alkaline", "cold", "hot", "multi", "random"]
+    episode_types = ScenarioGenerator.EPISODE_TYPES
     
     for ep in range(TRAIN_EPISODES):
         ep_type = episode_types[ep % len(episode_types)]

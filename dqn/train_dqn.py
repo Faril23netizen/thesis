@@ -54,7 +54,7 @@ MIN_BUFFER         = 500    # minimum transitions needed to start training
 PH_MIN, PH_MAX     = 5.5,  9.5
 T_MIN,  T_MAX      = 17.5, 35.0
 N_ACTIONS          = 4
-ACTION_NAMES       = ["OFF", "LOW", "MED", "HIGH"]
+ACTION_NAMES       = ["SAFE", "CAUTION", "WARNING", "CRITICAL"]
 
 
 # ── State normalization ───────────────────────────────────────────────────── #
@@ -151,9 +151,8 @@ def train_pytorch(buffer: list, epochs: int, model_path: str):
         s_next = torch.tensor(next_states[idx])
 
         # Bellman target: y = r + γ × max_a Q_target(s')
-        # Exclude action 0 (OFF) — never in buffer, untrained Q values add noise
         with torch.no_grad():
-            q_next = target_net(s_next)[:, 1:].max(dim=1).values
+            q_next = target_net(s_next).max(dim=1).values
             y      = r + GAMMA * q_next
 
         # Current Q(s, a)
@@ -198,7 +197,7 @@ def _print_policy_pytorch(net):
     t_centers  = [17.75, 21.0, 27.0, 32.5, 34.5]
     ph_lbl     = ["VeryAcid", "Acidic  ", "Normal  ", "Alkaline", "VeryAlk "]
     t_lbl      = ["VCold", "Cold ", "Opt  ", "Hot  ", "VHot "]
-    names      = ["OFF ", "LOW ", "MED ", "HIGH"]
+    names      = ["SAFE ", "CAUT ", "WARN ", "CRIT "]
 
     print("  " + "  ".join(t_lbl))
     print("  " + "-" * 38)
@@ -255,8 +254,8 @@ class DQNNumpy:
         return self._forward(x, target=True)
 
     def train_step(self, s, a, r, s_next):
-        # Bellman target — exclude OFF (col 0), never in buffer, noisy Q
-        q_next = self.predict_target(s_next)[:, 1:].max(axis=1, keepdims=True)
+        # Bellman target
+        q_next = self.predict_target(s_next).max(axis=1, keepdims=True)
         y      = r.reshape(-1, 1) + GAMMA * q_next  # (B,1)
 
         # Forward pass (online)
@@ -311,7 +310,7 @@ class DQNNumpy:
     def policy(self, ph: float, t: float) -> int:
         x = np.array([normalize(ph, t)], dtype=np.float32)
         q = self.predict(x)[0]
-        return int(np.argmax(q[1:])) + 1
+        return int(np.argmax(q))
 
 
 def train_numpy(buffer: list, epochs: int, model_path: str):
@@ -345,7 +344,7 @@ def train_numpy(buffer: list, epochs: int, model_path: str):
     t_centers  = [17.75, 21.0, 27.0, 32.5, 34.5]
     ph_lbl     = ["VeryAcid", "Acidic  ", "Normal  ", "Alkaline", "VeryAlk "]
     t_lbl      = ["VCold", "Cold ", "Opt  ", "Hot  ", "VHot "]
-    names      = ["OFF ", "LOW ", "MED ", "HIGH"]
+    names      = ["SAFE ", "CAUT ", "WARN ", "CRIT "]
     print("  " + "  ".join(t_lbl))
     print("  " + "-" * 38)
     for i, ph in enumerate(ph_centers):
