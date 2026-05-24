@@ -312,6 +312,54 @@ def plot_nh3_toxicity(data, ax):
     ax.grid(True, alpha=0.3)
 
 
+def plot_epsilon_decay(data, ax):
+    """Plot exploration rate (Epsilon) decay over time"""
+    steps = [d['step'] for d in data]
+    epsilon = [d['epsilon'] for d in data]
+    
+    ax.plot(steps, epsilon, color='#9b59b6', linewidth=2, label='Epsilon (Exploration Rate)')
+    ax.axhline(0.01, color='gray', linestyle='--', linewidth=1.5, label='Min Epsilon (0.01)')
+    
+    ax.set_ylabel('Epsilon Value', fontweight='bold')
+    ax.set_title('AI Exploration vs Exploitation (FQL Phase)', fontweight='bold')
+    ax.set_xlabel('Step')
+    ax.legend(fontsize=8, loc='upper right')
+    ax.grid(True, alpha=0.3)
+
+
+def plot_accuracy_comparison(data, ax):
+    """Plot overall prediction accuracy comparison"""
+    rb_correct = sum(1 for d in data if d['mode'] == 'RB' and d['correct'] == 1)
+    rb_total = sum(1 for d in data if d['mode'] == 'RB')
+    
+    fql_correct = sum(1 for d in data if d['mode'] == 'FQL' and d['correct'] == 1)
+    fql_total = sum(1 for d in data if d['mode'] == 'FQL')
+    
+    dqn_correct = sum(1 for d in data if d['mode'] == 'DQN' and d['correct'] == 1)
+    dqn_total = sum(1 for d in data if d['mode'] == 'DQN')
+    
+    rb_acc = (rb_correct / rb_total * 100) if rb_total > 0 else 0
+    fql_acc = (fql_correct / fql_total * 100) if fql_total > 0 else 0
+    dqn_acc = (dqn_correct / dqn_total * 100) if dqn_total > 0 else 0
+    
+    models = ['Rule-Based', 'FQL', 'DQN']
+    accuracies = [rb_acc, fql_acc, dqn_acc]
+    colors = ['#e74c3c', '#f39c12', '#27ae60']
+    
+    bars = ax.bar(models, accuracies, color=colors, alpha=0.8, width=0.6)
+    
+    for bar in bars:
+        height = bar.get_height()
+        if height > 0:
+            ax.text(bar.get_x() + bar.get_width()/2., height + 1,
+                    f'{height:.1f}%', ha='center', va='bottom', fontweight='bold')
+                
+    ax.set_ylim(0, 110)
+    ax.set_ylabel('Accuracy (%)', fontweight='bold')
+    ax.set_title('Overall Prediction Accuracy Comparison', fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='y')
+
+
 def plot_network_stats(stats, ax):
     """Plot network statistics - Enhanced version"""
     if not stats.get('callbox'):
@@ -532,11 +580,11 @@ def generate_all_plots():
     # Generate plots
     print("\n[3/4] Generating plots...")
     
-    fig = plt.figure(figsize=(16, 20))
+    fig = plt.figure(figsize=(16, 25))
     fig.suptitle('Complete Analysis - Aquaculture Edge AI with N3IWF', 
                  fontsize=16, fontweight='bold', y=0.995)
     
-    gs = gridspec.GridSpec(4, 2, figure=fig, hspace=0.35, wspace=0.30)
+    gs = gridspec.GridSpec(5, 2, figure=fig, hspace=0.35, wspace=0.30)
     
     # Plot 1: Water Quality
     ax1 = fig.add_subplot(gs[0, :])
@@ -550,17 +598,25 @@ def generate_all_plots():
     ax3 = fig.add_subplot(gs[2, 0])
     plot_action_distribution(data, ax3)
     
-    # Plot 4: NH3 Toxicity (Replacing unfair phase comparison)
+    # Plot 4: NH3 Toxicity
     ax4 = fig.add_subplot(gs[2, 1])
     plot_nh3_toxicity(data, ax4)
     
-    # Plot 5: Network Stats
+    # Plot 5: Epsilon Decay
     ax5 = fig.add_subplot(gs[3, 0])
-    plot_network_stats(network_stats, ax5)
+    plot_epsilon_decay(data, ax5)
     
-    # Plot 6: Network Details Table
+    # Plot 6: Accuracy Comparison
     ax6 = fig.add_subplot(gs[3, 1])
-    plot_network_details_table(network_stats, ax6)
+    plot_accuracy_comparison(data, ax6)
+    
+    # Plot 7: Network Stats
+    ax7 = fig.add_subplot(gs[4, 0])
+    plot_network_stats(network_stats, ax7)
+    
+    # Plot 8: Network Details Table
+    ax8 = fig.add_subplot(gs[4, 1])
+    plot_network_details_table(network_stats, ax8)
     
     plt.tight_layout(rect=[0, 0, 1, 0.99])
     
@@ -571,7 +627,7 @@ def generate_all_plots():
     print(f"✅ PDF saved: {pdf_path}")
     
     # Save individual plots
-    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6], 1):
+    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8], 1):
         extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
         fig.savefig(os.path.join(PLOTS_DIR, f'plot_{i}.png'), 
                    bbox_inches=extent.expanded(1.2, 1.2), dpi=150)
