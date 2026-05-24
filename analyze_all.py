@@ -35,7 +35,20 @@ RESULTS_THESIS = os.path.join(BASE_DIR, "results", "thesis")
 PLOTS_DIR = os.path.join(RESULTS_THESIS, "plots")
 
 # Input files
-COMPARISON_CSV = os.path.join(RESULTS_REAL, "comparison.csv")
+def get_latest_session_csv() -> str:
+    base_csv = os.path.join(RESULTS_REAL, "comparison.csv")
+    if not os.path.exists(RESULTS_REAL):
+        return base_csv
+        
+    sessions = [d for d in os.listdir(RESULTS_REAL) if d.startswith("session_") and os.path.isdir(os.path.join(RESULTS_REAL, d))]
+    if not sessions:
+        return base_csv
+        
+    sessions.sort(reverse=True)
+    latest_csv = os.path.join(RESULTS_REAL, sessions[0], "comparison.csv")
+    return latest_csv if os.path.exists(latest_csv) else base_csv
+
+COMPARISON_CSV = get_latest_session_csv()
 CALLBOX_STATS = os.path.join(RESULTS_NETWORK, "callbox_stats.json")
 N3IWF_STATUS = os.path.join(RESULTS_NETWORK, "n3iwf_status.json")
 
