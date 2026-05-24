@@ -652,7 +652,7 @@ def main():
                   real_steps - last_qtable_update >= QTABLE_UPDATE_INTERVAL):
                 stats = fql.get_stats()
                 logger.info(f"Sending updated Q-table to Pico "
-                            f"(step={real_steps}, AvgR={stats['avg_reward_prev_100']:+.4f})...")
+                            f"(step={real_steps}, AvgR={stats['avg_reward_100']:+.4f})...")
                 logger.info(fql.format_policy_map())
                 if bridge.send_qtable(fql.get_qtable_string()):
                     fql.save_qtable(QTABLE_FILE)
