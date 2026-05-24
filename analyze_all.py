@@ -97,6 +97,7 @@ def load_comparison_data():
                         'action': int(row.get('real_action', 0)),
                         'reward': float(row.get('reward', 0)),
                         'rb_reward': float(row.get('rb_reward', 0)),
+                        'nh3': float(row.get('NH3_pct', 0)),
                         'fql_steps': int(row.get('fql_steps', 0)),
                         'epsilon': float(row.get('epsilon', 0))
                     })
@@ -270,47 +271,31 @@ def plot_action_distribution(data, ax):
     pass
 
 
-def plot_phase_comparison(data, ax):
-    """Plot reward comparison between phases"""
-    rb_data = [d['reward'] for d in data if d['mode'] == 'RB']
-    fql_data = [d['reward'] for d in data if d['mode'] == 'FQL']
-    dqn_data = [d['reward'] for d in data if d['mode'] == 'DQN']
+def plot_nh3_toxicity(data, ax):
+    """Plot NH3 toxicity fraction over time"""
+    steps = [d['step'] for d in data]
+    nh3 = [d['nh3'] for d in data]
+    modes = [d['mode'] for d in data]
     
-    phases = []
-    means = []
-    stds = []
-    colors_list = []
+    # Split by mode for different colors
+    for mode, color, label in [('RB', '#e74c3c', 'Rule-Based'), 
+                               ('FQL', '#f39c12', 'FQL'), 
+                               ('DQN', '#27ae60', 'DQN')]:
+        mask = [m == mode for m in modes]
+        if any(mask):
+            x = [s for s, m in zip(steps, mask) if m]
+            y = [n for n, m in zip(nh3, mask) if m]
+            ax.plot(x, y, color=color, linewidth=1.5, alpha=0.8, label=label)
+            
+    # Danger zones
+    ax.axhline(5.0, color='orange', linestyle=':', linewidth=1.5, label='Warning Threshold (>5%)')
+    ax.axhline(10.0, color='red', linestyle='--', linewidth=1.5, label='Critical Threshold (>10%)')
     
-    if rb_data:
-        phases.append('Rule-Based')
-        means.append(np.mean(rb_data))
-        stds.append(np.std(rb_data))
-        colors_list.append('#e74c3c')
-    
-    if fql_data:
-        phases.append('FQL')
-        means.append(np.mean(fql_data))
-        stds.append(np.std(fql_data))
-        colors_list.append('#f39c12')
-    
-    if dqn_data:
-        phases.append('DQN')
-        means.append(np.mean(dqn_data))
-        stds.append(np.std(dqn_data))
-        colors_list.append('#27ae60')
-    
-    bars = ax.bar(phases, means, yerr=stds, capsize=10, color=colors_list, alpha=0.8)
-    
-    # Add value labels
-    for bar, mean in zip(bars, means):
-        height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2., height,
-                f'{mean:.4f}', ha='center', va='bottom', fontweight='bold')
-    
-    ax.set_ylabel('Average Reward')
-    ax.set_title('Performance Comparison by Phase')
-    ax.axhline(0, color='gray', linestyle=':', linewidth=1)
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_ylabel('NH3 Fraction (%)', fontweight='bold')
+    ax.set_title('Ammonia (NH3) Toxicity Evolution', fontweight='bold')
+    ax.set_xlabel('Step')
+    ax.legend(fontsize=8, loc='upper right')
+    ax.grid(True, alpha=0.3)
 
 
 def plot_network_stats(stats, ax):
@@ -551,9 +536,9 @@ def generate_all_plots():
     ax3 = fig.add_subplot(gs[2, 0])
     plot_action_distribution(data, ax3)
     
-    # Plot 4: Phase Comparison
+    # Plot 4: NH3 Toxicity (Replacing unfair phase comparison)
     ax4 = fig.add_subplot(gs[2, 1])
-    plot_phase_comparison(data, ax4)
+    plot_nh3_toxicity(data, ax4)
     
     # Plot 5: Network Stats
     ax5 = fig.add_subplot(gs[3, 0])
