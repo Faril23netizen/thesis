@@ -356,42 +356,64 @@ def plot_accuracy_comparison(data, ax):
                     f'{height:.1f}%', ha='center', va='bottom', fontweight='bold')
                 
     ax.set_ylim(0, 110)
-    ax.set_ylabel('Accuracy (%)', fontweight='bold')
-    ax.set_title('Overall Prediction Accuracy Comparison', fontweight='bold')
-    ax.grid(True, alpha=0.3, axis='y')
+import matplotlib.gridspec as gridspec
 
-
-def plot_confusion_matrix(data, ax):
-    """Plot confusion matrix of AI Predictions vs Ground Truth"""
-    ai_data = [d for d in data if d['mode'] in ['FQL', 'DQN']]
-    if not ai_data:
-        ai_data = data # fallback
+def plot_confusion_matrix(data, parent_ax, fig):
+    """Plot confusion matrix of AI Predictions vs Ground Truth (3 columns)"""
+    parent_ax.axis('off')
+    parent_ax.set_title('AI Confusion Matrix (RB vs FQL vs DQN)', fontweight='bold', y=1.05)
+    
+    gs = gridspec.GridSpecFromSubplotSpec(1, 3, subplot_spec=parent_ax.get_subplotspec(), wspace=0.1)
+    
+    phases = ['RB', 'FQL', 'DQN']
+    
+    for i, phase in enumerate(phases):
+        ax = fig.add_subplot(gs[0, i])
         
-    matrix = np.zeros((4, 4), dtype=int)
-    for d in ai_data:
-        actual = d['actual_risk']
-        predicted = d['action']
-        if 0 <= actual <= 3 and 0 <= predicted <= 3:
-            matrix[actual][predicted] += 1
+        phase_data = [d for d in data if d['mode'] == phase]
+        if not phase_data:
+            ax.text(0.5, 0.5, f"{phase}\nNot Available", ha='center', va='center', fontsize=12)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            continue
             
-    # Normalize for color mapping
-    im = ax.imshow(matrix, interpolation='nearest', cmap='Blues')
-    
-    # Add text annotations
-    for i in range(4):
-        for j in range(4):
-            color = "white" if matrix[i, j] > (matrix.max() / 2.) else "black"
-            ax.text(j, i, str(matrix[i, j]), ha="center", va="center", color=color, fontweight='bold')
+        matrix = np.zeros((4, 4), dtype=int)
+        for d in phase_data:
+            actual = d['actual_risk']
+            predicted = d['action']
+            if 0 <= actual <= 3 and 0 <= predicted <= 3:
+                matrix[actual][predicted] += 1
+                
+        # Normalize
+        row_sums = matrix.sum(axis=1)
+        row_sums[row_sums == 0] = 1 # Avoid division by zero
+        cm_norm = matrix.astype('float') / row_sums[:, np.newaxis]
+        
+        im = ax.imshow(cm_norm, interpolation='nearest', cmap='Blues', vmin=0, vmax=1)
+        
+        for r in range(4):
+            for c in range(4):
+                color = "white" if cm_norm[r, c] > 0.5 else "black"
+                ax.text(c, r, f"{matrix[r, c]}\n({cm_norm[r, c]:.0%})", 
+                        ha="center", va="center", color=color, fontweight='bold', fontsize=8)
+                
+        labels = ['SAFE', 'CAUTION', 'WARNING', 'CRIT']
+        ax.set_xticks(np.arange(4))
+        ax.set_yticks(np.arange(4))
+        ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=8)
+        
+        if i == 0:
+            ax.set_yticklabels(labels, fontsize=8)
+            ax.set_ylabel('Actual Risk Level', fontweight='bold', fontsize=9)
+        else:
+            ax.set_yticklabels([])
             
-    labels = ['SAFE', 'CAUTION', 'WARNING', 'CRIT']
-    ax.set_xticks(np.arange(4))
-    ax.set_yticks(np.arange(4))
-    ax.set_xticklabels(labels)
-    ax.set_yticklabels(labels)
-    
-    ax.set_ylabel('Actual Risk (Ground Truth)', fontweight='bold')
-    ax.set_xlabel('Predicted Risk (AI)', fontweight='bold')
-    ax.set_title('AI Confusion Matrix (FQL & DQN)', fontweight='bold')
+        ax.set_xlabel('Predicted Risk Level', fontweight='bold', fontsize=9)
+        
+        correct = sum(1 for d in phase_data if d['correct'] == 1)
+        acc = (correct / len(phase_data) * 100) if len(phase_data) > 0 else 0
+        
+        ax.set_title(f'{phase}\nAccuracy: {acc:.1f}%', fontweight='bold', fontsize=10)
 
 
 def plot_policy_map(data, ax):
@@ -674,7 +696,7 @@ def generate_all_plots():
     
     # Plot 7: Confusion Matrix
     ax7 = fig.add_subplot(gs[4, 0])
-    plot_confusion_matrix(data, ax7)
+    plot_confusion_matrix(data, ax7, fig)
     
     # Plot 8: Policy Map
     ax8 = fig.add_subplot(gs[4, 1])
