@@ -76,6 +76,7 @@ QTABLE_UPDATE_INTERVAL = 500      # re-send improved Q-table every N real steps
 LOG_INTERVAL           = 10       # detailed log every N real steps
 SUMMARY_INTERVAL       = 100      # summary log every N real steps
 RECONNECT_DELAY        = 2        # seconds between reconnect attempts
+DISCONNECT_TIMEOUT     = 30       # detik tanpa data → anggap Pico putus
 
 # MONITORING SYSTEM v2 - No aerator simulation needed
 # System only monitors and predicts risk, does not control aerator
@@ -366,16 +367,16 @@ def main():
         logger.warning("[HA] Home Assistant requested but module not available")
 
     dqn_ready_logged      = False
-    dqn_model_ready       = False  # DQN trained but not yet active
-    dqn_active            = False  # DQN model sent to Pico
+    dqn_model_ready       = False
+    dqn_active            = False
     dqn                   = DQNAgent()
     last_qtable_retry     = 0.0
-    last_qtable_update    = 0      # real_steps count of last Q-table update
-    last_dqn_retrain      = 0      # real_steps count of last DQN retraining
-    fql_mode_start        = None   # real_steps when FQL mode first activated
+    last_qtable_update    = 0
+    last_dqn_retrain      = 0
+    fql_mode_start        = None
     real_steps            = 0
 
-    # ── Load Q-table (if previous session exists) ───────────────────────── #
+    # ── Load Q-table & DQN buffer (only on FIRST session) ───────────────── #
     if os.path.exists(QTABLE_FILE):
         if fql.load_qtable(QTABLE_FILE):
             logger.info(f"Q-table loaded from {QTABLE_FILE} "
@@ -388,270 +389,317 @@ def main():
         if buffer_dqn:
             logger.info(f"DQN buffer loaded: {len(buffer_dqn)} transitions")
 
-    # ── PHASE A: Wait for Pico ──────────────────────────────────────────── #
-    logger.info("PHASE A — Waiting for Pico WH connection...")
+    session = 0  # sesi koneksi ke-N
+
+    # ══════════════════════════════════════════════════════════════════════ #
+    #  OUTER LOOP — satu iterasi per sesi koneksi Pico WH
+    # ══════════════════════════════════════════════════════════════════════ #
     while not _shutdown:
-        if bridge.connect():
-            logger.info("Pico connected!")
+        session += 1
+
+        # ── Reset semua state AI pada sesi ke-2 dan seterusnya ──────────── #
+        if session > 1:
+            logger.info("═" * 65)
+            logger.info(f"PICO PUTUS — Reset seluruh state belajar (sesi #{session})")
+            logger.info("Alasan: Pico WH mungkin dipindah ke lokasi/kolam berbeda.")
+            logger.info("═" * 65)
+
+            # Reset semua agent
+            fql              = FQLAgent()
+            dqn              = DQNAgent()
+            buffer_dqn       = []
+            real_steps       = 0
+            dqn_ready_logged = False
+            dqn_model_ready  = False
+            dqn_active       = False
+            last_qtable_retry  = 0.0
+            last_qtable_update = 0
+            last_dqn_retrain   = 0
+            fql_mode_start     = None
+
+            # Hapus file sesi lama agar tidak ter-load di sesi ini
+            for saved_file in [QTABLE_FILE, BUFFER_FILE, DQN_MODEL_FILE]:
+                if os.path.exists(saved_file):
+                    os.remove(saved_file)
+                    logger.info(f"  Dihapus: {saved_file}")
+
+        # ── PHASE A: Tunggu Pico WH konek ───────────────────────────────── #
+        logger.info(f"PHASE A — Waiting for Pico WH connection... (sesi #{session})")
+        while not _shutdown:
+            if bridge.connect():
+                logger.info("Pico connected!")
+                break
+            time.sleep(RECONNECT_DELAY)
+
+        if _shutdown:
             break
-        time.sleep(RECONNECT_DELAY)
 
-    if _shutdown:
-        _cleanup(fql, buffer_dqn)
-        return
+        # Waktu terakhir data diterima — untuk deteksi disconnect
+        last_data_time = time.time()
 
-    # ── Main loop — real data monitoring ─────────────────────────────────── #
-    logger.info("PHASE B — FQL learning risk prediction from real Pico data...")
+        # ── Main loop — real data monitoring ────────────────────────────── #
+        logger.info("PHASE B — FQL learning risk prediction from real Pico data...")
 
-    while not _shutdown:
-        # ── Real: receive data from Pico ─────────────────────────────────── #
-        data = bridge.read_data_line()
-        if data is None:
-            time.sleep(0.1)
-            continue
-
-        pH = data["pH"]
-        T  = data["T"]
-        real_steps += 1
-        
-        # Get latency from bridge (time since last packet)
-        real_latency = data.get("latency_ms", 0)
-
-        # ── Get IoT data from Home Assistant (if enabled) ────────────────── #
-        iot_pH, iot_T, iot_latency = None, None, 0
-        if ha_bridge is not None:
-            iot_pH, iot_T, iot_latency = ha_bridge.get_sensor_data()
-            _log_ha_comparison(real_steps, pH, T, 
-                             iot_pH, iot_T, real_latency, iot_latency)
-            
-            if iot_pH is not None and iot_T is not None:
-                pH_diff = abs(pH - iot_pH)
-                T_diff = abs(T - iot_T)
-                if real_steps % LOG_INTERVAL == 0:
-                    logger.info(
-                        f"[HA] IoT: pH={iot_pH:.3f} T={iot_T:.1f}°C | "
-                        f"Diff: ΔpH={pH_diff:.3f} ΔT={T_diff:.1f}°C | "
-                        f"Latency: Real={real_latency:.1f}ms IoT={iot_latency:.1f}ms"
+        while not _shutdown:
+            # ── Real: receive data from Pico ─────────────────────────────── #
+            data = bridge.read_data_line()
+            if data is None:
+                # Deteksi disconnect: jika > DISCONNECT_TIMEOUT detik tanpa data
+                if time.time() - last_data_time > DISCONNECT_TIMEOUT:
+                    logger.warning(
+                        f"[DISCONNECT] Tidak ada data selama {DISCONNECT_TIMEOUT}s "
+                        f"— Pico WH dianggap terputus. Kembali ke Phase A..."
                     )
+                    bridge.disconnect()
+                    break  # Keluar inner loop → outer loop → reset + Phase A
+                time.sleep(0.1)
+                continue
 
-        # ── Calculate actual risk (ground truth) ─────────────────────────── #
-        actual_risk = calculate_actual_risk(pH, T)
-        
-        # ── Get risk predictions from agents ─────────────────────────────── #
-        rb_risk = rule_based_risk(pH, T)
-        fql_risk = fql.predict_risk(pH, T)
-        dqn_risk = dqn.predict_risk(pH, T) if dqn_active and dqn.ready else -1
-        
-        # ── Update FQL with actual risk ──────────────────────────────────── #
-        fql.update(pH, T, fql_risk, actual_risk)
-        
-        # ── Track accuracy per phase ─────────────────────────────────────── #
-        if dqn_active:
-            mode = "DQN"
-        elif fql.converged_sent:
-            mode = "FQL"
-        else:
-            mode = "RB"
-        
-        _log_comparison(real_steps, pH, T, mode, fql, dqn, dqn_active)
-        
-        # ── Store transition for DQN training ────────────────────────────── #
-        append_transition(buffer_dqn,
-                          s      = [pH, T],
-                          a      = actual_risk,  # Use actual risk as "action"
-                          r      = 1.0 if fql_risk == actual_risk else -1.0,
-                          s_next = [pH, T])  # Same state (no dynamics)
+            last_data_time = time.time()  # Update waktu data terakhir
 
-        # ── Auto-save buffer ─────────────────────────────────────────────── #
-        if len(buffer_dqn) % BUFFER_AUTOSAVE == 0 and len(buffer_dqn) > 0:
-            save_buffer(buffer_dqn, BUFFER_FILE)
-            logger.debug(f"DQN buffer auto-saved: {len(buffer_dqn)} transitions")
+            pH = data["pH"]
+            T  = data["T"]
+            real_steps += 1
+        
+            # Get latency from bridge (time since last packet)
+            real_latency = data.get("latency_ms", 0)
 
-        fql_real_elapsed = (real_steps - fql_mode_start) if fql_mode_start else 0
+            # ── Get IoT data from Home Assistant (if enabled) ────────────────── #
+            iot_pH, iot_T, iot_latency = None, None, 0
+            if ha_bridge is not None:
+                iot_pH, iot_T, iot_latency = ha_bridge.get_sensor_data()
+                _log_ha_comparison(real_steps, pH, T, 
+                                 iot_pH, iot_T, real_latency, iot_latency)
+            
+                if iot_pH is not None and iot_T is not None:
+                    pH_diff = abs(pH - iot_pH)
+                    T_diff = abs(T - iot_T)
+                    if real_steps % LOG_INTERVAL == 0:
+                        logger.info(
+                            f"[HA] IoT: pH={iot_pH:.3f} T={iot_T:.1f}°C | "
+                            f"Diff: ΔpH={pH_diff:.3f} ΔT={T_diff:.1f}°C | "
+                            f"Latency: Real={real_latency:.1f}ms IoT={iot_latency:.1f}ms"
+                        )
 
-        # ── PHASE D: Train DQN as soon as buffer ready + FQL converged ──────── #
-        if (len(buffer_dqn) >= DQN_BUFFER_READY
-                and fql.converged_sent
-                and not dqn_model_ready
-                and not dqn_ready_logged):
-            dqn_ready_logged = True
-            logger.info("=" * 65)
-            logger.info(f"PHASE D — DQN training: {len(buffer_dqn)} transitions "
-                        f"— Pico stays on FQL during training")
-            logger.info("=" * 65)
-            save_buffer(buffer_dqn, BUFFER_FILE)
-            try:
-                from dqn.train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
-                if TORCH_AVAILABLE:
-                    train_pytorch(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
-                else:
-                    train_numpy(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
-                if dqn.load(DQN_MODEL_FILE):
-                    dqn_model_ready = True
-                    last_dqn_retrain = real_steps
-                    logger.info("[DQN] Model trained and ready. "
-                                f"Waiting for {FQL_MIN_REAL_STEPS} FQL steps "
-                                f"({fql_real_elapsed}/{FQL_MIN_REAL_STEPS}).")
-                else:
-                    logger.warning("DQN model failed to load — will retry later.")
-            except Exception as e:
-                logger.error(f"DQN training failed: {e}")
-
-        # ── PHASE E: Activate DQN only after FQL proves better than RB ──────── #
-        elif (dqn_model_ready
-              and not dqn_active
-              and fql_real_elapsed >= FQL_MIN_REAL_STEPS):
-            logger.info("=" * 65)
-            logger.info(f"PHASE E — [DQN] activating after {fql_real_elapsed} FQL steps")
-            logger.info("=" * 65)
-            dqn_active = True
-            if bridge.send_qtable(dqn.to_qtable_string()):
-                logger.info("[DQN] Q-table sent to Pico — DQN now predicts risk.")
+            # ── Calculate actual risk (ground truth) ─────────────────────────── #
+            actual_risk = calculate_actual_risk(pH, T)
+        
+            # ── Get risk predictions from agents ─────────────────────────────── #
+            rb_risk = rule_based_risk(pH, T)
+            fql_risk = fql.predict_risk(pH, T)
+            dqn_risk = dqn.predict_risk(pH, T) if dqn_active and dqn.ready else -1
+        
+            # ── Update FQL with actual risk ──────────────────────────────────── #
+            fql.update(pH, T, fql_risk, actual_risk)
+        
+            # ── Track accuracy per phase ─────────────────────────────────────── #
+            if dqn_active:
+                mode = "DQN"
+            elif fql.converged_sent:
+                mode = "FQL"
             else:
-                logger.warning("[DQN] Failed to send Q-table — retrying next cycle.")
-                dqn_active = False
+                mode = "RB"
+        
+            _log_comparison(real_steps, pH, T, mode, fql, dqn, dqn_active)
+        
+            # ── Store transition for DQN training ────────────────────────────── #
+            append_transition(buffer_dqn,
+                              s      = [pH, T],
+                              a      = actual_risk,  # Use actual risk as "action"
+                              r      = 1.0 if fql_risk == actual_risk else -1.0,
+                              s_next = [pH, T])  # Same state (no dynamics)
 
-        # ── Periodic DQN retraining with growing buffer ───────────────────── #
-        elif (dqn_active
-              and real_steps - last_dqn_retrain >= DQN_RETRAIN_INTERVAL):
-            logger.info(f"[DQN] Retraining with updated buffer "
-                        f"({len(buffer_dqn)} transitions, real_step={real_steps})...")
-            save_buffer(buffer_dqn, BUFFER_FILE)
-            try:
-                from dqn.train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
-                if TORCH_AVAILABLE:
-                    train_pytorch(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
-                else:
-                    train_numpy(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
-                if dqn.load(DQN_MODEL_FILE):
-                    last_dqn_retrain = real_steps
-                    logger.info("[DQN] Retrained. Sending updated policy to Pico...")
-                    if bridge.send_qtable(dqn.to_qtable_string()):
-                        logger.info("[DQN] Updated Q-table sent to Pico.")
+            # ── Auto-save buffer ─────────────────────────────────────────────── #
+            if len(buffer_dqn) % BUFFER_AUTOSAVE == 0 and len(buffer_dqn) > 0:
+                save_buffer(buffer_dqn, BUFFER_FILE)
+                logger.debug(f"DQN buffer auto-saved: {len(buffer_dqn)} transitions")
+
+            fql_real_elapsed = (real_steps - fql_mode_start) if fql_mode_start else 0
+
+            # ── PHASE D: Train DQN as soon as buffer ready + FQL converged ──────── #
+            if (len(buffer_dqn) >= DQN_BUFFER_READY
+                    and fql.converged_sent
+                    and not dqn_model_ready
+                    and not dqn_ready_logged):
+                dqn_ready_logged = True
+                logger.info("=" * 65)
+                logger.info(f"PHASE D — DQN training: {len(buffer_dqn)} transitions "
+                            f"— Pico stays on FQL during training")
+                logger.info("=" * 65)
+                save_buffer(buffer_dqn, BUFFER_FILE)
+                try:
+                    from dqn.train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
+                    if TORCH_AVAILABLE:
+                        train_pytorch(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
                     else:
-                        logger.warning("[DQN] Failed to send updated Q-table.")
-            except Exception as e:
-                logger.error(f"[DQN] Retraining failed: {e}")
+                        train_numpy(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
+                    if dqn.load(DQN_MODEL_FILE):
+                        dqn_model_ready = True
+                        last_dqn_retrain = real_steps
+                        logger.info("[DQN] Model trained and ready. "
+                                    f"Waiting for {FQL_MIN_REAL_STEPS} FQL steps "
+                                    f"({fql_real_elapsed}/{FQL_MIN_REAL_STEPS}).")
+                    else:
+                        logger.warning("DQN model failed to load — will retry later.")
+                except Exception as e:
+                    logger.error(f"DQN training failed: {e}")
 
-        # ── Convergence progress log (every SUMMARY_INTERVAL real steps) ─── #
-        if real_steps % SUMMARY_INTERVAL == 0:
-            prog = fql.convergence_progress()
-            logger.info(
-                f"  Convergence progress: "
-                f"steps {prog['steps']*100:.0f}% | "
-                f"windows {prog['windows']*100:.0f}% | "
-                f"accuracy {prog['accuracy']*100:.0f}%"
-            )
-            logger.info(fql.format_policy_map())
+            # ── PHASE E: Activate DQN only after FQL proves better than RB ──────── #
+            elif (dqn_model_ready
+                  and not dqn_active
+                  and fql_real_elapsed >= FQL_MIN_REAL_STEPS):
+                logger.info("=" * 65)
+                logger.info(f"PHASE E — [DQN] activating after {fql_real_elapsed} FQL steps")
+                logger.info("=" * 65)
+                dqn_active = True
+                if bridge.send_qtable(dqn.to_qtable_string()):
+                    logger.info("[DQN] Q-table sent to Pico — DQN now predicts risk.")
+                else:
+                    logger.warning("[DQN] Failed to send Q-table — retrying next cycle.")
+                    dqn_active = False
 
-        # ── PHASE C: FQL convergence check ───────────────────────────────── #
-        if fql.check_convergence() and not fql.converged_sent:
-            stats = fql.get_stats()
-            logger.info("=" * 65)
-            logger.info(f"=== FQL CONVERGED === "
-                        f"Step: {stats['total_steps']} | "
-                        f"Real: {real_steps} | "
-                        f"Avg Accuracy: {stats['avg_accuracy_100']:.2%} ===")
-            logger.info("=" * 65)
-            logger.info(fql.format_policy_map())
+            # ── Periodic DQN retraining with growing buffer ───────────────────── #
+            elif (dqn_active
+                  and real_steps - last_dqn_retrain >= DQN_RETRAIN_INTERVAL):
+                logger.info(f"[DQN] Retraining with updated buffer "
+                            f"({len(buffer_dqn)} transitions, real_step={real_steps})...")
+                save_buffer(buffer_dqn, BUFFER_FILE)
+                try:
+                    from dqn.train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
+                    if TORCH_AVAILABLE:
+                        train_pytorch(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
+                    else:
+                        train_numpy(buffer_dqn, DQN_TRAIN_EPOCHS, DQN_MODEL_FILE)
+                    if dqn.load(DQN_MODEL_FILE):
+                        last_dqn_retrain = real_steps
+                        logger.info("[DQN] Retrained. Sending updated policy to Pico...")
+                        if bridge.send_qtable(dqn.to_qtable_string()):
+                            logger.info("[DQN] Updated Q-table sent to Pico.")
+                        else:
+                            logger.warning("[DQN] Failed to send updated Q-table.")
+                except Exception as e:
+                    logger.error(f"[DQN] Retraining failed: {e}")
 
-            fql.save_qtable(QTABLE_FILE)
-            logger.info(f"Q-table saved to {QTABLE_FILE}")
-
-            qtable_str = fql.get_qtable_string()
-            if bridge.send_qtable(qtable_str):
-                logger.info("Q-table successfully sent to Pico WH")
-                fql.converged_sent = True
-                fql_mode_start = real_steps
-                logger.info(f"[FQL] Phase started at real_step={real_steps}. "
-                            f"DQN unlocks after {FQL_MIN_REAL_STEPS} more real steps.")
-            else:
-                logger.warning(f"FAILED to send Q-table — retry in {FQL_RETRY_INTERVAL}s")
-                last_qtable_retry = time.time()
-
-        elif (fql.converged and
-              not fql.converged_sent and
-              time.time() - last_qtable_retry > FQL_RETRY_INTERVAL):
-            logger.info("Retrying Q-table send to Pico...")
-            qtable_str = fql.get_qtable_string()
-            if bridge.send_qtable(qtable_str):
-                logger.info("Q-table successfully sent to Pico WH (retry)")
-                fql.converged_sent = True
-                fql_mode_start = real_steps
-                logger.info(f"[FQL] Phase started at real_step={real_steps}. "
-                            f"DQN unlocks after {FQL_MIN_REAL_STEPS} more real steps.")
-            else:
-                last_qtable_retry = time.time()
-
-        # ── Periodic Q-table re-send as FQL keeps improving ──────────────── #
-        elif (fql.converged_sent and
-              real_steps - last_qtable_update >= QTABLE_UPDATE_INTERVAL):
-            stats = fql.get_stats()
-            logger.info(f"Sending updated Q-table to Pico "
-                        f"(step={real_steps}, AvgR={stats['avg_reward_prev_100']:+.4f})...")
-            logger.info(fql.format_policy_map())
-            if bridge.send_qtable(fql.get_qtable_string()):
-                fql.save_qtable(QTABLE_FILE)
-                logger.info("Updated Q-table sent and saved.")
-            last_qtable_update = real_steps
-
-        # ── Periodic logging ──────────────────────────────────────────────── #
-        if real_steps % LOG_INTERVAL == 0:
-            stats = fql.get_stats()
-            _mode_label = "DQN" if dqn_active else ("FQL" if fql.converged_sent else "RB")
-            nh3_pct = nh3_fraction(pH, T) * 100.0
-            logger.info(
-                f"[{_mode_label}][Step:{real_steps:5d}] "
-                f"pH:{pH:.3f} T:{T:.1f}°C NH₃:{nh3_pct:.2f}% | "
-                f"Risk: Actual={RISK_LABELS[actual_risk]} "
-                f"RB={RISK_LABELS[rb_risk]} "
-                f"FQL={RISK_LABELS[fql_risk]} "
-                f"{'DQN=' + RISK_LABELS[dqn_risk] if dqn_active else ''} | "
-                f"Acc:{stats['avg_accuracy_100']:.2%} "
-                f"Buffer:{len(buffer_dqn)}"
-            )
-
-        if real_steps % SUMMARY_INTERVAL == 0:
-            stats = fql.get_stats()
-            _mode_label = "DQN" if dqn_active else ("FQL" if fql.converged_sent else "RB")
-            logger.info("-" * 65)
-            logger.info(
-                f"[{_mode_label}] Real steps: {real_steps} | "
-                f"FQL steps: {stats['total_steps']} | "
-                f"Avg Accuracy: {stats['avg_accuracy_100']:.2%} | "
-                f"Converged: {stats['converged']} | "
-                f"DQN Buffer: {len(buffer_dqn)}"
-            )
-            if fql.converged_sent and not dqn_active:
-                remaining = max(0, FQL_MIN_REAL_STEPS - fql_real_elapsed)
+            # ── Convergence progress log (every SUMMARY_INTERVAL real steps) ─── #
+            if real_steps % SUMMARY_INTERVAL == 0:
+                prog = fql.convergence_progress()
                 logger.info(
-                    f"[FQL] Steps in FQL phase: {fql_real_elapsed} / {FQL_MIN_REAL_STEPS} "
-                    f"| DQN unlocks in {remaining} more real steps"
+                    f"  Convergence progress: "
+                    f"steps {prog['steps']*100:.0f}% | "
+                    f"windows {prog['windows']*100:.0f}% | "
+                    f"accuracy {prog['accuracy']*100:.0f}%"
                 )
-            logger.info("-" * 65)
+                logger.info(fql.format_policy_map())
 
-        # ── Dashboard state dump ──────────────────────────────────────────── #
-        stats = fql.get_stats()  # Always fetch latest for dashboard
-        state_dump = {
-            "pH": round(pH, 3),
-            "T": round(T, 2),
-            "nh3_pct": round(nh3_fraction(pH, T) * 100.0, 2),
-            "actual_risk": RISK_LABELS[actual_risk],
-            "rb_risk": RISK_LABELS[rb_risk],
-            "fql_risk": RISK_LABELS[fql_risk],
-            "dqn_risk": RISK_LABELS[dqn_risk] if dqn_active and dqn_risk >= 0 else "N/A",
-            "phase": "DQN" if dqn_active else ("FQL" if fql.converged_sent else "Rule-Based"),
-            "buffer_size": len(buffer_dqn),
-            "accuracy": round(stats['avg_accuracy_100'], 4),
-            "real_steps": real_steps,
-            "fql_eps": round(fql.epsilon, 3)
-        }
-        with open(STATE_JSON_FILE, "w") as f:
-            json.dump(state_dump, f)
+            # ── PHASE C: FQL convergence check ───────────────────────────────── #
+            if fql.check_convergence() and not fql.converged_sent:
+                stats = fql.get_stats()
+                logger.info("=" * 65)
+                logger.info(f"=== FQL CONVERGED === "
+                            f"Step: {stats['total_steps']} | "
+                            f"Real: {real_steps} | "
+                            f"Avg Accuracy: {stats['avg_accuracy_100']:.2%} ===")
+                logger.info("=" * 65)
+                logger.info(fql.format_policy_map())
+
+                fql.save_qtable(QTABLE_FILE)
+                logger.info(f"Q-table saved to {QTABLE_FILE}")
+
+                qtable_str = fql.get_qtable_string()
+                if bridge.send_qtable(qtable_str):
+                    logger.info("Q-table successfully sent to Pico WH")
+                    fql.converged_sent = True
+                    fql_mode_start = real_steps
+                    logger.info(f"[FQL] Phase started at real_step={real_steps}. "
+                                f"DQN unlocks after {FQL_MIN_REAL_STEPS} more real steps.")
+                else:
+                    logger.warning(f"FAILED to send Q-table — retry in {FQL_RETRY_INTERVAL}s")
+                    last_qtable_retry = time.time()
+
+            elif (fql.converged and
+                  not fql.converged_sent and
+                  time.time() - last_qtable_retry > FQL_RETRY_INTERVAL):
+                logger.info("Retrying Q-table send to Pico...")
+                qtable_str = fql.get_qtable_string()
+                if bridge.send_qtable(qtable_str):
+                    logger.info("Q-table successfully sent to Pico WH (retry)")
+                    fql.converged_sent = True
+                    fql_mode_start = real_steps
+                    logger.info(f"[FQL] Phase started at real_step={real_steps}. "
+                                f"DQN unlocks after {FQL_MIN_REAL_STEPS} more real steps.")
+                else:
+                    last_qtable_retry = time.time()
+
+            # ── Periodic Q-table re-send as FQL keeps improving ──────────────── #
+            elif (fql.converged_sent and
+                  real_steps - last_qtable_update >= QTABLE_UPDATE_INTERVAL):
+                stats = fql.get_stats()
+                logger.info(f"Sending updated Q-table to Pico "
+                            f"(step={real_steps}, AvgR={stats['avg_reward_prev_100']:+.4f})...")
+                logger.info(fql.format_policy_map())
+                if bridge.send_qtable(fql.get_qtable_string()):
+                    fql.save_qtable(QTABLE_FILE)
+                    logger.info("Updated Q-table sent and saved.")
+                last_qtable_update = real_steps
+
+            # ── Periodic logging ──────────────────────────────────────────────── #
+            if real_steps % LOG_INTERVAL == 0:
+                stats = fql.get_stats()
+                _mode_label = "DQN" if dqn_active else ("FQL" if fql.converged_sent else "RB")
+                nh3_pct = nh3_fraction(pH, T) * 100.0
+                logger.info(
+                    f"[{_mode_label}][Step:{real_steps:5d}] "
+                    f"pH:{pH:.3f} T:{T:.1f}°C NH₃:{nh3_pct:.2f}% | "
+                    f"Risk: Actual={RISK_LABELS[actual_risk]} "
+                    f"RB={RISK_LABELS[rb_risk]} "
+                    f"FQL={RISK_LABELS[fql_risk]} "
+                    f"{'DQN=' + RISK_LABELS[dqn_risk] if dqn_active else ''} | "
+                    f"Acc:{stats['avg_accuracy_100']:.2%} "
+                    f"Buffer:{len(buffer_dqn)}"
+                )
+
+            if real_steps % SUMMARY_INTERVAL == 0:
+                stats = fql.get_stats()
+                _mode_label = "DQN" if dqn_active else ("FQL" if fql.converged_sent else "RB")
+                logger.info("-" * 65)
+                logger.info(
+                    f"[{_mode_label}] Real steps: {real_steps} | "
+                    f"FQL steps: {stats['total_steps']} | "
+                    f"Avg Accuracy: {stats['avg_accuracy_100']:.2%} | "
+                    f"Converged: {stats['converged']} | "
+                    f"DQN Buffer: {len(buffer_dqn)}"
+                )
+                if fql.converged_sent and not dqn_active:
+                    remaining = max(0, FQL_MIN_REAL_STEPS - fql_real_elapsed)
+                    logger.info(
+                        f"[FQL] Steps in FQL phase: {fql_real_elapsed} / {FQL_MIN_REAL_STEPS} "
+                        f"| DQN unlocks in {remaining} more real steps"
+                    )
+                logger.info("-" * 65)
+
+            # ── Dashboard state dump ──────────────────────────────────────────── #
+            stats = fql.get_stats()  # Always fetch latest for dashboard
+            state_dump = {
+                "pH": round(pH, 3),
+                "T": round(T, 2),
+                "nh3_pct": round(nh3_fraction(pH, T) * 100.0, 2),
+                "actual_risk": RISK_LABELS[actual_risk],
+                "rb_risk": RISK_LABELS[rb_risk],
+                "fql_risk": RISK_LABELS[fql_risk],
+                "dqn_risk": RISK_LABELS[dqn_risk] if dqn_active and dqn_risk >= 0 else "N/A",
+                "phase": "DQN" if dqn_active else ("FQL" if fql.converged_sent else "Rule-Based"),
+                "buffer_size": len(buffer_dqn),
+                "accuracy": round(stats['avg_accuracy_100'], 4),
+                "real_steps": real_steps,
+                "fql_eps": round(fql.epsilon, 3)
+            }
+            with open(STATE_JSON_FILE, "w") as f:
+                json.dump(state_dump, f)
 
     # ── Cleanup on shutdown ───────────────────────────────────────────────── #
     _cleanup(fql, buffer_dqn)
     bridge.disconnect()
+    logger.info("Sistem berhenti total.")
 
 
 def _cleanup(fql: FQLAgent, buffer_dqn: list) -> None:
