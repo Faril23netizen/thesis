@@ -335,6 +335,51 @@ static bool tcp_client_send_data(tcp_client_t *state, int32_t ph_x1000, int32_t 
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
+/*                       WIFI HELPER                                          */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * ensure_wifi_connected() — Pastikan WiFi terhubung.
+ * Jika putus: disconnect bersih, scan ulang, reconnect ke N3IWF_AQUA.
+ * Dipanggil sebelum setiap percobaan TCP reconnect.
+ * Tidak pernah return false — loop selamanya sampai berhasil.
+ */
+static void ensure_wifi_connected(void) {
+  /* Cek status link WiFi */
+  int status = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+  if (status == CYW43_LINK_UP) {
+    return; /* WiFi masih konek, tidak perlu apa-apa */
+  }
+
+  printf("# [WIFI] Link lost (status=%d) — reconnecting to %s...\r\n",
+         status, WIFI_SSID);
+
+  /* Disconnect bersih dulu */
+  cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
+  sleep_ms(2000);
+
+  /* Loop scan + reconnect sampai berhasil */
+  int attempt = 0;
+  while (true) {
+    attempt++;
+    printf("# [WIFI] Scan + connect attempt %d to '%s'...\r\n",
+           attempt, WIFI_SSID);
+
+    int err = cyw43_arch_wifi_connect_timeout_ms(
+        WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000);
+
+    if (err == 0) {
+      printf("# [WIFI] Reconnected! IP: %s\r\n",
+             ip4addr_ntoa(netif_ip4_addr(netif_default)));
+      return; /* Berhasil */
+    }
+
+    printf("# [WIFI] Failed (err=%d) — retry in 5s...\r\n", err);
+    sleep_ms(5000);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
 /*                              MAIN                                          */
 /* ══════════════════════════════════════════════════════════════════════════ */
 int main(void) {
@@ -409,6 +454,9 @@ int main(void) {
   /* ── Connect to N3IWF TCP Server ──────────────────────────────────────── */
   /* Keep trying until RPi is ready — never give up */
   while (true) {
+    /* Pastikan WiFi masih konek sebelum coba TCP */
+    ensure_wifi_connected();
+
     if (!tcp_client_open(g_client)) {
       printf("# TCP connect failed, retrying in 5s...\r\n");
       sleep_ms(5000);
@@ -418,19 +466,19 @@ int main(void) {
     /* Wait for connection to establish — poll lwIP so callbacks fire */
     int timeout = 100; /* 10 seconds (100 x 100ms) */
     while (!g_client->connected && timeout > 0) {
-      cyw43_arch_poll(); /* Allow lwIP background thread to process */
+      cyw43_arch_poll();
       sleep_ms(100);
       timeout--;
     }
 
     if (g_client->connected) {
-      break; /* Success — proceed to main loop */
+      break; /* Berhasil — lanjut ke main loop */
     }
 
-    /* Connection timed out — close and retry */
-    printf("# [WARN] TCP connection timeout — retrying in 5s...\r\n");
+    /* Timeout — tutup dan coba lagi (WiFi akan dicek ulang di atas) */
+    printf("# [WARN] TCP timeout — cek WiFi lalu retry...\r\n");
     tcp_client_close(g_client);
-    sleep_ms(5000);
+    sleep_ms(3000);
   }
 
   printf("# \r\n");
@@ -493,8 +541,11 @@ int main(void) {
       if (!tcp_client_send_data(g_client, ph_x1000, temp_x100, risk)) {
         printf("# [WARN] TCP send failed — reconnecting...\r\n");
         tcp_client_close(g_client);
-        /* Reconnect loop — same robust logic as startup */
+        /* Reconnect loop: cek WiFi dulu, baru retry TCP */
         while (true) {
+          /* Jika WiFi putus, scan ulang dan reconnect dulu */
+          ensure_wifi_connected();
+
           if (!tcp_client_open(g_client)) {
             printf("# Retry TCP in 3s...\r\n");
             sleep_ms(3000);
@@ -506,8 +557,11 @@ int main(void) {
             sleep_ms(100);
             timeout--;
           }
-          if (g_client->connected) break;
-          printf("# Reconnect timeout, retrying...\r\n");
+          if (g_client->connected) {
+            printf("# [OK] Reconnected to server!\r\n");
+            break;
+          }
+          printf("# Reconnect timeout, cek WiFi lagi...\r\n");
           tcp_client_close(g_client);
           sleep_ms(3000);
         }
