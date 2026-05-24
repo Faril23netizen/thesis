@@ -188,11 +188,20 @@ def rule_based_risk(pH: float, T: float) -> int:
 _csv_file   = None
 _csv_writer = None
 
-def _init_comparison_csv() -> None:
+def _init_comparison_csv(session_ts: str = "") -> None:
     global _csv_file, _csv_writer
+    
+    # Tutup file lama jika ada
+    if _csv_file is not None and not _csv_file.closed:
+        _csv_file.close()
+
     os.makedirs(RESULTS_REAL, exist_ok=True)
-    write_header = not os.path.exists(COMPARISON_CSV)
-    _csv_file   = open(COMPARISON_CSV, "a", newline="")
+    
+    filename = f"comparison_{session_ts}.csv" if session_ts else "comparison.csv"
+    csv_path = os.path.join(RESULTS_REAL, filename)
+    
+    write_header = not os.path.exists(csv_path)
+    _csv_file   = open(csv_path, "a", newline="")
     _csv_writer = csv.writer(_csv_file)
     if write_header:
         _csv_writer.writerow([
@@ -215,11 +224,20 @@ def _init_comparison_csv() -> None:
 _ha_csv_file   = None
 _ha_csv_writer = None
 
-def _init_ha_comparison_csv() -> None:
+def _init_ha_comparison_csv(session_ts: str = "") -> None:
     global _ha_csv_file, _ha_csv_writer
+    
+    # Tutup file lama jika ada
+    if _ha_csv_file is not None and not _ha_csv_file.closed:
+        _ha_csv_file.close()
+
     os.makedirs(RESULTS_REAL, exist_ok=True)
-    write_header = not os.path.exists(HA_COMPARISON_CSV)
-    _ha_csv_file   = open(HA_COMPARISON_CSV, "a", newline="")
+    
+    filename = f"ha_comparison_{session_ts}.csv" if session_ts else "ha_comparison.csv"
+    csv_path = os.path.join(RESULTS_REAL, filename)
+
+    write_header = not os.path.exists(csv_path)
+    _ha_csv_file   = open(csv_path, "a", newline="")
     _ha_csv_writer = csv.writer(_ha_csv_file)
     if write_header:
         _ha_csv_writer.writerow([
@@ -311,7 +329,6 @@ signal.signal(signal.SIGTERM, _handle_signal)
 # ══════════════════════════════════════════════════════════════════════════ #
 
 logger = setup_logging()
-_init_comparison_csv()
 
 
 def main():
@@ -357,9 +374,7 @@ def main():
         )
         
         if ha_bridge.test_connection():
-            _init_ha_comparison_csv()
             logger.info(f"[HA] Connected to Home Assistant at {HA_URL}")
-            logger.info(f"[HA] Comparison data will be saved to {HA_COMPARISON_CSV}")
         else:
             logger.warning("[HA] Failed to connect to Home Assistant — comparison disabled")
             ha_bridge = None
@@ -433,6 +448,15 @@ def main():
 
         if _shutdown:
             break
+
+        # Sesi terhubung, buat timestamp untuk file CSV sesi ini
+        session_ts = time.strftime("%Y%m%d_%H%M%S")
+        _init_comparison_csv(session_ts)
+        logger.info(f"CSV data comparison baru dibuat: comparison_{session_ts}.csv")
+        
+        if ha_bridge is not None:
+            _init_ha_comparison_csv(session_ts)
+            logger.info(f"CSV Home Assistant comparison baru dibuat: ha_comparison_{session_ts}.csv")
 
         # Waktu terakhir data diterima — untuk deteksi disconnect
         last_data_time = time.time()
