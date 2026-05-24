@@ -51,7 +51,6 @@ HTML_TEMPLATE = """
     <title>Aquaculture Dashboard</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="refresh" content="2">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -294,6 +293,13 @@ HTML_TEMPLATE = """
                                 <span class="metric-unit">°C</span>
                             </div>
                         </div>
+                        <div class="metric">
+                            <div class="metric-label">NH3 Toxicity</div>
+                            <div class="metric-value">
+                                <span id="nh3-value">{{ '%.2f'|format(nh3) if nh3 != 'null' else '--' }}</span>
+                                <span class="metric-unit">%</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="chart-container">
                         <canvas id="waterChart"></canvas>
@@ -473,10 +479,84 @@ HTML_TEMPLATE = """
 
         const maxDataPoints = 50;
 
-        // Dashboard uses server-side rendering with auto-refresh every 2s
-        // Chart.js renders pH & Temperature (data resets on each page refresh)
         const ctx = document.getElementById('waterChart').getContext('2d');
         const waterChart = new Chart(ctx, chartConfig);
+
+        function formatValue(val, decimals=2) {
+            return val !== null && val !== undefined && val !== 'null' ? parseFloat(val).toFixed(decimals) : '--';
+        }
+
+        async function updateDashboard() {
+            try {
+                const stateRes = await fetch('/api/state');
+                if (stateRes.ok) {
+                    const state = await stateRes.json();
+                    if (!state.error) {
+                        document.getElementById('ph-value').innerText = formatValue(state.pH, 3);
+                        document.getElementById('temp-value').innerText = formatValue(state.T, 1);
+                        document.getElementById('nh3-value').innerText = formatValue(state.nh3, 2);
+                        
+                        const riskLabels = {0: "SAFE", 1: "CAUTION", 2: "WARNING", 3: "CRITICAL"};
+                        document.getElementById('action-value').innerText = riskLabels[state.action] || '--';
+                        
+                        document.getElementById('ai-phase').innerText = state.phase || '--';
+                        document.getElementById('reward-value').innerText = formatValue(state.reward, 4);
+                        document.getElementById('steps-value').innerText = state.real_steps || '--';
+                        document.getElementById('buffer-value').innerText = state.buffer_size || '--';
+                        document.getElementById('epsilon-value').innerText = formatValue(state.fql_eps, 3);
+                        
+                        // Update Chart
+                        if (state.pH && state.T) {
+                            const timeLabel = new Date().toLocaleTimeString();
+                            waterChart.data.labels.push(timeLabel);
+                            waterChart.data.datasets[0].data.push(state.pH);
+                            waterChart.data.datasets[1].data.push(state.T);
+                            
+                            if (waterChart.data.labels.length > maxDataPoints) {
+                                waterChart.data.labels.shift();
+                                waterChart.data.datasets[0].data.shift();
+                                waterChart.data.datasets[1].data.shift();
+                            }
+                            waterChart.update('none'); // Update without full animation for performance
+                        }
+                        
+                        document.getElementById('error-banner').style.display = 'none';
+                        document.getElementById('main-content').style.display = 'block';
+                        document.getElementById('pico-status').innerText = 'Connected';
+                        document.getElementById('pico-status').className = 'status-value status-online';
+                        document.getElementById('system-status').innerText = 'Online';
+                        document.getElementById('system-status').className = 'status-value status-online';
+                    }
+                }
+
+                const netRes = await fetch('/api/network');
+                if (netRes.ok) {
+                    const net = await netRes.json();
+                    if (!net.error || net.error === "Network stats are stale") {
+                        document.getElementById('ipsec-status').innerText = net.ipsec_status || 'UNKNOWN';
+                        document.getElementById('ipsec-status').className = 'status-value ' + (net.ipsec_status === 'ESTABLISHED' ? 'status-online' : 'status-offline');
+                        
+                        document.getElementById('latency-value').innerText = formatValue(net.avg_latency_ms, 1) + ' ms';
+                        document.getElementById('packet-loss-value').innerText = formatValue(net.packet_loss_rate, 2) + ' %';
+                        document.getElementById('throughput-value').innerText = formatValue(net.throughput, 2) + ' Mbps';
+                        document.getElementById('packets-sent-value').innerText = (net.packets_sent || 0).toLocaleString();
+                        document.getElementById('packets-dropped-value').innerText = (net.packets_dropped || 0).toLocaleString();
+                        document.getElementById('uptime-value').innerText = formatValue(net.uptime / 3600, 1) + ' h';
+                        
+                        document.getElementById('amf-status').innerText = net.amf_status || 'UNKNOWN';
+                        document.getElementById('smf-status').innerText = net.smf_status || 'UNKNOWN';
+                        document.getElementById('upf-status').innerText = net.upf_status || 'UNKNOWN';
+                    }
+                }
+                
+                document.getElementById('last-update').innerText = new Date().toLocaleTimeString();
+            } catch (err) {
+                console.error("Failed to update dashboard", err);
+            }
+        }
+
+        updateDashboard();
+        setInterval(updateDashboard, 2000);
     </script>
 </body>
 </html>
@@ -515,6 +595,7 @@ def index():
         template_data = {
             'pH': state.get('pH', 'null'),
             'T': state.get('T', 'null'),
+            'nh3': state.get('nh3', 'null'),
             'action': action_str,
             'phase': state.get('phase', '--'),
             'reward': state.get('reward', 'null'),
