@@ -371,6 +371,10 @@ HTML_TEMPLATE = """
                             <div class="network-stat-value status-online" id="latency-value">{{ '%.1f'|format(avg_latency_ms) }} ms</div>
                         </div>
                         <div class="network-stat">
+                            <div class="network-stat-label">Jitter</div>
+                            <div class="network-stat-value" id="jitter-value">{{ '%.2f'|format(jitter_ms) }} ms</div>
+                        </div>
+                        <div class="network-stat">
                             <div class="network-stat-label">Packet Loss</div>
                             <div class="network-stat-value" id="packet-loss-value">{{ '%.2f'|format(packet_loss_rate) }} %</div>
                         </div>
@@ -565,6 +569,7 @@ HTML_TEMPLATE = """
                         document.getElementById('ipsec-status').className = 'status-value ' + (net.ipsec_status === 'ESTABLISHED' ? 'status-online' : 'status-offline');
                         
                         document.getElementById('latency-value').innerText = formatValue(net.avg_latency_ms, 1) + ' ms';
+                        document.getElementById('jitter-value').innerText = formatValue(net.jitter_ms, 2) + ' ms';
                         document.getElementById('packet-loss-value').innerText = formatValue(net.packet_loss_rate, 2) + ' %';
                         document.getElementById('throughput-value').innerText = formatValue(net.throughput, 2) + ' Mbps';
                         document.getElementById('packets-sent-value').innerText = (net.packets_sent || 0).toLocaleString();
@@ -638,6 +643,7 @@ def index():
             'fql_eps': state.get('fql_eps', 'null'),
             'ipsec_status': network.get('ipsec_status', 'UNKNOWN'),
             'avg_latency_ms': network.get('avg_latency_ms', 0),
+            'jitter_ms': network.get('jitter_ms', 0),
             'packet_loss_rate': packet_loss_rate,
             'throughput': network.get('current_bandwidth_mbps', 0),
             'packets_sent': packets_sent,
@@ -699,6 +705,7 @@ def get_network():
                 "error": "Network stats not available yet",
                 "ipsec_status": "UNKNOWN",
                 "avg_latency_ms": 0,
+                "jitter_ms": 0,
                 "packet_loss_rate": 0,
                 "throughput": 0,
                 "packets_sent": 0,
@@ -716,6 +723,7 @@ def get_network():
                 "error": "Network stats are stale",
                 "ipsec_status": "STALE",
                 "avg_latency_ms": 0,
+                "jitter_ms": 0,
                 "packet_loss_rate": 0,
                 "throughput": 0,
                 "packets_sent": 0,
@@ -737,6 +745,7 @@ def get_network():
         return jsonify({
             "ipsec_status": stats.get('ipsec_status', 'UNKNOWN'),
             "avg_latency_ms": stats.get('avg_latency_ms', 0),
+            "jitter_ms": stats.get('jitter_ms', 0),
             "packet_loss_rate": packet_loss_rate,
             "throughput": stats.get('current_bandwidth_mbps', 0),
             "packets_sent": packets_sent,
