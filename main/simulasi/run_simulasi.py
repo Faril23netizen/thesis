@@ -249,59 +249,171 @@ def evaluate_agent(agent, agent_name: str, n_episodes: int) -> dict:
 def plot_simulation_results(results: dict):
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
+    import seaborn as sns
+    from math import pi
     
     print("\nGenerating simulation plots...")
-    fig = plt.figure(figsize=(14, 10))
-    gs = gridspec.GridSpec(2, 1, height_ratios=[1, 1.5], hspace=0.3)
+    sns.set_theme(style="whitegrid")
     
-    # 1. Overall Accuracy Plot
-    ax1 = fig.add_subplot(gs[0])
-    agents = ['Traditional Rules', 'Trained FQL', 'Trained DQN']
-    accuracies = [
-        results['rule_based']['accuracy'] * 100,
-        results['fql']['accuracy'] * 100,
-        results['dqn']['accuracy'] * 100
-    ]
-    colors = ['#e74c3c', '#f39c12', '#27ae60']
+    agents = ['Rule-Based', 'FQL', 'DQN']
+    colors = ['#95a5a6', '#5DADE2', '#58D68D'] # Gray, Blue, Green
+    risk_labels = ['SAFE', 'CAUTION', 'WARNING', 'CRITICAL']
     
-    bars = ax1.bar(agents, accuracies, color=colors, width=0.5, alpha=0.8)
-    ax1.set_ylim(0, 105)
-    ax1.set_ylabel('Accuracy (%)')
-    ax1.set_title('Overall Accuracy Comparison', fontweight='bold')
-    ax1.grid(True, axis='y', alpha=0.3)
+    rb = results['rule_based']
+    fql = results['fql']
+    dqn = results['dqn']
+
+    # ── 1. Accuracy Comparison ────────────────────────────────────────────── #
+    plt.figure(figsize=(8, 6))
+    accuracies = [rb['accuracy'], fql['accuracy'], dqn['accuracy']]
+    bars = plt.bar(agents, accuracies, color=colors, edgecolor='black', alpha=0.9)
+    plt.ylim(0, 1.05)
+    plt.ylabel('Accuracy', fontweight='bold')
+    plt.title('NH₃ Risk Prediction Accuracy Comparison', fontweight='bold', fontsize=14)
     
     for bar in bars:
-        height = bar.get_height()
-        ax1.text(bar.get_x() + bar.get_width()/2., height + 2,
-                 f'{height:.1f}%', ha='center', va='bottom', fontweight='bold')
-                 
-    # 2. Accuracy per Scenario Plot
-    ax2 = fig.add_subplot(gs[1])
-    scenarios = list(results['rule_based']['scenario_accuracy'].keys())
+        h = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., h + 0.01,
+                 f'{h*100:.1f}%', ha='center', va='bottom', fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(os.path.join(RESULTS_DIR, "sim_1_accuracy.png"), dpi=150)
+    plt.close()
+
+    # ── 2. Precision, Recall, F1 per Risk Level ───────────────────────────── #
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    metrics_names = ['Precision', 'Recall', 'F1-Score']
     
-    rb_scen = [results['rule_based']['scenario_accuracy'][s] * 100 for s in scenarios]
-    fql_scen = [results['fql']['scenario_accuracy'][s] * 100 for s in scenarios]
-    dqn_scen = [results['dqn']['scenario_accuracy'][s] * 100 for s in scenarios]
+    def get_list(d):
+        if isinstance(d, dict):
+            # Sort keys just in case, though they are 0..3
+            return [d[k] for k in sorted(d.keys())]
+        return d
+        
+    metrics_data = [
+        [get_list(rb['precision']), get_list(fql['precision']), get_list(dqn['precision'])],
+        [get_list(rb['recall']), get_list(fql['recall']), get_list(dqn['recall'])],
+        [get_list(rb['f1']), get_list(fql['f1']), get_list(dqn['f1'])]
+    ]
     
-    x = np.arange(len(scenarios))
+    x = np.arange(len(risk_labels))
     width = 0.25
     
-    ax2.bar(x - width, rb_scen, width, label='Traditional Rules', color='#e74c3c', alpha=0.8)
-    ax2.bar(x, fql_scen, width, label='Trained FQL', color='#f39c12', alpha=0.8)
-    ax2.bar(x + width, dqn_scen, width, label='Trained DQN', color='#27ae60', alpha=0.8)
-    
-    ax2.set_xticks(x)
-    ax2.set_xticklabels([s.upper() for s in scenarios])
-    ax2.set_ylabel('Accuracy (%)')
-    ax2.set_title('Accuracy Breakdown by Environmental Scenario', fontweight='bold')
-    ax2.legend(loc='lower right')
-    ax2.grid(True, axis='y', alpha=0.3)
-    ax2.set_ylim(0, 110)
+    for i, ax in enumerate(axes):
+        ax.bar(x - width, metrics_data[i][0], width, label='Rule-Based', color=colors[0])
+        ax.bar(x,         metrics_data[i][1], width, label='FQL', color=colors[1])
+        ax.bar(x + width, metrics_data[i][2], width, label='DQN', color=colors[2])
+        
+        ax.set_xticks(x)
+        ax.set_xticklabels(risk_labels, rotation=45, ha='right')
+        ax.set_ylim(0, 1.05)
+        ax.set_ylabel(metrics_names[i], fontweight='bold')
+        ax.set_title(f'{metrics_names[i]} per Risk Level', fontweight='bold')
+        ax.legend()
     
     plt.tight_layout()
-    plot_path = os.path.join(RESULTS_DIR, "simulation_analysis.png")
-    plt.savefig(plot_path, dpi=150, bbox_inches='tight')
-    print(f"Plot saved successfully to: {plot_path}")
+    plt.savefig(os.path.join(RESULTS_DIR, "sim_2_metrics.png"), dpi=150)
+    plt.close()
+
+    # ── 3. Action Distribution ────────────────────────────────────────────── #
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    
+    def get_distribution(matrix):
+        # Sum columns of confusion matrix to get predicted counts
+        return np.sum(np.array(matrix), axis=0)
+        
+    dists = [
+        get_distribution(rb['confusion_matrix']),
+        get_distribution(fql['confusion_matrix']),
+        get_distribution(dqn['confusion_matrix'])
+    ]
+    
+    for i, ax in enumerate(axes):
+        bars = ax.bar(risk_labels, dists[i], color=colors[i], edgecolor='black')
+        ax.set_title(f'{agents[i]}\nAction Distribution', fontweight='bold')
+        ax.set_ylabel('Count', fontweight='bold')
+        ax.set_xlabel('Predicted Risk Level', fontweight='bold')
+        max_val = max(dists[i]) if max(dists[i]) > 0 else 1
+        ax.set_ylim(0, max_val * 1.2)
+        for bar in bars:
+            h = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., h,
+                     f'{int(h)}', ha='center', va='bottom', fontweight='bold')
+                     
+    plt.tight_layout()
+    plt.savefig(os.path.join(RESULTS_DIR, "sim_3_action_dist.png"), dpi=150)
+    plt.close()
+
+    # ── 4. Radar Chart ────────────────────────────────────────────────────── #
+    categories = ['Accuracy', 'Avg Precision', 'Avg Recall', 'Avg F1']
+    N = len(categories)
+    
+    def get_radar_data(agent_data):
+        return [
+            agent_data['accuracy'],
+            np.mean(list(agent_data['precision'].values()) if isinstance(agent_data['precision'], dict) else agent_data['precision']),
+            np.mean(list(agent_data['recall'].values()) if isinstance(agent_data['recall'], dict) else agent_data['recall']),
+            np.mean(list(agent_data['f1'].values()) if isinstance(agent_data['f1'], dict) else agent_data['f1'])
+        ]
+        
+    radar_data = [get_radar_data(rb), get_radar_data(fql), get_radar_data(dqn)]
+    
+    angles = [n / float(N) * 2 * pi for n in range(N)]
+    angles += angles[:1]
+    
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    ax.set_theta_offset(pi / 4)
+    ax.set_theta_direction(-1)
+    
+    plt.xticks(angles[:-1], categories, fontweight='bold')
+    ax.set_rlabel_position(0)
+    plt.yticks([0.2, 0.4, 0.6, 0.8, 1.0], ["20%", "40%", "60%", "80%", "100%"], color="grey", size=10)
+    plt.ylim(0, 1.05)
+    
+    for i, agent in enumerate(agents):
+        values = radar_data[i]
+        values += values[:1]
+        ax.plot(angles, values, linewidth=2, linestyle='solid', label=agent, color=colors[i], marker='o')
+        ax.fill(angles, values, color=colors[i], alpha=0.1)
+        
+    plt.title('Multi-Metric Comparison\n(NH₃ Risk Prediction)', size=15, fontweight='bold', y=1.1)
+    plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+    plt.savefig(os.path.join(RESULTS_DIR, "sim_4_radar.png"), dpi=150, bbox_inches='tight')
+    plt.close()
+
+    # ── 5. Confusion Matrices ─────────────────────────────────────────────── #
+    fig, axes = plt.subplots(1, 3, figsize=(20, 5))
+    
+    for i, (agent, data) in enumerate(zip(agents, [rb, fql, dqn])):
+        cm = np.array(data['confusion_matrix'])
+        # Handle cases where some classes might not exist in predictions
+        # cm is guaranteed to be 4x4 from calculate_metrics in old code if labels explicitly given,
+        # Let's format it.
+        cm_norm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        cm_norm = np.nan_to_num(cm_norm) # handle div by zero
+        
+        sns.heatmap(cm_norm, annot=False, cmap="Blues", cbar=False, ax=axes[i], 
+                    vmin=0, vmax=1, linewidths=0.5, linecolor='gray')
+                    
+        # Custom annotations showing Count and Percentage
+        for row in range(cm.shape[0]):
+            for col in range(cm.shape[1]):
+                count = int(cm[row, col])
+                pct = cm_norm[row, col] * 100
+                color = "white" if cm_norm[row, col] > 0.5 else "black"
+                axes[i].text(col + 0.5, row + 0.5, f"{count}\n({pct:.0f}%)", 
+                             ha="center", va="center", color=color, fontsize=10)
+        
+        axes[i].set_title(f'{agent}\nAccuracy: {data["accuracy"]*100:.1f}%', fontweight='bold')
+        axes[i].set_xlabel('Predicted Risk Level', fontweight='bold')
+        axes[i].set_ylabel('Actual Risk Level', fontweight='bold')
+        axes[i].set_xticklabels(risk_labels, rotation=45, ha='right')
+        axes[i].set_yticklabels(risk_labels, rotation=0)
+        
+    plt.tight_layout()
+    plt.savefig(os.path.join(RESULTS_DIR, "sim_5_confusion.png"), dpi=150)
+    plt.close()
+    
+    print("All 5 simulation plots successfully generated in results/simulation/")
 
 
 # ══════════════════════════════════════════════════════════════════════════ #
