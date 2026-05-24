@@ -695,6 +695,7 @@ def main():
                 "fql_risk": RISK_LABELS[fql_risk],
                 "dqn_risk": RISK_LABELS[dqn_risk] if dqn_active and dqn_risk >= 0 else "N/A",
                 "phase": "DQN" if dqn_active else ("FQL" if fql.converged_sent else "Rule-Based"),
+                "reward": round(stats.get('avg_reward_100', 0.0), 4),
                 "buffer_size": len(buffer_dqn),
                 "accuracy": round(stats['avg_accuracy_100'], 4),
                 "real_steps": real_steps,

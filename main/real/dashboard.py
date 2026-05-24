@@ -494,10 +494,13 @@ HTML_TEMPLATE = """
                     if (!state.error) {
                         document.getElementById('ph-value').innerText = formatValue(state.pH, 3);
                         document.getElementById('temp-value').innerText = formatValue(state.T, 1);
-                        document.getElementById('nh3-value').innerText = formatValue(state.nh3, 2);
+                        document.getElementById('nh3-value').innerText = formatValue(state.nh3_pct, 2);
                         
-                        const riskLabels = {0: "SAFE", 1: "CAUTION", 2: "WARNING", 3: "CRITICAL"};
-                        document.getElementById('action-value').innerText = riskLabels[state.action] || '--';
+                        let currentRisk = "--";
+                        if (state.phase === "Rule-Based") currentRisk = state.rb_risk;
+                        else if (state.phase === "FQL") currentRisk = state.fql_risk;
+                        else if (state.phase === "DQN") currentRisk = state.dqn_risk;
+                        document.getElementById('action-value').innerText = currentRisk || '--';
                         
                         document.getElementById('ai-phase').innerText = state.phase || '--';
                         document.getElementById('reward-value').innerText = formatValue(state.reward, 4);
@@ -586,18 +589,24 @@ def index():
         packets_dropped = network.get('packets_dropped', 0)
         packet_loss_rate = (packets_dropped / max(packets_sent, 1)) * 100 if packets_sent > 0 else 0
         
-        # Map action integer to risk label
-        action_val = state.get('action')
-        risk_labels = {0: "SAFE", 1: "CAUTION", 2: "WARNING", 3: "CRITICAL"}
-        action_str = risk_labels.get(action_val, "--") if action_val is not None else "--"
+        # Map action string based on phase
+        phase_val = state.get('phase', '--')
+        if phase_val == "Rule-Based":
+            action_str = state.get('rb_risk', '--')
+        elif phase_val == "FQL":
+            action_str = state.get('fql_risk', '--')
+        elif phase_val == "DQN":
+            action_str = state.get('dqn_risk', '--')
+        else:
+            action_str = '--'
         
         # Prepare data for template
         template_data = {
             'pH': state.get('pH', 'null'),
             'T': state.get('T', 'null'),
-            'nh3': state.get('nh3', 'null'),
+            'nh3': state.get('nh3_pct', 'null'),
             'action': action_str,
-            'phase': state.get('phase', '--'),
+            'phase': phase_val,
             'reward': state.get('reward', 'null'),
             'real_steps': state.get('real_steps', '--'),
             'buffer_size': state.get('buffer_size', '--'),
