@@ -172,6 +172,10 @@ class FQLAgent:
         # Accuracy tracking for convergence
         self._accuracy_window:    list[float] = []   # buffer of last 100 steps
         self._avg_accuracy_history: list[float] = [] # average per 100-step window
+        
+        # Reward tracking for dashboard
+        self._reward_window:      list[float] = []   # buffer of last 100 steps
+        self._avg_reward_history:   list[float] = [] # average per 100-step window
 
     # ── Firing strength ─────────────────────────────────────────────────── #
 
@@ -290,14 +294,19 @@ class FQLAgent:
         # Epsilon decay
         self.epsilon = max(self.eps_min, self.epsilon * self.eps_decay)
 
-        # Track accuracy for convergence
+        # Track accuracy and reward for dashboard and convergence
         accuracy = 1.0 if predicted_risk == actual_risk else 0.0
         self._accuracy_window.append(accuracy)
+        self._reward_window.append(reward)
         if len(self._accuracy_window) >= 100:
             avg = sum(self._accuracy_window) / len(self._accuracy_window)
             self._avg_accuracy_history.append(avg)
             self._accuracy_window.clear()
-
+            
+            avg_rew = sum(self._reward_window) / len(self._reward_window)
+            self._avg_reward_history.append(avg_rew)
+            self._reward_window.clear()
+            
         self.total_steps += 1
         return reward
 
@@ -428,11 +437,18 @@ class FQLAgent:
                    if self._avg_accuracy_history else 0.0)
         acc_prev = (self._avg_accuracy_history[-2]
                     if len(self._avg_accuracy_history) >= 2 else 0.0)
+        
+        # Compute sliding average for current incomplete window
+        rew_now = (self._avg_reward_history[-1] if self._avg_reward_history else 0.0)
+        if self._reward_window:
+            rew_now = sum(self._reward_window) / len(self._reward_window)
+            
         return {
             "total_steps":        self.total_steps,
             "epsilon":            round(self.epsilon, 4),
             "avg_accuracy_100":   round(acc_now,  4),
             "avg_accuracy_prev":  round(acc_prev, 4),
+            "avg_reward_100":     rew_now,
             "converged":          self.converged,
             "converged_sent":     self.converged_sent,
             "n_windows":          len(self._avg_accuracy_history),
