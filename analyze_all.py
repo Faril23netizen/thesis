@@ -109,6 +109,7 @@ def load_comparison_data():
                         'pH': float(row['pH']),
                         'T': float(row['T_C']),
                         'mode': mode,
+                        'actual_risk': int(row.get('actual_risk', 0)),
                         'action': action,
                         'reward': 1.0 if correct == 1 else -1.0,
                         'correct': correct,
@@ -360,6 +361,67 @@ def plot_accuracy_comparison(data, ax):
     ax.grid(True, alpha=0.3, axis='y')
 
 
+def plot_confusion_matrix(data, ax):
+    """Plot confusion matrix of AI Predictions vs Ground Truth"""
+    ai_data = [d for d in data if d['mode'] in ['FQL', 'DQN']]
+    if not ai_data:
+        ai_data = data # fallback
+        
+    matrix = np.zeros((4, 4), dtype=int)
+    for d in ai_data:
+        actual = d['actual_risk']
+        predicted = d['action']
+        if 0 <= actual <= 3 and 0 <= predicted <= 3:
+            matrix[actual][predicted] += 1
+            
+    # Normalize for color mapping
+    im = ax.imshow(matrix, interpolation='nearest', cmap='Blues')
+    
+    # Add text annotations
+    for i in range(4):
+        for j in range(4):
+            color = "white" if matrix[i, j] > (matrix.max() / 2.) else "black"
+            ax.text(j, i, str(matrix[i, j]), ha="center", va="center", color=color, fontweight='bold')
+            
+    labels = ['SAFE', 'CAUTION', 'WARNING', 'CRIT']
+    ax.set_xticks(np.arange(4))
+    ax.set_yticks(np.arange(4))
+    ax.set_xticklabels(labels)
+    ax.set_yticklabels(labels)
+    
+    ax.set_ylabel('Actual Risk (Ground Truth)', fontweight='bold')
+    ax.set_xlabel('Predicted Risk (AI)', fontweight='bold')
+    ax.set_title('AI Confusion Matrix (FQL & DQN)', fontweight='bold')
+
+
+def plot_policy_map(data, ax):
+    """Plot AI Policy Map (Decision Boundary over State Space)"""
+    pH_vals = [d['pH'] for d in data]
+    T_vals = [d['T'] for d in data]
+    actions = [d['action'] for d in data]
+    
+    colors = ['#3498db', '#f1c40f', '#e67e22', '#e74c3c'] # Safe, Caution, Warn, Crit
+    labels = ['SAFE', 'CAUTION', 'WARNING', 'CRITICAL']
+    
+    for i in range(4):
+        mask = [a == i for a in actions]
+        if any(mask):
+            x = [p for p, m in zip(pH_vals, mask) if m]
+            y = [t for t, m in zip(T_vals, mask) if m]
+            ax.scatter(x, y, c=colors[i], label=labels[i], alpha=0.6, edgecolors='none', s=30)
+            
+    # Add safe zone box
+    rect = plt.Rectangle((6.5, 26), 2.0, 4.0, fill=False, edgecolor='green', 
+                         linestyle='--', linewidth=2, label='Optimal Target Zone')
+    ax.add_patch(rect)
+    
+    ax.set_xlabel('pH Level', fontweight='bold')
+    ax.set_ylabel('Temperature (°C)', fontweight='bold')
+    ax.set_title('AI Learned Policy (State Space Map)', fontweight='bold')
+    ax.legend(fontsize=8, loc='best')
+    ax.grid(True, alpha=0.3)
+
+
 def plot_network_stats(stats, ax):
     """Plot network statistics - Enhanced version"""
     if not stats.get('callbox'):
@@ -580,11 +642,11 @@ def generate_all_plots():
     # Generate plots
     print("\n[3/4] Generating plots...")
     
-    fig = plt.figure(figsize=(16, 25))
+    fig = plt.figure(figsize=(16, 30))
     fig.suptitle('Complete Analysis - Aquaculture Edge AI with N3IWF', 
                  fontsize=16, fontweight='bold', y=0.995)
     
-    gs = gridspec.GridSpec(5, 2, figure=fig, hspace=0.35, wspace=0.30)
+    gs = gridspec.GridSpec(6, 2, figure=fig, hspace=0.40, wspace=0.30)
     
     # Plot 1: Water Quality
     ax1 = fig.add_subplot(gs[0, :])
@@ -610,13 +672,21 @@ def generate_all_plots():
     ax6 = fig.add_subplot(gs[3, 1])
     plot_accuracy_comparison(data, ax6)
     
-    # Plot 7: Network Stats
+    # Plot 7: Confusion Matrix
     ax7 = fig.add_subplot(gs[4, 0])
-    plot_network_stats(network_stats, ax7)
+    plot_confusion_matrix(data, ax7)
     
-    # Plot 8: Network Details Table
+    # Plot 8: Policy Map
     ax8 = fig.add_subplot(gs[4, 1])
-    plot_network_details_table(network_stats, ax8)
+    plot_policy_map(data, ax8)
+    
+    # Plot 9: Network Stats
+    ax9 = fig.add_subplot(gs[5, 0])
+    plot_network_stats(network_stats, ax9)
+    
+    # Plot 10: Network Details Table
+    ax10 = fig.add_subplot(gs[5, 1])
+    plot_network_details_table(network_stats, ax10)
     
     plt.tight_layout(rect=[0, 0, 1, 0.99])
     
@@ -627,7 +697,7 @@ def generate_all_plots():
     print(f"✅ PDF saved: {pdf_path}")
     
     # Save individual plots
-    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8], 1):
+    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10], 1):
         extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
         fig.savefig(os.path.join(PLOTS_DIR, f'plot_{i}.png'), 
                    bbox_inches=extent.expanded(1.2, 1.2), dpi=150)
