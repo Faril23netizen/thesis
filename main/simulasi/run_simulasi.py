@@ -231,6 +231,7 @@ def evaluate_agent(agent, agent_name: str, n_episodes: int) -> dict:
         
     metrics = calculate_metrics(all_predictions, all_actuals)
     metrics['avg_reward'] = np.mean(all_rewards)
+    metrics['episode_rewards'] = episode_rewards
     
     # Calculate scenario accuracy
     scenario_accuracy = {}
@@ -246,7 +247,7 @@ def evaluate_agent(agent, agent_name: str, n_episodes: int) -> dict:
 #  Visualization
 # ══════════════════════════════════════════════════════════════════════════ #
 
-def plot_simulation_results(results: dict):
+def plot_simulation_results(results: dict, fql_agent=None, dqn_agent=None):
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
     import seaborn as sns
@@ -413,7 +414,144 @@ def plot_simulation_results(results: dict):
     plt.savefig(os.path.join(RESULTS_DIR, "sim_5_confusion.png"), dpi=150)
     plt.close()
     
-    print("All 5 simulation plots successfully generated in results/simulation/")
+    # ── 6. Average Reward & Episode Reward Distribution ───────────────────── #
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+    
+    # Bar chart for Avg Reward
+    avg_rewards = [rb['avg_reward'], fql['avg_reward'], dqn['avg_reward']]
+    bars = axes[0].bar(agents, avg_rewards, color=colors, edgecolor='black', alpha=0.9)
+    axes[0].set_ylabel('Average Reward', fontweight='bold')
+    axes[0].set_title('Average Reward per Step', fontweight='bold')
+    # Use 1.2 as upper limit if all values are <= 1
+    axes[0].set_ylim(min(0, min(avg_rewards)*1.2), 1.05)
+    for bar in bars:
+        h = bar.get_height()
+        axes[0].text(bar.get_x() + bar.get_width()/2., h + 0.01 if h >= 0 else h - 0.05,
+                 f'{h:.3f}', ha='center', va='bottom' if h >= 0 else 'top', fontweight='bold')
+                 
+    # Box plot for Episode Rewards
+    ep_rewards_data = [rb['episode_rewards'], fql['episode_rewards'], dqn['episode_rewards']]
+    bplot = axes[1].boxplot(ep_rewards_data, patch_artist=True, labels=agents, showmeans=True, meanline=True)
+    axes[1].set_ylabel('Episode Reward', fontweight='bold')
+    axes[1].set_title('Episode Reward Distribution', fontweight='bold')
+    axes[1].axhline(0, color='gray', linestyle='--', linewidth=1)
+    
+    for patch, color in zip(bplot['boxes'], colors):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.7)
+        
+    plt.tight_layout()
+    plt.savefig(os.path.join(RESULTS_DIR, "sim_6_rewards.png"), dpi=150)
+    plt.close()
+
+    # ── 7. Accuracy vs Average Reward (Bubble Chart) ──────────────────────── #
+    plt.figure(figsize=(10, 8))
+    
+    acc_pct = [a * 100 for a in accuracies]
+    scatter = plt.scatter(acc_pct, avg_rewards, s=500, c=colors, edgecolor='black', linewidth=2, alpha=0.8)
+    
+    for i, agent in enumerate(agents):
+        plt.text(acc_pct[i], avg_rewards[i], agent, ha='center', va='center', fontweight='bold')
+        
+    plt.xlabel('Accuracy (%)', fontweight='bold', fontsize=12)
+    plt.ylabel('Average Reward', fontweight='bold', fontsize=12)
+    plt.title('Accuracy vs Average Reward\n(Higher is Better)', fontweight='bold', fontsize=14)
+    
+    # Draw diagonal line from min to max to show ideal progression
+    min_acc, max_acc = min(acc_pct), max(acc_pct)
+    min_rew, max_rew = min(avg_rewards), max(avg_rewards)
+    # Add a bit of padding
+    plt.xlim(min_acc - 5, max_acc + 5)
+    plt.ylim(min_rew - 0.2, max_rew + 0.1)
+    
+    # Diagonal dotted line just for visual cue
+    plt.plot([min_acc - 5, max_acc + 5], [min_rew - 0.2, max_rew + 0.1], linestyle='--', color='gray', alpha=0.4, linewidth=1)
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(RESULTS_DIR, "sim_7_bubble.png"), dpi=150)
+    plt.close()
+
+    # ── 8. Policy Map (Learned Risk Predictions) ──────────────────────────── #
+    if fql_agent and dqn_agent:
+        # Define ranges
+        pH_ranges = [(0,5), (5,6.5), (6.5,8.5), (8.5,10), (10,14)]
+        pH_labels = ["VeryAcidic", "Acidic", "Normal", "Alkaline", "VeryAlkaline"]
+        T_ranges = [(0,20), (20,25), (25,32), (32,35), (35,50)]
+        T_labels = ["VeryCold", "Cold", "Optimal", "Hot", "VeryHot"]
+        
+        # Test values (midpoints)
+        test_pH = [2.5, 5.75, 7.5, 9.25, 12.0]
+        test_T = [10, 22.5, 28.5, 33.5, 42.5]
+        
+        # We'll plot just the DQN policy map as requested (or both)
+        # Let's plot DQN policy map since it's the highlight
+        policy_matrix = np.zeros((len(test_pH), len(test_T)))
+        
+        for i, pH in enumerate(test_pH):
+            for j, T in enumerate(test_T):
+                policy_matrix[i, j] = dqn_agent.predict_risk(pH, T)
+                
+        plt.figure(figsize=(10, 8))
+        cmap = sns.color_palette("RdYlGn_r", 4) # Green to Red
+        ax = sns.heatmap(policy_matrix, annot=False, cmap=cmap, cbar=True,
+                         xticklabels=T_labels, yticklabels=pH_labels, vmin=0, vmax=3)
+                         
+        # Add cbar labels
+        colorbar = ax.collections[0].colorbar
+        colorbar.set_ticks([0.375, 1.125, 1.875, 2.625])
+        colorbar.set_ticklabels(['SAFE', 'CAUTION', 'WARNING', 'CRITICAL'])
+        colorbar.set_label('Risk Level', fontweight='bold')
+                         
+        for i in range(len(test_pH)):
+            for j in range(len(test_T)):
+                risk = int(policy_matrix[i, j])
+                label = risk_labels[risk]
+                color = "white" if risk >= 2 else "black"
+                plt.text(j + 0.5, i + 0.5, label, ha='center', va='center', fontweight='bold', color=color, fontsize=9)
+                
+        plt.title('DQN Policy Map\n(Learned Risk Predictions)', fontweight='bold', fontsize=14)
+        plt.xlabel('Temperature', fontweight='bold', fontsize=12)
+        plt.ylabel('pH', fontweight='bold', fontsize=12)
+        plt.xticks(rotation=45, ha='right')
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(RESULTS_DIR, "sim_8_policy_map.png"), dpi=150)
+        plt.close()
+
+    # ── 9. Accuracy Improvement Comparison ────────────────────────────────── #
+    plt.figure(figsize=(10, 6))
+    
+    # Calculate relative improvements
+    acc_rb = rb['accuracy']
+    acc_fql = fql['accuracy']
+    acc_dqn = dqn['accuracy']
+    
+    imp_fql_rb = (acc_fql - acc_rb) / acc_rb * 100
+    imp_dqn_fql = (acc_dqn - acc_fql) / acc_fql * 100
+    imp_dqn_rb = (acc_dqn - acc_rb) / acc_rb * 100
+    
+    imp_labels = ['FQL vs\nRule-Based', 'DQN vs\nFQL', 'DQN vs\nRule-Based']
+    imp_values = [imp_fql_rb, imp_dqn_fql, imp_dqn_rb]
+    imp_colors = ['#5DADE2', '#58D68D', '#58D68D'] # Match agent colors roughly
+    
+    bars = plt.bar(imp_labels, imp_values, color=imp_colors, edgecolor='black', alpha=0.9)
+    plt.ylabel('Relative Improvement (%)', fontweight='bold')
+    plt.title('Accuracy Improvement Comparison', fontweight='bold', fontsize=14)
+    
+    max_imp = max(imp_values)
+    plt.ylim(0, max_imp * 1.2)
+    
+    for bar in bars:
+        h = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., h + max_imp*0.01,
+                 f'+{h:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=12)
+                 
+    plt.grid(True, axis='y', alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(os.path.join(RESULTS_DIR, "sim_9_improvement.png"), dpi=150)
+    plt.close()
+    
+    print("All 9 simulation plots successfully generated in results/simulation/")
 
 
 # ══════════════════════════════════════════════════════════════════════════ #
@@ -508,7 +646,8 @@ def main():
     
     # Generate Plots
     try:
-        plot_simulation_results(results)
+        # Plot completely 9 visual analytics
+        plot_simulation_results(results, fql_agent=fql_agent, dqn_agent=dqn_agent)
     except ImportError:
         print("\nSkipping plots: matplotlib not installed.")
 
