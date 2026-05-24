@@ -97,7 +97,6 @@ def load_comparison_data():
                         'action': int(row.get('real_action', 0)),
                         'reward': float(row.get('reward', 0)),
                         'rb_reward': float(row.get('rb_reward', 0)),
-                        'energy': float(row.get('energy_real', 0)),
                         'fql_steps': int(row.get('fql_steps', 0)),
                         'epsilon': float(row.get('epsilon', 0))
                     })
@@ -167,10 +166,6 @@ def compute_statistics(data):
         'rb_reward_mean': np.mean([d['reward'] for d in rb_data]) if rb_data else 0,
         'fql_reward_mean': np.mean([d['reward'] for d in fql_data]) if fql_data else 0,
         'dqn_reward_mean': np.mean([d['reward'] for d in dqn_data]) if dqn_data else 0,
-        
-        # Energy statistics
-        'total_energy': np.sum([d['energy'] for d in data]),
-        'avg_energy': np.mean([d['energy'] for d in data]),
     }
     
     return stats
@@ -243,7 +238,7 @@ def plot_progressive_learning(data, ax):
 
 def plot_action_distribution(data, ax):
     """Plot action distribution by phase"""
-    action_names = ['OFF', 'LOW', 'MED', 'HIGH']
+    action_names = ['SAFE', 'CAUTION', 'WARNING', 'CRITICAL']
     phases = ['RB', 'FQL', 'DQN']
     colors = ['#e74c3c', '#f39c12', '#27ae60']
     
@@ -272,19 +267,7 @@ def plot_action_distribution(data, ax):
     ax.grid(True, alpha=0.3, axis='y')
 
 
-def plot_energy_consumption(data, ax):
-    """Plot cumulative energy consumption"""
-    steps = [d['step'] for d in data]
-    energy = [d['energy'] for d in data]
-    cumulative = np.cumsum(energy)
-    
-    ax.plot(steps, cumulative, 'purple', linewidth=2)
-    ax.fill_between(steps, 0, cumulative, alpha=0.3, color='purple')
-    
-    ax.set_xlabel('Step')
-    ax.set_ylabel('Cumulative Energy Cost')
-    ax.set_title('Energy Consumption Over Time')
-    ax.grid(True, alpha=0.3)
+    pass
 
 
 def plot_phase_comparison(data, ax):
@@ -536,8 +519,6 @@ def generate_all_plots():
     print(f"  RB Avg Reward:      {stats['rb_reward_mean']:.4f}")
     print(f"  FQL Avg Reward:     {stats['fql_reward_mean']:.4f}")
     print(f"  DQN Avg Reward:     {stats['dqn_reward_mean']:.4f}")
-    print()
-    print(f"  Total Energy Cost:  {stats['total_energy']:.2f}")
     print("="*70)
     
     # Save summary to CSV
@@ -552,11 +533,11 @@ def generate_all_plots():
     # Generate plots
     print("\n[3/4] Generating plots...")
     
-    fig = plt.figure(figsize=(16, 24))
+    fig = plt.figure(figsize=(16, 20))
     fig.suptitle('Complete Analysis - Aquaculture Edge AI with N3IWF', 
                  fontsize=16, fontweight='bold', y=0.995)
     
-    gs = gridspec.GridSpec(5, 2, figure=fig, hspace=0.35, wspace=0.30)
+    gs = gridspec.GridSpec(4, 2, figure=fig, hspace=0.35, wspace=0.30)
     
     # Plot 1: Water Quality
     ax1 = fig.add_subplot(gs[0, :])
@@ -574,17 +555,13 @@ def generate_all_plots():
     ax4 = fig.add_subplot(gs[2, 1])
     plot_phase_comparison(data, ax4)
     
-    # Plot 5: Energy Consumption
+    # Plot 5: Network Stats
     ax5 = fig.add_subplot(gs[3, 0])
-    plot_energy_consumption(data, ax5)
+    plot_network_stats(network_stats, ax5)
     
-    # Plot 6: Network Stats
+    # Plot 6: Network Details Table
     ax6 = fig.add_subplot(gs[3, 1])
-    plot_network_stats(network_stats, ax6)
-    
-    # Plot 7: Network Details Table (NEW!)
-    ax7 = fig.add_subplot(gs[4, :])
-    plot_network_details_table(network_stats, ax7)
+    plot_network_details_table(network_stats, ax6)
     
     plt.tight_layout(rect=[0, 0, 1, 0.99])
     
@@ -595,7 +572,7 @@ def generate_all_plots():
     print(f"✅ PDF saved: {pdf_path}")
     
     # Save individual plots
-    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6, ax7], 1):
+    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6], 1):
         extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
         fig.savefig(os.path.join(PLOTS_DIR, f'plot_{i}.png'), 
                    bbox_inches=extent.expanded(1.2, 1.2), dpi=150)

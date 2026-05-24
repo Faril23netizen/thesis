@@ -44,8 +44,7 @@ def get_latest_session() -> tuple[str, str]:
     return base_csv, RESULTS_REAL
 
 DEFAULT_CSV, DEFAULT_SAVE_DIR = get_latest_session()
-ACTION_NAMES = ["OFF", "LOW", "MED", "HIGH"]
-ACTION_COST  = [0.0, 0.3, 0.6, 1.0]
+ACTION_NAMES = ["SAFE", "CAUTION", "WARNING", "CRITICAL"]
 
 
 # ── Load CSV ─────────────────────────────────────────────────────────────── #
@@ -90,9 +89,6 @@ def load_csv(path: str) -> dict:
         "fql_action":  col("fql_action", int),
         "reward":      col("reward"),
         "rb_reward":   col("rb_reward"),
-        "energy_real": col("energy_real"),
-        "energy_rb":   col("energy_rb"),
-        "energy_fql":  col("energy_fql"),
         "fql_steps":   col("fql_steps", int),
         "epsilon":     col("epsilon"),
         "n":           len(rows),
@@ -118,7 +114,6 @@ def summary(d: dict, rb_mask, fql_mask, dqn_mask) -> None:
         actions = d[action_key][mask]
         rewards = d[reward_key][mask]
         nh3     = d["NH3"][mask]
-        energy  = d[energy_key][mask]
         ph      = d["pH"][mask]
 
         ph_safe = ((ph >= 6.5) & (ph <= 8.5)).mean() * 100
@@ -128,8 +123,6 @@ def summary(d: dict, rb_mask, fql_mask, dqn_mask) -> None:
         print(f"    Avg reward      : {rewards.mean():+.4f}")
         print(f"    Avg NH3%%        : {nh3.mean():.3f}%%")
         print(f"    NH3 exposure    : {nh3.sum():.1f} (%%-steps, lower=better)")
-        print(f"    Avg energy/step : {energy.mean():.3f}")
-        print(f"    Total energy    : {energy.sum():.1f}")
         print(f"    %% time SAFE pH  : {ph_safe:.1f}%%")
         print(f"    Action dist     : " +
               "  ".join(f"{ACTION_NAMES[a]}={dist[a]:.1f}%%" for a in range(4)))
@@ -137,34 +130,31 @@ def summary(d: dict, rb_mask, fql_mask, dqn_mask) -> None:
     print("\n" + "=" * 60)
     print("  COMPARISON SUMMARY  (RB → FQL → DQN)")
     print("=" * 60)
-    stats("Rule-Based (actual)",      rb_mask,  "real_action", "reward",    "energy_real")
-    stats("FQL (actual)",             fql_mask, "real_action", "reward",    "energy_real")
-    stats("RB shadow (in FQL phase)", fql_mask, "rb_action",   "rb_reward", "energy_rb")
-    stats("DQN (actual)",             dqn_mask, "real_action", "reward",    "energy_real")
+    stats("Rule-Based (actual)",      rb_mask,  "real_action", "reward")
+    stats("FQL (actual)",             fql_mask, "real_action", "reward")
+    stats("RB shadow (in FQL phase)", fql_mask, "rb_action",   "rb_reward")
+    stats("DQN (actual)",             dqn_mask, "real_action", "reward")
 
     # pairwise deltas
     def _mean(mask, key): return d[key][mask].mean() if mask.sum() > 0 else None
 
-    rb_r  = _mean(rb_mask,  "reward");       rb_e  = _mean(rb_mask,  "energy_real"); rb_n  = _mean(rb_mask,  "NH3")
-    fql_r = _mean(fql_mask, "reward");       fql_e = _mean(fql_mask, "energy_real"); fql_n = _mean(fql_mask, "NH3")
-    dqn_r = _mean(dqn_mask, "reward");       dqn_e = _mean(dqn_mask, "energy_real"); dqn_n = _mean(dqn_mask, "NH3")
+    rb_r  = _mean(rb_mask,  "reward");       rb_n  = _mean(rb_mask,  "NH3")
+    fql_r = _mean(fql_mask, "reward");       fql_n = _mean(fql_mask, "NH3")
+    dqn_r = _mean(dqn_mask, "reward");       dqn_n = _mean(dqn_mask, "NH3")
 
     if rb_r is not None and fql_r is not None:
         print(f"\n  ── FQL vs RB ──")
         print(f"    Reward : {fql_r:+.4f} vs {rb_r:+.4f}  →  Δ={fql_r-rb_r:+.4f}")
-        print(f"    Energy : {fql_e:.3f} vs {rb_e:.3f}  →  Δ={fql_e-rb_e:+.3f}")
         print(f"    NH3%%   : {fql_n:.3f} vs {rb_n:.3f}  →  Δ={fql_n-rb_n:+.3f}")
 
     if rb_r is not None and dqn_r is not None:
         print(f"\n  ── DQN vs RB ──")
         print(f"    Reward : {dqn_r:+.4f} vs {rb_r:+.4f}  →  Δ={dqn_r-rb_r:+.4f}")
-        print(f"    Energy : {dqn_e:.3f} vs {rb_e:.3f}  →  Δ={dqn_e-rb_e:+.3f}")
         print(f"    NH3%%   : {dqn_n:.3f} vs {rb_n:.3f}  →  Δ={dqn_n-rb_n:+.3f}")
 
     if fql_r is not None and dqn_r is not None:
         print(f"\n  ── DQN vs FQL ──")
         print(f"    Reward : {dqn_r:+.4f} vs {fql_r:+.4f}  →  Δ={dqn_r-fql_r:+.4f}")
-        print(f"    Energy : {dqn_e:.3f} vs {fql_e:.3f}  →  Δ={dqn_e-fql_e:+.3f}")
         print(f"    NH3%%   : {dqn_n:.3f} vs {fql_n:.3f}  →  Δ={dqn_n-fql_n:+.3f}")
 
     print("=" * 60 + "\n")
@@ -238,19 +228,8 @@ def plot_all(d: dict, rb_mask, fql_mask, dqn_mask, save_dir: str | None = None):
     ax.set_ylabel("Avg Reward (roll-20)"); ax.set_title("Reward Comparison")
     ax.legend(fontsize=8); ax.grid(True, alpha=0.3)
 
-    # ── 5. Cumulative energy ──────────────────────────────────────────────── #
+    # ── 5. Action distribution bar chart ─────────────────────────────────── #
     ax = fig.add_subplot(gs[3, 1])
-    ax.plot(steps, np.cumsum(d["energy_real"]), color="#2980b9", label="Real")
-    ax.plot(steps, np.cumsum(d["energy_rb"]),   color="#e74c3c",
-            linestyle="--", label="RB shadow")
-    ax.plot(steps, np.cumsum(d["energy_fql"]),  color="#27ae60",
-            linestyle=":",  label="FQL greedy")
-    vlines(ax)
-    ax.set_ylabel("Cumulative Energy"); ax.set_title("Energy Consumption")
-    ax.legend(fontsize=8); ax.grid(True, alpha=0.3)
-
-    # ── 6. Action distribution bar chart ─────────────────────────────────── #
-    ax = fig.add_subplot(gs[4, 0])
     x = np.arange(4)
     w = 0.22
     phases = {}
@@ -269,8 +248,8 @@ def plot_all(d: dict, rb_mask, fql_mask, dqn_mask, save_dir: str | None = None):
     ax.set_ylabel("Usage (%)"); ax.set_title("Action Distribution")
     ax.legend(fontsize=8); ax.grid(True, alpha=0.3, axis="y")
 
-    # ── 7. Epsilon decay ─────────────────────────────────────────────────── #
-    ax = fig.add_subplot(gs[4, 1])
+    # ── 6. Epsilon decay ─────────────────────────────────────────────────── #
+    ax = fig.add_subplot(gs[4, :])
     ax.plot(steps, d["epsilon"], color="#9b59b6", linewidth=1.0)
     vlines(ax)
     ax.set_ylabel("Epsilon"); ax.set_title("FQL Exploration Rate (ε)")
