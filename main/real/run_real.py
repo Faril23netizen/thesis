@@ -396,8 +396,8 @@ def main():
         # ── Reset semua state AI pada sesi ke-2 dan seterusnya ──────────── #
         if session > 1:
             logger.info("═" * 65)
-            logger.info(f"PICO PUTUS — Reset seluruh state belajar (sesi #{session})")
-            logger.info("Alasan: Pico WH mungkin dipindah ke lokasi/kolam berbeda.")
+            logger.info(f"PICO DISCONNECTED — Resetting all learning states (session #{session})")
+            logger.info("Reason: Pico WH might be moved to a different location/pond.")
             logger.info("═" * 65)
 
             # Reset semua agent
@@ -414,7 +414,7 @@ def main():
             fql_mode_start     = None
 
         # ── PHASE A: Tunggu Pico WH konek ───────────────────────────────── #
-        logger.info(f"PHASE A — Waiting for Pico WH connection... (sesi #{session})")
+        logger.info(f"PHASE A — Waiting for Pico WH connection... (session #{session})")
         while not _shutdown:
             if bridge.connect():
                 logger.info("Pico connected!")
@@ -454,8 +454,8 @@ def main():
                 # Deteksi disconnect: jika > DISCONNECT_TIMEOUT detik tanpa data
                 if time.time() - last_data_time > DISCONNECT_TIMEOUT:
                     logger.warning(
-                        f"[DISCONNECT] Tidak ada data selama {DISCONNECT_TIMEOUT}s "
-                        f"— Pico WH dianggap terputus. Kembali ke Phase A..."
+                        f"[DISCONNECT] No data received for {DISCONNECT_TIMEOUT}s "
+                        f"— Pico WH assumed disconnected. Returning to Phase A..."
                     )
                     bridge.disconnect()
                     break  # Keluar inner loop → outer loop → reset + Phase A
