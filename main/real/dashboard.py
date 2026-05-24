@@ -310,17 +310,6 @@ HTML_TEMPLATE = """
                             </div>
                         </div>
                     </div>
-                    <div class="charts-grid">
-                        <div class="chart-container">
-                            <canvas id="phChart"></canvas>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="tempChart"></canvas>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="nh3Chart"></canvas>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="card">
@@ -344,6 +333,26 @@ HTML_TEMPLATE = """
                         <div class="metric">
                             <div class="metric-label">Buffer Size</div>
                             <div class="metric-value" id="buffer-value">{{ buffer_size }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-Time Charts Section -->
+            <div class="grid">
+                <div class="card grid-full">
+                    <div class="card-header">
+                        <div class="card-title">📈 Real-Time Charts</div>
+                    </div>
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <canvas id="phChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="tempChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="nh3Chart"></canvas>
                         </div>
                     </div>
                 </div>
