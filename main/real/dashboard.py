@@ -395,6 +395,16 @@ HTML_TEMPLATE = """
                             <div class="network-stat-value" id="uptime-value">{{ '%.1f'|format(uptime) }} h</div>
                         </div>
                     </div>
+                        </div>
+                    </div>
+                    <div class="charts-grid" style="margin-top: 24px;">
+                        <div class="chart-container">
+                            <canvas id="latencyChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="jitterChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -406,16 +416,16 @@ HTML_TEMPLATE = """
                     </div>
                     <div class="metrics">
                         <div class="metric">
-                            <div class="metric-label">AMF (Access)</div>
-                            <div class="metric-value status-online" id="amf-status">{{ amf_status }}</div>
+                            <div class="metric-label">AMF UEs</div>
+                            <div class="metric-value status-online" id="amf-status">{{ amf_ues }} Active</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-label">SMF (Session)</div>
-                            <div class="metric-value status-online" id="smf-status">{{ smf_status }}</div>
+                            <div class="metric-label">SMF Sessions</div>
+                            <div class="metric-value status-online" id="smf-status">{{ smf_sessions }} PDU</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-label">UPF (User Plane)</div>
-                            <div class="metric-value status-online" id="upf-status">{{ upf_status }}</div>
+                            <div class="metric-label">UPF Processed</div>
+                            <div class="metric-value status-online" id="upf-status">{{ '{:,}'.format(upf_packets) }} Pkts</div>
                         </div>
                     </div>
                 </div>
@@ -496,6 +506,8 @@ HTML_TEMPLATE = """
         const phChart = new Chart(document.getElementById('phChart').getContext('2d'), createChartConfig('pH Level', '#3b82f6', 'pH'));
         const tempChart = new Chart(document.getElementById('tempChart').getContext('2d'), createChartConfig('Temperature', '#ef4444', '°C'));
         const nh3Chart = new Chart(document.getElementById('nh3Chart').getContext('2d'), createChartConfig('NH3 Toxicity', '#f59e0b', '%'));
+        const latencyChart = new Chart(document.getElementById('latencyChart').getContext('2d'), createChartConfig('Latency', '#10b981', 'ms'));
+        const jitterChart = new Chart(document.getElementById('jitterChart').getContext('2d'), createChartConfig('Jitter', '#8b5cf6', 'ms'));
 
         function formatValue(val, decimals=2) {
             return val !== null && val !== undefined && val !== 'null' ? parseFloat(val).toFixed(decimals) : '--';
@@ -552,6 +564,8 @@ HTML_TEMPLATE = """
                             phChart.resize();
                             tempChart.resize();
                             nh3Chart.resize();
+                            latencyChart.resize();
+                            jitterChart.resize();
                         }
                         
                         document.getElementById('pico-status').innerText = 'Connected';
@@ -576,9 +590,22 @@ HTML_TEMPLATE = """
                         document.getElementById('packets-dropped-value').innerText = (net.packets_dropped || 0).toLocaleString();
                         document.getElementById('uptime-value').innerText = formatValue(net.uptime / 3600, 1) + ' h';
                         
-                        document.getElementById('amf-status').innerText = net.amf_status || 'UNKNOWN';
-                        document.getElementById('smf-status').innerText = net.smf_status || 'UNKNOWN';
-                        document.getElementById('upf-status').innerText = net.upf_status || 'UNKNOWN';
+                        document.getElementById('amf-status').innerText = (net.amf_ues || 0) + ' Active';
+                        document.getElementById('smf-status').innerText = (net.smf_sessions || 0) + ' PDU';
+                        document.getElementById('upf-status').innerText = (net.upf_packets || 0).toLocaleString() + ' Pkts';
+
+                        // Update Network Charts
+                        const timeLabel = new Date().toLocaleTimeString();
+                        
+                        latencyChart.data.labels.push(timeLabel);
+                        latencyChart.data.datasets[0].data.push(net.avg_latency_ms || 0);
+                        if (latencyChart.data.labels.length > maxDataPoints) { latencyChart.data.labels.shift(); latencyChart.data.datasets[0].data.shift(); }
+                        latencyChart.update('none');
+
+                        jitterChart.data.labels.push(timeLabel);
+                        jitterChart.data.datasets[0].data.push(net.jitter_ms || 0);
+                        if (jitterChart.data.labels.length > maxDataPoints) { jitterChart.data.labels.shift(); jitterChart.data.datasets[0].data.shift(); }
+                        jitterChart.update('none');
                     }
                 }
                 
@@ -652,7 +679,10 @@ def index():
             'amf_status': network.get('amf_status', 'UNKNOWN'),
             'smf_status': network.get('smf_status', 'UNKNOWN'),
             'upf_status': network.get('upf_status', 'UNKNOWN'),
-            'has_data': bool(state)
+            'has_data': bool(state),
+            'amf_ues': network.get('amf_ues', 0),
+            'smf_sessions': network.get('smf_sessions', 0),
+            'upf_packets': network.get('upf_packets', 0)
         }
         
         return render_template_string(HTML_TEMPLATE, **template_data)
@@ -713,7 +743,10 @@ def get_network():
                 "uptime": 0,
                 "amf_status": "UNKNOWN",
                 "smf_status": "UNKNOWN",
-                "upf_status": "UNKNOWN"
+                "upf_status": "UNKNOWN",
+                "amf_ues": 0,
+                "smf_sessions": 0,
+                "upf_packets": 0
             })
         
         # Check if file is stale (older than 30 seconds)
@@ -731,7 +764,10 @@ def get_network():
                 "uptime": 0,
                 "amf_status": "UNKNOWN",
                 "smf_status": "UNKNOWN",
-                "upf_status": "UNKNOWN"
+                "upf_status": "UNKNOWN",
+                "amf_ues": 0,
+                "smf_sessions": 0,
+                "upf_packets": 0
             })
         
         with open(CALLBOX_STATS, 'r') as f:
@@ -753,7 +789,10 @@ def get_network():
             "uptime": stats.get('uptime', 0),
             "amf_status": stats.get('amf_status', 'UNKNOWN'),
             "smf_status": stats.get('smf_status', 'UNKNOWN'),
-            "upf_status": stats.get('upf_status', 'UNKNOWN')
+            "upf_status": stats.get('upf_status', 'UNKNOWN'),
+            "amf_ues": stats.get('amf_ues', 0),
+            "smf_sessions": stats.get('smf_sessions', 0),
+            "upf_packets": stats.get('upf_packets', 0)
         })
     
     except json.JSONDecodeError:

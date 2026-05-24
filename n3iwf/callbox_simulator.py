@@ -341,24 +341,35 @@ class CallboxSimulator:
                 stats["smf_status"] = self.smf.status
                 stats["upf_status"] = self.upf.status
                 
+                stats["amf_ues"] = len(self.amf.registered_ues)
+                stats["smf_sessions"] = len(self.smf.sessions)
+                stats["upf_packets"] = self.upf.packet_count
+                
                 # Simulate network traffic if IPsec is established
                 if stats["ipsec_status"] == "ESTABLISHED":
                     # Simulate latency (10-15ms with jitter)
-                    stats["avg_latency_ms"] = BASE_LATENCY_MS + random.uniform(-JITTER_MS, JITTER_MS)
+                    current_lat = BASE_LATENCY_MS + random.uniform(-JITTER_MS, JITTER_MS)
                     
                     # Simulate packet traffic (increase over time)
                     packets_per_second = 10  # Simulate 10 packets/sec
                     stats["packets_sent"] += packets_per_second
                     stats["packets_received"] += packets_per_second
+                    self.upf.packet_count += packets_per_second
                     
                     # Simulate packet loss (1%)
                     if random.random() < PACKET_LOSS_RATE:
                         stats["packets_dropped"] += 1
                     
                     # Update latency history
-                    latency_history.append(stats["avg_latency_ms"])
+                    latency_history.append(current_lat)
                     if len(latency_history) > 0:
                         stats["avg_latency_ms"] = sum(latency_history) / len(latency_history)
+                    
+                    if len(latency_history) > 1:
+                        diffs = [abs(latency_history[i] - latency_history[i-1]) for i in range(1, len(latency_history))]
+                        stats["jitter_ms"] = sum(diffs) / len(diffs)
+                    else:
+                        stats["jitter_ms"] = 0.0
             
             time.sleep(1)
     
