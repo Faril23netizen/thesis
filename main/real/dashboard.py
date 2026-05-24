@@ -178,10 +178,19 @@ HTML_TEMPLATE = """
         }
         
         /* Chart Container */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
         .chart-container {
             position: relative;
-            height: 300px;
-            margin-top: 16px;
+            height: 250px;
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #334155;
         }
         
         /* Network Stats */
@@ -301,8 +310,16 @@ HTML_TEMPLATE = """
                             </div>
                         </div>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="waterChart"></canvas>
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <canvas id="phChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="tempChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="nh3Chart"></canvas>
+                        </div>
                     </div>
                 </div>
 
@@ -411,76 +428,53 @@ HTML_TEMPLATE = """
     </div>
 
     <script>
-        // Chart.js configuration
-        const chartConfig = {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'pH',
-                    data: [],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    yAxisID: 'y'
-                }, {
-                    label: 'Temperature (°C)',
-                    data: [],
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    tension: 0.4,
-                    yAxisID: 'y1'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
+        // Chart Config Generator
+        function createChartConfig(label, color, yAxisTitle) {
+            return {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: label,
+                        data: [],
+                        borderColor: color,
+                        backgroundColor: color + '1A', // 10% opacity
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 1,
+                        pointHoverRadius: 4
+                    }]
                 },
-                plugins: {
-                    legend: {
-                        labels: { color: '#e2e8f0' }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: '#94a3b8' },
-                        grid: { color: '#334155' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { labels: { color: '#e2e8f0' } }
                     },
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        ticks: { color: '#3b82f6' },
-                        grid: { color: '#334155' },
-                        title: {
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 },
+                            grid: { color: '#334155', drawBorder: false }
+                        },
+                        y: {
+                            type: 'linear',
                             display: true,
-                            text: 'pH',
-                            color: '#3b82f6'
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        ticks: { color: '#ef4444' },
-                        grid: { display: false },
-                        title: {
-                            display: true,
-                            text: 'Temperature (°C)',
-                            color: '#ef4444'
+                            position: 'left',
+                            ticks: { color: color },
+                            grid: { color: '#334155', drawBorder: false },
+                            title: { display: true, text: yAxisTitle, color: color }
                         }
                     }
                 }
-            }
-        };
+            };
+        }
 
         const maxDataPoints = 50;
 
-        const ctx = document.getElementById('waterChart').getContext('2d');
-        const waterChart = new Chart(ctx, chartConfig);
+        const phChart = new Chart(document.getElementById('phChart').getContext('2d'), createChartConfig('pH Level', '#3b82f6', 'pH'));
+        const tempChart = new Chart(document.getElementById('tempChart').getContext('2d'), createChartConfig('Temperature', '#ef4444', '°C'));
+        const nh3Chart = new Chart(document.getElementById('nh3Chart').getContext('2d'), createChartConfig('NH3 Toxicity', '#f59e0b', '%'));
 
         function formatValue(val, decimals=2) {
             return val !== null && val !== undefined && val !== 'null' ? parseFloat(val).toFixed(decimals) : '--';
@@ -511,23 +505,30 @@ HTML_TEMPLATE = """
                         // Update Chart
                         if (state.pH && state.T) {
                             const timeLabel = new Date().toLocaleTimeString();
-                            waterChart.data.labels.push(timeLabel);
-                            waterChart.data.datasets[0].data.push(state.pH);
-                            waterChart.data.datasets[1].data.push(state.T);
                             
-                            if (waterChart.data.labels.length > maxDataPoints) {
-                                waterChart.data.labels.shift();
-                                waterChart.data.datasets[0].data.shift();
-                                waterChart.data.datasets[1].data.shift();
-                            }
-                            waterChart.update('none'); // Update without full animation for performance
+                            phChart.data.labels.push(timeLabel);
+                            phChart.data.datasets[0].data.push(state.pH);
+                            if (phChart.data.labels.length > maxDataPoints) { phChart.data.labels.shift(); phChart.data.datasets[0].data.shift(); }
+                            phChart.update('none');
+
+                            tempChart.data.labels.push(timeLabel);
+                            tempChart.data.datasets[0].data.push(state.T);
+                            if (tempChart.data.labels.length > maxDataPoints) { tempChart.data.labels.shift(); tempChart.data.datasets[0].data.shift(); }
+                            tempChart.update('none');
+
+                            nh3Chart.data.labels.push(timeLabel);
+                            nh3Chart.data.datasets[0].data.push(state.nh3_pct);
+                            if (nh3Chart.data.labels.length > maxDataPoints) { nh3Chart.data.labels.shift(); nh3Chart.data.datasets[0].data.shift(); }
+                            nh3Chart.update('none');
                         }
                         
                         document.getElementById('error-banner').style.display = 'none';
                         const mainContent = document.getElementById('main-content');
                         if (mainContent.style.display === 'none') {
                             mainContent.style.display = 'block';
-                            waterChart.resize(); // Fix Chart.js size 0x0 bug
+                            phChart.resize();
+                            tempChart.resize();
+                            nh3Chart.resize();
                         }
                         
                         document.getElementById('pico-status').innerText = 'Connected';
