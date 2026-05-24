@@ -89,16 +89,30 @@ def load_comparison_data():
                     if not row.get('real_step') or not row.get('pH') or not row.get('T_C'):
                         continue
                     
+                    # Parse which action the AI took based on mode
+                    mode = row.get('mode', 'Unknown')
+                    if mode == 'RB':
+                        action = int(row.get('rb_risk', 0))
+                        correct = int(row.get('rb_correct', 0))
+                    elif mode == 'FQL':
+                        action = int(row.get('fql_risk', 0))
+                        correct = int(row.get('fql_correct', 0))
+                    elif mode == 'DQN':
+                        action = int(row.get('dqn_risk', 0))
+                        correct = int(row.get('dqn_correct', 0))
+                    else:
+                        action = int(row.get('actual_risk', 0))
+                        correct = 0
+
                     data.append({
                         'step': int(row['real_step']),
                         'pH': float(row['pH']),
                         'T': float(row['T_C']),
-                        'mode': row.get('mode', 'Unknown'),
-                        'action': int(row.get('real_action', 0)),
-                        'reward': float(row.get('reward', 0)),
-                        'rb_reward': float(row.get('rb_reward', 0)),
+                        'mode': mode,
+                        'action': action,
+                        'reward': 1.0 if correct == 1 else -1.0,
+                        'correct': correct,
                         'nh3': float(row.get('NH3_pct', 0)),
-                        'fql_steps': int(row.get('fql_steps', 0)),
                         'epsilon': float(row.get('epsilon', 0))
                     })
                 except (ValueError, KeyError, TypeError):
@@ -223,15 +237,15 @@ def plot_progressive_learning(data, ax):
     
     # Rolling average
     all_steps = [d['step'] for d in data]
-    all_rewards = [d['reward'] for d in data]
+    all_correct = [d['correct'] for d in data]
     window = min(50, len(data) // 10)
     if window > 0:
-        rolling_avg = np.convolve(all_rewards, np.ones(window)/window, mode='same')
-        ax.plot(all_steps, rolling_avg, 'k-', linewidth=2, label='Rolling Avg', alpha=0.8)
+        rolling_avg = np.convolve(all_correct, np.ones(window)/window, mode='same')
+        ax.plot(all_steps, rolling_avg, 'k-', linewidth=2, label='Rolling Accuracy', alpha=0.8)
     
     ax.axhline(0, color='gray', linestyle=':', linewidth=1)
     ax.set_xlabel('Step')
-    ax.set_ylabel('Reward')
+    ax.set_ylabel('Reward / Correctness')
     ax.set_title('Progressive Learning: RB → FQL → DQN')
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
