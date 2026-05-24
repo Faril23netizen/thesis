@@ -524,7 +524,12 @@ HTML_TEMPLATE = """
                         }
                         
                         document.getElementById('error-banner').style.display = 'none';
-                        document.getElementById('main-content').style.display = 'block';
+                        const mainContent = document.getElementById('main-content');
+                        if (mainContent.style.display === 'none') {
+                            mainContent.style.display = 'block';
+                            waterChart.resize(); // Fix Chart.js size 0x0 bug
+                        }
+                        
                         document.getElementById('pico-status').innerText = 'Connected';
                         document.getElementById('pico-status').className = 'status-value status-online';
                         document.getElementById('system-status').innerText = 'Online';
