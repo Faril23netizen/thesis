@@ -54,14 +54,12 @@ except ImportError as e:
 BASE_DIR        = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RESULTS_REAL    = os.path.join(BASE_DIR, "results", "hasil_real")
 
-QTABLE_FILE     = os.path.join(RESULTS_REAL, "qtable.json")
-BUFFER_FILE     = os.path.join(RESULTS_REAL, "dqn_buffer.json")
-DQN_MODEL_FILE  = os.path.join(RESULTS_REAL, "dqn_model.pt")
+QTABLE_FILE     = ""
+BUFFER_FILE     = ""
+DQN_MODEL_FILE  = ""
 
 LOG_FILE        = os.path.join(RESULTS_REAL, "fql.log")
 LOG_ERROR_FILE  = os.path.join(RESULTS_REAL, "fql_error.log")
-COMPARISON_CSV  = os.path.join(RESULTS_REAL, "comparison.csv")
-HA_COMPARISON_CSV = os.path.join(RESULTS_REAL, "ha_comparison.csv")
 STATE_JSON_FILE = os.path.join(RESULTS_REAL, "state.json")
 
 # ── Constants ────────────────────────────────────────────────────────────── #
@@ -188,17 +186,15 @@ def rule_based_risk(pH: float, T: float) -> int:
 _csv_file   = None
 _csv_writer = None
 
-def _init_comparison_csv(session_ts: str = "") -> None:
+def _init_comparison_csv(session_dir: str) -> None:
     global _csv_file, _csv_writer
     
     # Tutup file lama jika ada
     if _csv_file is not None and not _csv_file.closed:
         _csv_file.close()
 
-    os.makedirs(RESULTS_REAL, exist_ok=True)
-    
-    filename = f"comparison_{session_ts}.csv" if session_ts else "comparison.csv"
-    csv_path = os.path.join(RESULTS_REAL, filename)
+    os.makedirs(session_dir, exist_ok=True)
+    csv_path = os.path.join(session_dir, "comparison.csv")
     
     write_header = not os.path.exists(csv_path)
     _csv_file   = open(csv_path, "a", newline="")
@@ -224,17 +220,15 @@ def _init_comparison_csv(session_ts: str = "") -> None:
 _ha_csv_file   = None
 _ha_csv_writer = None
 
-def _init_ha_comparison_csv(session_ts: str = "") -> None:
+def _init_ha_comparison_csv(session_dir: str) -> None:
     global _ha_csv_file, _ha_csv_writer
     
     # Tutup file lama jika ada
     if _ha_csv_file is not None and not _ha_csv_file.closed:
         _ha_csv_file.close()
 
-    os.makedirs(RESULTS_REAL, exist_ok=True)
-    
-    filename = f"ha_comparison_{session_ts}.csv" if session_ts else "ha_comparison.csv"
-    csv_path = os.path.join(RESULTS_REAL, filename)
+    os.makedirs(session_dir, exist_ok=True)
+    csv_path = os.path.join(session_dir, "ha_comparison.csv")
 
     write_header = not os.path.exists(csv_path)
     _ha_csv_file   = open(csv_path, "a", newline="")
@@ -391,19 +385,6 @@ def main():
     fql_mode_start        = None
     real_steps            = 0
 
-    # ── Load Q-table & DQN buffer (only on FIRST session) ───────────────── #
-    if os.path.exists(QTABLE_FILE):
-        if fql.load_qtable(QTABLE_FILE):
-            logger.info(f"Q-table loaded from {QTABLE_FILE} "
-                        f"(step={fql.total_steps}, eps={fql.epsilon:.3f})")
-        else:
-            logger.warning("Q-table file corrupted, starting fresh.")
-
-    if os.path.exists(BUFFER_FILE):
-        buffer_dqn = load_buffer(BUFFER_FILE)
-        if buffer_dqn:
-            logger.info(f"DQN buffer loaded: {len(buffer_dqn)} transitions")
-
     session = 0  # sesi koneksi ke-N
 
     # ══════════════════════════════════════════════════════════════════════ #
@@ -432,12 +413,6 @@ def main():
             last_dqn_retrain   = 0
             fql_mode_start     = None
 
-            # Hapus file sesi lama agar tidak ter-load di sesi ini
-            for saved_file in [QTABLE_FILE, BUFFER_FILE, DQN_MODEL_FILE]:
-                if os.path.exists(saved_file):
-                    os.remove(saved_file)
-                    logger.info(f"  Dihapus: {saved_file}")
-
         # ── PHASE A: Tunggu Pico WH konek ───────────────────────────────── #
         logger.info(f"PHASE A — Waiting for Pico WH connection... (sesi #{session})")
         while not _shutdown:
@@ -449,14 +424,22 @@ def main():
         if _shutdown:
             break
 
-        # Sesi terhubung, buat timestamp untuk file CSV sesi ini
+        # Sesi terhubung, buat folder sesi baru
+        global QTABLE_FILE, BUFFER_FILE, DQN_MODEL_FILE
         session_ts = time.strftime("%Y%m%d_%H%M%S")
-        _init_comparison_csv(session_ts)
-        logger.info(f"CSV data comparison baru dibuat: comparison_{session_ts}.csv")
+        session_dir = os.path.join(RESULTS_REAL, f"session_{session_ts}")
+        os.makedirs(session_dir, exist_ok=True)
+        
+        # Set path file AI ke dalam folder sesi
+        QTABLE_FILE    = os.path.join(session_dir, "qtable.json")
+        BUFFER_FILE    = os.path.join(session_dir, "dqn_buffer.json")
+        DQN_MODEL_FILE = os.path.join(session_dir, "dqn_model.pt")
+
+        _init_comparison_csv(session_dir)
+        logger.info(f"Folder sesi baru dibuat: {session_dir}")
         
         if ha_bridge is not None:
-            _init_ha_comparison_csv(session_ts)
-            logger.info(f"CSV Home Assistant comparison baru dibuat: ha_comparison_{session_ts}.csv")
+            _init_ha_comparison_csv(session_dir)
 
         # Waktu terakhir data diterima — untuk deteksi disconnect
         last_data_time = time.time()
