@@ -634,6 +634,46 @@ def plot_network_details_table(stats, ax):
     ax.axis('off')
 
 
+def plot_latency_timeline(timeline_data, ax):
+    """Plot network latency over Uptime"""
+    if not timeline_data:
+        ax.text(0.5, 0.5, 'No Timeline Data Available', ha='center', va='center', fontsize=12)
+        ax.set_title('Network Latency Timeline')
+        return
+        
+    uptimes = [d['uptime'] / 60 for d in timeline_data] # Convert to minutes
+    latencies = [d['latency'] for d in timeline_data]
+    
+    ax.plot(uptimes, latencies, color='#2ecc71', linewidth=1.5, label='Avg Latency', alpha=0.8)
+    ax.axhline(15.0, color='red', linestyle='--', linewidth=1, label='Max Target (15ms)')
+    
+    ax.set_xlabel('Uptime (Minutes)', fontweight='bold')
+    ax.set_ylabel('Latency (ms)', fontweight='bold')
+    ax.set_title('N3IWF Latency Timeline', fontweight='bold')
+    ax.legend(fontsize=8, loc='upper right')
+    ax.grid(True, alpha=0.3)
+
+
+def plot_jitter_timeline(timeline_data, ax):
+    """Plot network jitter over Uptime"""
+    if not timeline_data:
+        ax.text(0.5, 0.5, 'No Timeline Data Available', ha='center', va='center', fontsize=12)
+        ax.set_title('Network Jitter Timeline')
+        return
+        
+    uptimes = [d['uptime'] / 60 for d in timeline_data] # Convert to minutes
+    jitters = [d['jitter'] for d in timeline_data]
+    
+    ax.plot(uptimes, jitters, color='#9b59b6', linewidth=1.5, label='Jitter', alpha=0.8)
+    ax.axhline(5.0, color='red', linestyle='--', linewidth=1, label='Max Target (5ms)')
+    
+    ax.set_xlabel('Uptime (Minutes)', fontweight='bold')
+    ax.set_ylabel('Jitter (ms)', fontweight='bold')
+    ax.set_title('N3IWF Jitter Timeline', fontweight='bold')
+    ax.legend(fontsize=8, loc='upper right')
+    ax.grid(True, alpha=0.3)
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  Main Analysis
 # ══════════════════════════════════════════════════════════════════════════════
@@ -729,17 +769,21 @@ def generate_all_plots():
     ax8 = fig.add_subplot(gs[4, 1])
     plot_policy_map(data, ax8)
     
-    # Plot 9: Network Stability Timeline
-    ax9 = fig.add_subplot(gs[5, :])
-    plot_network_stability(network_timeline, ax9)
+    # Plot 9: Latency Timeline
+    ax9 = fig.add_subplot(gs[5, 0])
+    plot_latency_timeline(network_timeline, ax9)
     
-    # Plot 10: Network Stats
-    ax10 = fig.add_subplot(gs[6, 0])
-    plot_network_stats(network_stats, ax10)
+    # Plot 10: Jitter Timeline
+    ax10 = fig.add_subplot(gs[5, 1])
+    plot_jitter_timeline(network_timeline, ax10)
     
-    # Plot 11: Network Details Table
-    ax11 = fig.add_subplot(gs[6, 1])
-    plot_network_details_table(network_stats, ax11)
+    # Plot 11: Network Stats
+    ax11 = fig.add_subplot(gs[6, 0])
+    plot_network_stats(network_stats, ax11)
+    
+    # Plot 12: Network Details Table
+    ax12 = fig.add_subplot(gs[6, 1])
+    plot_network_details_table(network_stats, ax12)
     
     plt.tight_layout(rect=[0, 0, 1, 0.99])
     
@@ -750,7 +794,7 @@ def generate_all_plots():
     print(f"✅ PDF saved: {pdf_path}")
     
     # Save individual plots
-    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10, ax11], 1):
+    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10, ax11, ax12], 1):
         extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
         fig.savefig(os.path.join(PLOTS_DIR, f'plot_{i}.png'), 
                    bbox_inches=extent.expanded(1.2, 1.2), dpi=150)
