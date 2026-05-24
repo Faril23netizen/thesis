@@ -34,23 +34,37 @@ RESULTS_NETWORK = os.path.join(BASE_DIR, "results", "network")
 RESULTS_THESIS = os.path.join(BASE_DIR, "results", "thesis")
 PLOTS_DIR = os.path.join(RESULTS_THESIS, "plots")
 
+import shutil
+
 # Input files
-def get_latest_session_csv() -> str:
-    base_csv = os.path.join(RESULTS_REAL, "comparison.csv")
+def get_latest_session_dir() -> str:
     if not os.path.exists(RESULTS_REAL):
-        return base_csv
+        return RESULTS_REAL
         
     sessions = [d for d in os.listdir(RESULTS_REAL) if d.startswith("session_") and os.path.isdir(os.path.join(RESULTS_REAL, d))]
     if not sessions:
-        return base_csv
+        return RESULTS_REAL
         
     sessions.sort(reverse=True)
-    latest_csv = os.path.join(RESULTS_REAL, sessions[0], "comparison.csv")
-    return latest_csv if os.path.exists(latest_csv) else base_csv
+    return os.path.join(RESULTS_REAL, sessions[0])
 
-COMPARISON_CSV = get_latest_session_csv()
-CALLBOX_STATS = os.path.join(RESULTS_NETWORK, "callbox_stats.json")
-N3IWF_STATUS = os.path.join(RESULTS_NETWORK, "n3iwf_status.json")
+LATEST_SESSION = get_latest_session_dir()
+COMPARISON_CSV = os.path.join(LATEST_SESSION, "comparison.csv")
+CALLBOX_STATS = os.path.join(LATEST_SESSION, "callbox_stats.json")
+N3IWF_STATUS = os.path.join(LATEST_SESSION, "n3iwf_status.json")
+
+def archive_network_stats():
+    """Copy live network stats to the session folder for permanent archiving"""
+    if LATEST_SESSION == RESULTS_REAL:
+        return
+        
+    live_callbox = os.path.join(RESULTS_NETWORK, "callbox_stats.json")
+    live_n3iwf = os.path.join(RESULTS_NETWORK, "n3iwf_status.json")
+    
+    if os.path.exists(live_callbox):
+        shutil.copy2(live_callbox, CALLBOX_STATS)
+    if os.path.exists(live_n3iwf):
+        shutil.copy2(live_n3iwf, N3IWF_STATUS)
 
 # Output files
 PDF_OUTPUT = os.path.join(RESULTS_THESIS, "complete_analysis.pdf")
@@ -492,6 +506,7 @@ def generate_all_plots():
     
     # Load data
     print("\n[1/4] Loading data...")
+    archive_network_stats()
     data = load_comparison_data()
     network_stats = load_network_stats()
     
