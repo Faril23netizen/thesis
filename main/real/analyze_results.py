@@ -25,7 +25,25 @@ import matplotlib.gridspec as gridspec
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RESULTS_REAL = os.path.join(BASE_DIR, "results", "hasil_real")
-DEFAULT_CSV  = os.path.join(RESULTS_REAL, "comparison.csv")
+
+def get_latest_session() -> tuple[str, str]:
+    base_csv = os.path.join(RESULTS_REAL, "comparison.csv")
+    if not os.path.exists(RESULTS_REAL):
+        return base_csv, RESULTS_REAL
+        
+    sessions = [d for d in os.listdir(RESULTS_REAL) if d.startswith("session_") and os.path.isdir(os.path.join(RESULTS_REAL, d))]
+    if not sessions:
+        return base_csv, RESULTS_REAL
+        
+    sessions.sort(reverse=True)
+    latest_dir = os.path.join(RESULTS_REAL, sessions[0])
+    latest_csv = os.path.join(latest_dir, "comparison.csv")
+    
+    if os.path.exists(latest_csv):
+        return latest_csv, latest_dir
+    return base_csv, RESULTS_REAL
+
+DEFAULT_CSV, DEFAULT_SAVE_DIR = get_latest_session()
 ACTION_NAMES = ["OFF", "LOW", "MED", "HIGH"]
 ACTION_COST  = [0.0, 0.3, 0.6, 1.0]
 
@@ -276,7 +294,7 @@ def plot_all(d: dict, rb_mask, fql_mask, dqn_mask, save_dir: str | None = None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv",  default=DEFAULT_CSV,  help="Path to comparison.csv")
-    parser.add_argument("--save", default=RESULTS_REAL, help="Directory to save plot PNG")
+    parser.add_argument("--save", default=DEFAULT_SAVE_DIR, help="Directory to save plot PNG")
     args = parser.parse_args()
 
     print(f"Loading: {args.csv}")
