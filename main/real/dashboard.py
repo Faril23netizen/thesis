@@ -393,10 +393,6 @@ HTML_TEMPLATE = """
                             <div class="metric-label">FQL Epsilon</div>
                             <div class="metric-value" id="epsilon-value">{{ '%.3f'|format(fql_eps) if fql_eps != 'null' else '--' }}</div>
                         </div>
-                        <div class="metric">
-                            <div class="metric-label">Total Energy</div>
-                            <div class="metric-value" id="energy-value">--</div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -510,11 +506,16 @@ def index():
         packets_dropped = network.get('packets_dropped', 0)
         packet_loss_rate = (packets_dropped / max(packets_sent, 1)) * 100 if packets_sent > 0 else 0
         
+        # Map action integer to risk label
+        action_val = state.get('action')
+        risk_labels = {0: "SAFE", 1: "CAUTION", 2: "WARNING", 3: "CRITICAL"}
+        action_str = risk_labels.get(action_val, "--") if action_val is not None else "--"
+        
         # Prepare data for template
         template_data = {
             'pH': state.get('pH', 'null'),
             'T': state.get('T', 'null'),
-            'action': state.get('action', '--'),
+            'action': action_str,
             'phase': state.get('phase', '--'),
             'reward': state.get('reward', 'null'),
             'real_steps': state.get('real_steps', '--'),
