@@ -1,0 +1,14 @@
+[2026-05-24 12:19:28] [INFO] Pico monitor log: D:\thesis-master\results\hasil_real\pico_monitor.log
+[2026-05-24 12:19:28] [INFO]   Run in second terminal: tail -f results/hasil_real/pico_monitor.log
+[2026-05-24 12:19:28] [INFO] =================================================================
+[2026-05-24 12:19:28] [INFO]   Mode: MONITORING ONLY (no aerator control)
+[2026-05-24 12:19:28] [INFO] =================================================================
+[2026-05-24 12:19:28] [INFO] PHASE A — Waiting for Pico WH connection... (session #1)
+[2026-05-24 12:20:14] [INFO] Pico monitor log: D:\thesis-master\results\hasil_real\pico_monitor.log
+[2026-05-24 12:20:14] [INFO]   Run in second terminal: tail -f results/hasil_real/pico_monitor.log
+[2026-05-24 12:20:14] [INFO] =================================================================
+[2026-05-24 12:20:14] [INFO] Aquaculture NH3 Risk Monitoring System - Raspberry Pi 4
+[2026-05-24 12:20:14] [INFO]   Mode: MONITORING ONLY (no aerator control)
+[2026-05-24 12:20:14] [INFO]   Progressive Learning: Rule-Based -> FQL -> DQN
+[2026-05-24 12:20:14] [INFO] =================================================================
+[2026-05-24 12:20:14] [INFO] PHASE A - Waiting for Pico WH connection... (session #1)

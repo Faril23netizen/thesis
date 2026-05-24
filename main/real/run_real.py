@@ -332,9 +332,9 @@ def main():
     use_ha = "--with-ha" in sys.argv
     
     logger.info("=" * 65)
-    logger.info("Aquaculture NH₃ Risk Monitoring System — Raspberry Pi 4")
+    logger.info("Aquaculture NH3 Risk Monitoring System - Raspberry Pi 4")
     logger.info("  Mode: MONITORING ONLY (no aerator control)")
-    logger.info("  Progressive Learning: Rule-Based → FQL → DQN")
+    logger.info("  Progressive Learning: Rule-Based -> FQL -> DQN")
     if use_ha and HA_AVAILABLE:
         logger.info(f"  Home Assistant: ENABLED (comparison mode)")
     logger.info("=" * 65)
@@ -395,10 +395,10 @@ def main():
 
         # ── Reset semua state AI pada sesi ke-2 dan seterusnya ──────────── #
         if session > 1:
-            logger.info("═" * 65)
-            logger.info(f"PICO DISCONNECTED — Resetting all learning states (session #{session})")
+            logger.info("=" * 65)
+            logger.info(f"PICO DISCONNECTED - Resetting all learning states (session #{session})")
             logger.info("Reason: Pico WH might be moved to a different location/pond.")
-            logger.info("═" * 65)
+            logger.info("=" * 65)
 
             # Reset semua agent
             fql              = FQLAgent()
@@ -414,7 +414,7 @@ def main():
             fql_mode_start     = None
 
         # ── PHASE A: Tunggu Pico WH konek ───────────────────────────────── #
-        logger.info(f"PHASE A — Waiting for Pico WH connection... (session #{session})")
+        logger.info(f"PHASE A - Waiting for Pico WH connection... (session #{session})")
         while not _shutdown:
             if bridge.connect():
                 logger.info("Pico connected!")
@@ -455,7 +455,7 @@ def main():
                 if time.time() - last_data_time > DISCONNECT_TIMEOUT:
                     logger.warning(
                         f"[DISCONNECT] No data received for {DISCONNECT_TIMEOUT}s "
-                        f"— Pico WH assumed disconnected. Returning to Phase A..."
+                        f"- Pico WH assumed disconnected. Returning to Phase A..."
                     )
                     bridge.disconnect()
                     break  # Keluar inner loop → outer loop → reset + Phase A
