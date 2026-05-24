@@ -631,6 +631,7 @@ def main():
             logger.info("-" * 65)
 
         # ── Dashboard state dump ──────────────────────────────────────────── #
+        stats = fql.get_stats()  # Always fetch latest for dashboard
         state_dump = {
             "pH": round(pH, 3),
             "T": round(T, 2),
