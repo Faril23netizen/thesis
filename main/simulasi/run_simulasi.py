@@ -158,6 +158,8 @@ def evaluate_agent(agent, agent_name: str, n_episodes: int) -> dict:
     all_predictions, all_actuals, all_rewards, episode_rewards = [], [], [], []
     episode_types = ["safe", "acidic", "alkaline", "cold", "hot", "multi", "random"]
     
+    scenario_stats = defaultdict(lambda: {"correct": 0, "total": 0})
+    
     for ep in range(n_episodes):
         ep_type = episode_types[ep % len(episode_types)]
         trajectory = ScenarioGenerator.generate_episode(ep_type, STEPS_PER_EPISODE)
@@ -167,9 +169,15 @@ def evaluate_agent(agent, agent_name: str, n_episodes: int) -> dict:
             predicted_risk = agent.predict_risk(pH, T)
             
             error = abs(predicted_risk - actual_risk)
-            if error == 0: reward = +1.0
-            elif error == 1: reward = -0.5
-            else: reward = -1.0
+            if error == 0: 
+                reward = +1.0
+                scenario_stats[ep_type]["correct"] += 1
+            elif error == 1: 
+                reward = -0.5
+            else: 
+                reward = -1.0
+                
+            scenario_stats[ep_type]["total"] += 1
             
             all_predictions.append(predicted_risk)
             all_actuals.append(actual_risk)
@@ -180,8 +188,76 @@ def evaluate_agent(agent, agent_name: str, n_episodes: int) -> dict:
     metrics = calculate_metrics(all_predictions, all_actuals)
     metrics['avg_reward'] = np.mean(all_rewards)
     
+    # Calculate scenario accuracy
+    scenario_accuracy = {}
+    for stype, stats in scenario_stats.items():
+        scenario_accuracy[stype] = stats["correct"] / stats["total"] if stats["total"] > 0 else 0
+    metrics['scenario_accuracy'] = scenario_accuracy
+    
     print(f"[{agent_name}] Accuracy: {metrics['accuracy']:.2%} | Avg Reward: {metrics['avg_reward']:.3f}")
     return metrics
+
+
+# ══════════════════════════════════════════════════════════════════════════ #
+#  Visualization
+# ══════════════════════════════════════════════════════════════════════════ #
+
+def plot_simulation_results(results: dict):
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec
+    
+    print("\nGenerating simulation plots...")
+    fig = plt.figure(figsize=(14, 10))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[1, 1.5], hspace=0.3)
+    
+    # 1. Overall Accuracy Plot
+    ax1 = fig.add_subplot(gs[0])
+    agents = ['Traditional Rules', 'Trained FQL', 'Trained DQN']
+    accuracies = [
+        results['rule_based']['accuracy'] * 100,
+        results['fql']['accuracy'] * 100,
+        results['dqn']['accuracy'] * 100
+    ]
+    colors = ['#e74c3c', '#f39c12', '#27ae60']
+    
+    bars = ax1.bar(agents, accuracies, color=colors, width=0.5, alpha=0.8)
+    ax1.set_ylim(0, 105)
+    ax1.set_ylabel('Accuracy (%)')
+    ax1.set_title('Overall Accuracy Comparison', fontweight='bold')
+    ax1.grid(True, axis='y', alpha=0.3)
+    
+    for bar in bars:
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2., height + 2,
+                 f'{height:.1f}%', ha='center', va='bottom', fontweight='bold')
+                 
+    # 2. Accuracy per Scenario Plot
+    ax2 = fig.add_subplot(gs[1])
+    scenarios = list(results['rule_based']['scenario_accuracy'].keys())
+    
+    rb_scen = [results['rule_based']['scenario_accuracy'][s] * 100 for s in scenarios]
+    fql_scen = [results['fql']['scenario_accuracy'][s] * 100 for s in scenarios]
+    dqn_scen = [results['dqn']['scenario_accuracy'][s] * 100 for s in scenarios]
+    
+    x = np.arange(len(scenarios))
+    width = 0.25
+    
+    ax2.bar(x - width, rb_scen, width, label='Traditional Rules', color='#e74c3c', alpha=0.8)
+    ax2.bar(x, fql_scen, width, label='Trained FQL', color='#f39c12', alpha=0.8)
+    ax2.bar(x + width, dqn_scen, width, label='Trained DQN', color='#27ae60', alpha=0.8)
+    
+    ax2.set_xticks(x)
+    ax2.set_xticklabels([s.upper() for s in scenarios])
+    ax2.set_ylabel('Accuracy (%)')
+    ax2.set_title('Accuracy Breakdown by Environmental Scenario', fontweight='bold')
+    ax2.legend(loc='lower right')
+    ax2.grid(True, axis='y', alpha=0.3)
+    ax2.set_ylim(0, 110)
+    
+    plt.tight_layout()
+    plot_path = os.path.join(RESULTS_DIR, "simulation_analysis.png")
+    plt.savefig(plot_path, dpi=150, bbox_inches='tight')
+    print(f"Plot saved successfully to: {plot_path}")
 
 
 # ══════════════════════════════════════════════════════════════════════════ #
@@ -273,6 +349,12 @@ def main():
     print("2. FQL successfully learned the complex pKa formula dynamically, outperforming rigid rules.")
     print("3. DQN generalized the continuous state-space perfectly, achieving the highest scientific accuracy.")
     print("=" * 70)
+    
+    # Generate Plots
+    try:
+        plot_simulation_results(results)
+    except ImportError:
+        print("\nSkipping plots: matplotlib not installed.")
 
 if __name__ == "__main__":
     main()

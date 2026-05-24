@@ -22,12 +22,17 @@ from itertools import product
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from main.simulasi.run_simulasi import (
-    RuleBasedAgent, ScenarioGenerator, calculate_metrics,
-    train_fql, train_dqn_from_fql, evaluate_agent,
+    TraditionalRuleBased, ScenarioGenerator, calculate_metrics, evaluate_agent,
+    append_transition, calculate_actual_risk,
     N_EPISODES, STEPS_PER_EPISODE
 )
 from fql.fql_agent import FQLAgent
 from dqn.dqn_agent import DQNAgent
+
+try:
+    from dqn.train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
+except ImportError:
+    TORCH_AVAILABLE = False
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RESULTS_DIR = os.path.join(BASE_DIR, "results", "simulation")
@@ -39,36 +44,32 @@ RESULTS_DIR = os.path.join(BASE_DIR, "results", "simulation")
 
 FQL_CONFIGS = [
     # (alpha, gamma, eps_start, eps_min, eps_decay, train_episodes)
-    (0.05, 0.90, 0.5, 0.05, 0.995, 30),   # Conservative learning
-    (0.10, 0.95, 0.3, 0.05, 0.995, 50),   # Balanced (default)
-    (0.15, 0.95, 0.3, 0.05, 0.990, 50),   # Faster learning
-    (0.10, 0.98, 0.2, 0.03, 0.997, 70),   # High gamma, more episodes
-    (0.20, 0.95, 0.4, 0.05, 0.990, 40),   # Aggressive learning
+    (0.05, 0.90, 0.5, 0.05, 0.995, 100),  # Conservative learning
+    (0.15, 0.95, 0.5, 0.01, 0.999, 150),  # Fast learning (Default)
+    (0.20, 0.95, 0.6, 0.05, 0.990, 200),  # Aggressive learning
 ]
 
 DQN_CONFIGS = [
-    # (epochs, hidden_size)
-    (200, 64),   # Fast training
-    (300, 64),   # Default
-    (400, 64),   # More training
-    (300, 128),  # Larger network
-    (500, 64),   # Extended training
+    # epochs
+    (500,),   
+    (1000,),  
+    (1500,),  
 ]
 
 
 def evaluate_config(fql_config, dqn_config, config_id):
     """Evaluate one hyperparameter configuration."""
     alpha, gamma, eps_start, eps_min, eps_decay, train_eps = fql_config
-    dqn_epochs, dqn_hidden = dqn_config
+    dqn_epochs = dqn_config[0]
     
     print(f"\n{'='*70}")
     print(f"CONFIG #{config_id}")
     print(f"FQL: α={alpha}, γ={gamma}, ε={eps_start}→{eps_min}, decay={eps_decay}, episodes={train_eps}")
-    print(f"DQN: epochs={dqn_epochs}, hidden={dqn_hidden}")
+    print(f"DQN: epochs={dqn_epochs}")
     print(f"{'='*70}")
     
     # Initialize agents
-    rb_agent = RuleBasedAgent()
+    rb_agent = TraditionalRuleBased()
     fql_agent = FQLAgent(
         alpha=alpha,
         gamma=gamma,
@@ -76,20 +77,34 @@ def evaluate_config(fql_config, dqn_config, config_id):
         eps_min=eps_min,
         eps_decay=eps_decay
     )
-    dqn_agent = DQNAgent()
+    dqn_buffer = []
     
     # Train FQL
-    train_fql(fql_agent, train_eps)
+    episode_types = ["safe", "acidic", "alkaline", "cold", "hot", "multi", "random"]
+    for ep in range(train_eps):
+        ep_type = episode_types[ep % len(episode_types)]
+        trajectory = ScenarioGenerator.generate_episode(ep_type, STEPS_PER_EPISODE)
+        for pH, T in trajectory:
+            actual_risk = calculate_actual_risk(pH, T)
+            predicted_risk = fql_agent.predict_risk(pH, T)
+            fql_agent.update(pH, T, predicted_risk, actual_risk)
+            append_transition(dqn_buffer, s=[pH, T], a=actual_risk, 
+                              r=1.0 if predicted_risk == actual_risk else -1.0, 
+                              s_next=[pH, T])
     
     # Train DQN
     dqn_model_path = os.path.join(RESULTS_DIR, f"dqn_tune_{config_id}.pt")
-    dqn_trained = train_dqn_from_fql(fql_agent, dqn_model_path)
-    
-    if not dqn_trained:
-        print(f"[CONFIG #{config_id}] DQN training failed, skipping...")
+    if TORCH_AVAILABLE:
+        train_pytorch(dqn_buffer, epochs=dqn_epochs, model_path=dqn_model_path)
+    else:
+        train_numpy(dqn_buffer, epochs=dqn_epochs, model_path=dqn_model_path)
+        
+    dqn_agent = DQNAgent()
+    if not dqn_agent.load(dqn_model_path):
+        print(f"[CONFIG #{config_id}] DQN loading failed, skipping...")
         return None
-    
-    dqn_agent.load(dqn_model_path)
+        
+    fql_agent.epsilon = 0.0 # greedy for eval
     
     # Evaluate all agents
     rb_metrics = evaluate_agent(rb_agent, "RB", N_EPISODES)
