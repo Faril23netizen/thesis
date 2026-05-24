@@ -407,21 +407,30 @@ int main(void) {
   }
 
   /* ── Connect to N3IWF TCP Server ──────────────────────────────────────── */
-  while (!tcp_client_open(g_client)) {
-    printf("# TCP connect failed, retrying in 5s...\r\n");
+  /* Keep trying until RPi is ready — never give up */
+  while (true) {
+    if (!tcp_client_open(g_client)) {
+      printf("# TCP connect failed, retrying in 5s...\r\n");
+      sleep_ms(5000);
+      continue;
+    }
+
+    /* Wait for connection to establish — poll lwIP so callbacks fire */
+    int timeout = 100; /* 10 seconds (100 x 100ms) */
+    while (!g_client->connected && timeout > 0) {
+      cyw43_arch_poll(); /* Allow lwIP background thread to process */
+      sleep_ms(100);
+      timeout--;
+    }
+
+    if (g_client->connected) {
+      break; /* Success — proceed to main loop */
+    }
+
+    /* Connection timed out — close and retry */
+    printf("# [WARN] TCP connection timeout — retrying in 5s...\r\n");
+    tcp_client_close(g_client);
     sleep_ms(5000);
-  }
-
-  /* Wait for connection to establish */
-  int timeout = 50; /* 5 seconds */
-  while (!g_client->connected && timeout > 0) {
-    sleep_ms(100);
-    timeout--;
-  }
-
-  if (!g_client->connected) {
-    printf("# [ERROR] TCP connection timeout\r\n");
-    return 1;
   }
 
   printf("# \r\n");
@@ -484,15 +493,23 @@ int main(void) {
       if (!tcp_client_send_data(g_client, ph_x1000, temp_x100, risk)) {
         printf("# [WARN] TCP send failed — reconnecting...\r\n");
         tcp_client_close(g_client);
-        while (!tcp_client_open(g_client)) {
-          printf("# Retry TCP in 3s...\r\n");
+        /* Reconnect loop — same robust logic as startup */
+        while (true) {
+          if (!tcp_client_open(g_client)) {
+            printf("# Retry TCP in 3s...\r\n");
+            sleep_ms(3000);
+            continue;
+          }
+          int timeout = 100;
+          while (!g_client->connected && timeout > 0) {
+            cyw43_arch_poll();
+            sleep_ms(100);
+            timeout--;
+          }
+          if (g_client->connected) break;
+          printf("# Reconnect timeout, retrying...\r\n");
+          tcp_client_close(g_client);
           sleep_ms(3000);
-        }
-        /* Wait for connection */
-        timeout = 50;
-        while (!g_client->connected && timeout > 0) {
-          sleep_ms(100);
-          timeout--;
         }
       }
 
