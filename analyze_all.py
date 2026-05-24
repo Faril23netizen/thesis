@@ -52,6 +52,7 @@ LATEST_SESSION = get_latest_session_dir()
 COMPARISON_CSV = os.path.join(LATEST_SESSION, "comparison.csv")
 CALLBOX_STATS = os.path.join(LATEST_SESSION, "callbox_stats.json")
 N3IWF_STATUS = os.path.join(LATEST_SESSION, "n3iwf_status.json")
+NETWORK_TIMELINE = os.path.join(LATEST_SESSION, "network_timeline.csv")
 
 def archive_network_stats():
     """Copy live network stats to the session folder for permanent archiving"""
@@ -60,11 +61,14 @@ def archive_network_stats():
         
     live_callbox = os.path.join(RESULTS_NETWORK, "callbox_stats.json")
     live_n3iwf = os.path.join(RESULTS_NETWORK, "n3iwf_status.json")
+    live_timeline = os.path.join(RESULTS_NETWORK, "network_timeline.csv")
     
     if os.path.exists(live_callbox):
         shutil.copy2(live_callbox, CALLBOX_STATS)
     if os.path.exists(live_n3iwf):
         shutil.copy2(live_n3iwf, N3IWF_STATUS)
+    if os.path.exists(live_timeline):
+        shutil.copy2(live_timeline, NETWORK_TIMELINE)
 
 # Output files
 PDF_OUTPUT = os.path.join(RESULTS_THESIS, "complete_analysis.pdf")
@@ -142,8 +146,30 @@ def load_network_stats():
             stats['n3iwf'] = json.load(f)
     except FileNotFoundError:
         stats['n3iwf'] = None
-    
+        
     return stats
+
+
+def load_network_timeline():
+    """Load network timeline data"""
+    timeline = []
+    try:
+        with open(NETWORK_TIMELINE, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    timeline.append({
+                        'uptime': float(row['uptime']),
+                        'latency': float(row['avg_latency_ms']),
+                        'jitter': float(row['jitter_ms']),
+                        'packets_dropped': int(row['packets_dropped'])
+                    })
+                except (ValueError, KeyError):
+                    continue
+    except FileNotFoundError:
+        pass
+    
+    return timeline
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -623,6 +649,7 @@ def generate_all_plots():
     archive_network_stats()
     data = load_comparison_data()
     network_stats = load_network_stats()
+    network_timeline = load_network_timeline()
     
     if not data:
         print("❌ No data found in comparison.csv")
@@ -664,11 +691,11 @@ def generate_all_plots():
     # Generate plots
     print("\n[3/4] Generating plots...")
     
-    fig = plt.figure(figsize=(16, 30))
+    fig = plt.figure(figsize=(16, 35))
     fig.suptitle('Complete Analysis - Aquaculture Edge AI with N3IWF', 
                  fontsize=16, fontweight='bold', y=0.995)
     
-    gs = gridspec.GridSpec(6, 2, figure=fig, hspace=0.40, wspace=0.30)
+    gs = gridspec.GridSpec(7, 2, figure=fig, hspace=0.40, wspace=0.30)
     
     # Plot 1: Water Quality
     ax1 = fig.add_subplot(gs[0, :])
@@ -702,13 +729,17 @@ def generate_all_plots():
     ax8 = fig.add_subplot(gs[4, 1])
     plot_policy_map(data, ax8)
     
-    # Plot 9: Network Stats
-    ax9 = fig.add_subplot(gs[5, 0])
-    plot_network_stats(network_stats, ax9)
+    # Plot 9: Network Stability Timeline
+    ax9 = fig.add_subplot(gs[5, :])
+    plot_network_stability(network_timeline, ax9)
     
-    # Plot 10: Network Details Table
-    ax10 = fig.add_subplot(gs[5, 1])
-    plot_network_details_table(network_stats, ax10)
+    # Plot 10: Network Stats
+    ax10 = fig.add_subplot(gs[6, 0])
+    plot_network_stats(network_stats, ax10)
+    
+    # Plot 11: Network Details Table
+    ax11 = fig.add_subplot(gs[6, 1])
+    plot_network_details_table(network_stats, ax11)
     
     plt.tight_layout(rect=[0, 0, 1, 0.99])
     
@@ -719,7 +750,7 @@ def generate_all_plots():
     print(f"✅ PDF saved: {pdf_path}")
     
     # Save individual plots
-    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10], 1):
+    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10, ax11], 1):
         extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
         fig.savefig(os.path.join(PLOTS_DIR, f'plot_{i}.png'), 
                    bbox_inches=extent.expanded(1.2, 1.2), dpi=150)

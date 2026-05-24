@@ -48,6 +48,7 @@ BANDWIDTH_MBPS = 100  # Simulated bandwidth
 
 # Monitoring
 STATS_FILE = "results/network/callbox_stats.json"
+TIMELINE_FILE = "results/network/network_timeline.csv"
 LOG_FILE = "results/network/callbox.log"
 
 os.makedirs("results/network", exist_ok=True)
@@ -376,6 +377,13 @@ class CallboxSimulator:
     def _save_stats(self):
         """Save statistics to file"""
         log(f"Stats saver started, will save to {STATS_FILE}", "INFO")
+        
+        # Initialize CSV
+        os.makedirs(os.path.dirname(TIMELINE_FILE), exist_ok=True)
+        if not os.path.exists(TIMELINE_FILE):
+            with open(TIMELINE_FILE, "w") as f:
+                f.write("timestamp,uptime,avg_latency_ms,jitter_ms,packets_dropped,current_bandwidth_mbps\n")
+                
         while self.running:
             try:
                 with stats_lock:
@@ -386,6 +394,11 @@ class CallboxSimulator:
                 
                 with open(STATS_FILE, "w") as f:
                     json.dump(stats_copy, f, indent=2)
+                    
+                # Append to timeline CSV
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                with open(TIMELINE_FILE, "a") as f:
+                    f.write(f"{timestamp},{stats_copy['uptime']},{stats_copy['avg_latency_ms']:.2f},{stats_copy['jitter_ms']:.2f},{stats_copy['packets_dropped']},{stats_copy['current_bandwidth_mbps']}\n")
                 
                 log(f"Stats saved: uptime={stats_copy['uptime']}s, ipsec={stats_copy['ipsec_status']}", "DEBUG")
                 
