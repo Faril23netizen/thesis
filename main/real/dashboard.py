@@ -425,6 +425,14 @@ HTML_TEMPLATE = """
                             <div class="metric-label">FQL Epsilon</div>
                             <div class="metric-value" id="epsilon-value">{{ '%.3f'|format(fql_eps) if fql_eps != 'null' else '--' }}</div>
                         </div>
+                        <div class="metric">
+                            <div class="metric-label">DQN Ready</div>
+                            <div class="metric-value" id="dqn-ready-value">{{ 'Yes' if dqn_ready else 'No' }}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">DQN Active</div>
+                            <div class="metric-value" id="dqn-active-value">{{ 'Yes' if dqn_active else 'No' }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -510,6 +518,8 @@ HTML_TEMPLATE = """
                         document.getElementById('steps-value').innerText = state.real_steps || '--';
                         document.getElementById('buffer-value').innerText = state.buffer_size || '--';
                         document.getElementById('epsilon-value').innerText = formatValue(state.fql_eps, 3);
+                        document.getElementById('dqn-ready-value').innerText = state.dqn_ready ? 'Yes' : 'No';
+                        document.getElementById('dqn-active-value').innerText = state.dqn_active ? 'Yes' : 'No';
                         
                         // Update Chart
                         if (state.pH && state.T) {
