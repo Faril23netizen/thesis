@@ -217,31 +217,40 @@ def compute_statistics(data):
 #  Plotting Functions
 # ══════════════════════════════════════════════════════════════════════════════
 
-def plot_water_quality(data, ax):
-    """Plot pH and Temperature"""
+def plot_ph_trend(data, ax):
+    """Plot pH trend over time"""
     steps = [d['step'] for d in data]
     pH = [d['pH'] for d in data]
-    T = [d['T'] for d in data]
     
-    ax1 = ax
-    ax2 = ax.twinx()
-    
-    line1 = ax1.plot(steps, pH, 'b-', label='pH', linewidth=1.5, alpha=0.8)
-    line2 = ax2.plot(steps, T, 'r-', label='Temperature', linewidth=1.5, alpha=0.8)
+    ax.plot(steps, pH, 'b-', label='pH Level', linewidth=1.5, alpha=0.8)
     
     # Safe zones
-    ax1.axhspan(6.5, 8.5, alpha=0.1, color='green', label='pH Safe Zone')
-    ax2.axhspan(26, 30, alpha=0.1, color='orange')
+    ax.axhspan(6.5, 8.5, alpha=0.1, color='green', label='pH Safe Zone (6.5 - 8.5)')
     
-    ax1.set_xlabel('Step')
-    ax1.set_ylabel('pH', color='b')
-    ax2.set_ylabel('Temperature (°C)', color='r')
-    ax1.set_title('Water Quality Monitoring')
+    ax.set_xlabel('Step', fontweight='bold')
+    ax.set_ylabel('pH', color='b', fontweight='bold')
+    ax.set_title('pH Level Trend', fontweight='bold')
     
-    lines = line1 + line2
-    labels = [l.get_label() for l in lines]
-    ax1.legend(lines, labels, loc='upper left', fontsize=8)
-    ax1.grid(True, alpha=0.3)
+    ax.legend(loc='upper left', fontsize=8)
+    ax.grid(True, alpha=0.3)
+
+
+def plot_temperature_trend(data, ax):
+    """Plot Temperature trend over time"""
+    steps = [d['step'] for d in data]
+    T = [d['T'] for d in data]
+    
+    ax.plot(steps, T, 'r-', label='Temperature (°C)', linewidth=1.5, alpha=0.8)
+    
+    # Safe zones
+    ax.axhspan(26, 30, alpha=0.1, color='orange', label='Temp Safe Zone (26 - 30°C)')
+    
+    ax.set_xlabel('Step', fontweight='bold')
+    ax.set_ylabel('Temperature (°C)', color='r', fontweight='bold')
+    ax.set_title('Temperature Trend', fontweight='bold')
+    
+    ax.legend(loc='upper left', fontsize=8)
+    ax.grid(True, alpha=0.3)
 
 
 def plot_progressive_learning(data, ax):
@@ -745,7 +754,8 @@ def generate_all_plots():
         plt.close(fig)
         print(f"  - Saved {filename}")
 
-    save_single_plot('01_water_quality.png', plot_water_quality, data, figsize=(12, 6))
+    save_single_plot('01a_ph_trend.png', plot_ph_trend, data, figsize=(10, 5))
+    save_single_plot('01b_temperature_trend.png', plot_temperature_trend, data, figsize=(10, 5))
     save_single_plot('02_progressive_learning.png', plot_progressive_learning, data, figsize=(12, 6))
     save_single_plot('03_action_distribution.png', plot_action_distribution, data)
     save_single_plot('04_nh3_toxicity.png', plot_nh3_toxicity, data)
