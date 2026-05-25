@@ -218,6 +218,7 @@ def _init_comparison_csv(session_dir: str) -> None:
             "fql_correct",       # 1 if FQL correct, 0 if wrong
             "dqn_correct",       # 1 if DQN correct, 0 if wrong
             "fql_steps", "epsilon",
+            "bandwidth_mbps", "latency_ms"  # Network QoS Logs
         ])
         _csv_file.flush()
 
@@ -300,12 +301,25 @@ def _log_comparison(real_step: int, pH: float, T: float,
     
     nh3 = nh3_fraction(pH, T) * 100.0
 
+    # Read network stats to log bandwidth and latency
+    bandwidth = 0.0
+    latency = 0.0
+    try:
+        import json
+        with open(os.path.join(RESULTS_DIR, "../network/callbox_stats.json"), 'r') as f:
+            net_stats = json.load(f)
+            bandwidth = float(net_stats.get('current_bandwidth_mbps', 0))
+            latency = float(net_stats.get('avg_latency_ms', 0))
+    except Exception:
+        pass
+
     _csv_writer.writerow([
         time.strftime("%Y-%m-%d %H:%M:%S"), real_step,
         round(pH, 4), round(T, 2), round(nh3, 4),
         mode, actual_risk, rb_risk, fql_risk, dqn_risk,
         rb_correct, fql_correct, dqn_correct,
         fql.total_steps, round(fql.epsilon, 4),
+        round(bandwidth, 2), round(latency, 2)
     ])
     _csv_file.flush()
 

@@ -379,7 +379,7 @@ HTML_TEMPLATE = """
                             <div class="network-stat-value" id="packet-loss-value">{{ '%.2f'|format(packet_loss_rate) }} %</div>
                         </div>
                         <div class="network-stat">
-                            <div class="network-stat-label">Throughput</div>
+                            <div class="network-stat-label">Bandwidth</div>
                             <div class="network-stat-value" id="throughput-value">{{ throughput }} Mbps</div>
                         </div>
                         <div class="network-stat">
@@ -614,7 +614,7 @@ HTML_TEMPLATE = """
                         document.getElementById('latency-value').innerText = formatValue(net.avg_latency_ms, 1) + ' ms';
                         document.getElementById('jitter-value').innerText = formatValue(net.jitter_ms, 2) + ' ms';
                         document.getElementById('packet-loss-value').innerText = formatValue(net.packet_loss_rate, 2) + ' %';
-                        document.getElementById('throughput-value').innerText = formatValue(net.current_bandwidth_mbps || net.throughput, 2) + ' Mbps';
+                        document.getElementById('throughput-value').innerText = formatValue(net.throughput, 2) + ' Mbps';
                         document.getElementById('packets-sent-value').innerText = (net.packets_sent || 0).toLocaleString();
                         document.getElementById('packets-dropped-value').innerText = (net.packets_dropped || 0).toLocaleString();
                         document.getElementById('uptime-value').innerText = formatValue(net.uptime / 3600, 1) + ' h';
@@ -649,7 +649,7 @@ HTML_TEMPLATE = """
                             // Fallback
                             latencyChart.data.datasets[0].data.push(net.avg_latency_ms || 0);
                             jitterChart.data.datasets[0].data.push(net.jitter_ms || 0);
-                            bandwidthChart.data.datasets[0].data.push(net.current_bandwidth_mbps || 0);
+                            bandwidthChart.data.datasets[0].data.push(net.throughput || 0);
                         }
                         
                         if (latencyChart.data.labels.length > maxDataPoints) {
@@ -847,7 +847,8 @@ def get_network():
             "upf_status": stats.get('upf_status', 'UNKNOWN'),
             "amf_ues": stats.get('amf_ues', 0),
             "smf_sessions": stats.get('smf_sessions', 0),
-            "upf_packets": stats.get('upf_packets', 0)
+            "upf_packets": stats.get('upf_packets', 0),
+            "nodes": stats.get('node_stats', {})
         })
     
     except json.JSONDecodeError:
