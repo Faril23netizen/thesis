@@ -246,6 +246,35 @@ HTML_TEMPLATE = """
             margin-bottom: 12px;
             color: #fca5a5;
         }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .tab-btn {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            background: #334155;
+            color: #f1f5f9;
+        }
+        .tab-btn.active {
+            background: #3b82f6;
+            color: #ffffff;
+            border-color: #60a5fa;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -260,6 +289,13 @@ HTML_TEMPLATE = """
         <div id="error-banner" class="error-banner" style="{% if not has_data %}display: block;{% else %}display: none;{% endif %}">
             <h3>⚠️ System Not Running</h3>
             <p>Please start the system: <code>sudo ./start_all.sh</code></p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="selectPico('Pico 1')">Pico 1</button>
+            <button class="tab-btn" onclick="selectPico('Pico 2')">Pico 2</button>
+            <button class="tab-btn" onclick="selectPico('Pico 3')">Pico 3</button>
         </div>
 
         <!-- Status Bar -->
@@ -495,6 +531,8 @@ HTML_TEMPLATE = """
                             type: 'linear',
                             display: true,
                             position: 'left',
+                            beginAtZero: true,
+                            min: 0,
                             ticks: { color: color },
                             grid: { color: '#334155', drawBorder: false },
                             title: { display: true, text: yAxisTitle, color: color }
@@ -510,9 +548,9 @@ HTML_TEMPLATE = """
                 data: {
                     labels: [],
                     datasets: [
-                        { label: 'Pico 1 (Main)', data: [], borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
-                        { label: 'Pico 2 (Dummy)', data: [], borderColor: '#3b82f6', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
-                        { label: 'Pico 3 (Dummy)', data: [], borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 }
+                        { label: 'Pico 1', data: [], borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
+                        { label: 'Pico 2', data: [], borderColor: '#3b82f6', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
+                        { label: 'Pico 3', data: [], borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 }
                     ]
                 },
                 options: {
@@ -522,7 +560,7 @@ HTML_TEMPLATE = """
                     plugins: { legend: { labels: { color: '#e2e8f0' } } },
                     scales: {
                         x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 }, grid: { color: '#334155', drawBorder: false } },
-                        y: { type: 'linear', display: true, position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' } }
+                        y: { type: 'linear', display: true, position: 'left', beginAtZero: true, min: 0, ticks: { color: '#94a3b8' }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' } }
                     }
                 }
             };
@@ -536,6 +574,32 @@ HTML_TEMPLATE = """
         const latencyChart = new Chart(document.getElementById('latencyChart').getContext('2d'), createMultiChartConfig('ms'));
         const jitterChart = new Chart(document.getElementById('jitterChart').getContext('2d'), createMultiChartConfig('ms'));
         const bandwidthChart = new Chart(document.getElementById('bandwidthChart').getContext('2d'), createMultiChartConfig('Mbps'));
+
+        let activePico = 'Pico 1';
+
+        function selectPico(picoName) {
+            activePico = picoName;
+            
+            // Update button styles
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.innerText === picoName) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Filter network charts to show only selected Pico
+            [latencyChart, jitterChart, bandwidthChart].forEach(chart => {
+                chart.data.datasets.forEach(ds => {
+                    ds.hidden = (ds.label !== picoName);
+                });
+                chart.update();
+            });
+        }
+
+        // Initialize tabs on load
+        selectPico('Pico 1');
 
         function formatValue(val, decimals=2) {
             return val !== null && val !== undefined && val !== 'null' ? parseFloat(val).toFixed(decimals) : '--';
