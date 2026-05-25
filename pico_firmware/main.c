@@ -519,9 +519,9 @@ int main(void) {
       int32_t temp_x100 = 2500; /* Default 25°C if sensor fails */
       if (g_ds18b20.found) {
         temp_x100 = ds18b20_read_raw(&g_ds18b20);
-        /* Sanity check (catches 0 reading from hardware fault) */
-        if (temp_x100 <= 0 || temp_x100 > 8500) {
-          printf("# [WARN] Invalid temp reading: %ld, using default 25C\r\n", (long)temp_x100);
+        /* Sanity check */
+        if (temp_x100 < -5000 || temp_x100 > 8500) {
+          printf("# [WARN] Invalid temp reading: %ld, using default\r\n", (long)temp_x100);
           temp_x100 = 2500;
         }
       }
