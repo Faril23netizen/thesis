@@ -529,8 +529,6 @@ HTML_TEMPLATE = """
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            beginAtZero: true,
-                            min: 0,
                             ticks: { color: color },
                             grid: { color: '#334155', drawBorder: false },
                             title: { display: true, text: yAxisTitle, color: color }
