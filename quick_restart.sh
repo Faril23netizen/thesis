@@ -43,6 +43,14 @@ for script in callbox_simulator.py n3iwf_client.py run_real.py server.py dashboa
         FOUND=1
     fi
 done
+
+if pgrep -f "tshark" >/dev/null 2>&1; then
+    echo -e "  Killing tshark..."
+    pkill -9 -f "tshark" 2>/dev/null || true
+    pkill -9 -f "capture_qos.sh" 2>/dev/null || true
+    FOUND=1
+fi
+
 [ $FOUND -eq 1 ] && sleep 2 && echo -e "${GREEN}✅ Proses orphan dihapus${NC}" \
                  || echo -e "${GREEN}✅ Tidak ada proses orphan${NC}"
 echo ""

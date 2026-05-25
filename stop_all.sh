@@ -57,6 +57,16 @@ for script in callbox_simulator.py n3iwf_client.py run_real.py server.py; do
         echo -e "  ${GREEN}✅ Stopped${NC}"
     fi
 done
+
+# Hentikan tshark/pcap capture
+if pgrep -f "tshark" >/dev/null 2>&1; then
+    echo -e "  Stopping tshark (QoS Capture)..."
+    pkill -TERM -f "tshark" 2>/dev/null || true
+    pkill -TERM -f "capture_qos.sh" 2>/dev/null || true
+    sleep 1
+    echo -e "  ${GREEN}✅ Stopped${NC}"
+fi
+
 echo -e "${GREEN}✅ Selesai${NC}"
 echo ""
 

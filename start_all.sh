@@ -157,6 +157,16 @@ echo -e "${CYAN}   URL : ${WHITE}http://$RPI_IP:8080${NC}  ← buka di browser"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════ #
+# [5/4] QOS CAPTURE (Background)
+# ═══════════════════════════════════════════════════════════════════════════ #
+echo -e "${YELLOW}━━━ [*] Memulai Perekaman Wireshark (QoS) ━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+chmod +x capture_qos.sh
+sudo ./capture_qos.sh > "$LOG_DIR/capture_qos.log" 2>&1 &
+echo "$!" >> "$PIDS_FILE"
+echo -e "${GREEN}✅ QoS Capture (tshark) berjalan${NC} ${GRAY}→ results/network/qos_real.pcap${NC}"
+echo ""
+
+# ═══════════════════════════════════════════════════════════════════════════ #
 #  STATUS BOX
 # ═══════════════════════════════════════════════════════════════════════════ #
 echo -e "${BLUE}╔═══════════════════════════════════════════════════════════════════╗${NC}"
