@@ -553,10 +553,10 @@ HTML_TEMPLATE = """
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
-                    plugins: { legend: { labels: { color: '#e2e8f0' } } },
+                    plugins: { legend: { display: false } },
                     scales: {
                         x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 }, grid: { color: '#334155', drawBorder: false } },
-                        y: { type: 'linear', display: true, position: 'left', beginAtZero: true, min: 0, ticks: { color: '#94a3b8' }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' } }
+                        y: { type: 'linear', display: true, position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' } }
                     }
                 }
             };
