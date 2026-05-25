@@ -93,10 +93,10 @@ conn n3iwf-callbox
     ike=aes256-sha256-modp2048!
     esp=aes256-sha256!
     
-    # Keepalive
-    dpdaction=restart
-    dpddelay=30s
-    dpdtimeout=120s
+    # Keepalive (Disabled for local simulation)
+    dpdaction=none
+    dpddelay=300s
+    dpdtimeout=1200s
 """
     
     # Merge configs
@@ -219,7 +219,7 @@ def ping_callbox():
                     log(f"Ping to Callbox: {line.strip()}", "INFO")
             return True
         else:
-            log("Ping to Callbox failed", "WARN")
+            # Muted warning since local IPsec routing blocks ping
             return False
             
     except Exception as e:

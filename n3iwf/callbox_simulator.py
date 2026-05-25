@@ -149,10 +149,10 @@ conn callbox-n3iwf
     ike=aes256-sha256-modp2048!
     esp=aes256-sha256!
     
-    # Keepalive
-    dpdaction=restart
-    dpddelay=30s
-    dpdtimeout=120s
+    # Keepalive (Disabled for local simulation)
+    dpdaction=none
+    dpddelay=300s
+    dpdtimeout=1200s
 """
     
     ipsec_secrets = f"""
