@@ -67,11 +67,7 @@ stats = {
     "amf_status": "RUNNING",
     "smf_status": "RUNNING",
     "upf_status": "RUNNING",
-    "nodes": {
-        "Pico_1_Main": {"latency_ms": 0, "jitter_ms": 0, "bandwidth_mbps": 0},
-        "Pico_2_Dummy": {"latency_ms": 0, "jitter_ms": 0, "bandwidth_mbps": 0},
-        "Pico_3_Dummy": {"latency_ms": 0, "jitter_ms": 0, "bandwidth_mbps": 0}
-    }
+    "nodes": {}
 }
 
 node_latency_history = {
