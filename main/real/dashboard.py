@@ -414,7 +414,7 @@ HTML_TEMPLATE = """
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Bandwidth</div>
-                            <div class="network-stat-value" id="throughput-value">{{ throughput }} Mbps</div>
+                            <div class="network-stat-value" id="throughput-value">{{ throughput * 1000 }} Kbps</div>
                         </div>
                         <div class="network-stat">
                             <div class="network-stat-label">Packets Sent</div>
@@ -569,7 +569,7 @@ HTML_TEMPLATE = """
         const nh3Chart = new Chart(document.getElementById('nh3Chart').getContext('2d'), createChartConfig('NH3 Toxicity', '#f59e0b', '%'));
         const latencyChart = new Chart(document.getElementById('latencyChart').getContext('2d'), createMultiChartConfig('ms'));
         const jitterChart = new Chart(document.getElementById('jitterChart').getContext('2d'), createMultiChartConfig('ms'));
-        const bandwidthChart = new Chart(document.getElementById('bandwidthChart').getContext('2d'), createMultiChartConfig('Mbps'));
+        const bandwidthChart = new Chart(document.getElementById('bandwidthChart').getContext('2d'), createMultiChartConfig('Kbps'));
 
         let activePico = 'Pico 1';
 
@@ -705,7 +705,7 @@ HTML_TEMPLATE = """
                         document.getElementById('latency-value').innerText = formatValue(net.avg_latency_ms, 1) + ' ms';
                         document.getElementById('jitter-value').innerText = formatValue(net.jitter_ms, 2) + ' ms';
                         document.getElementById('packet-loss-value').innerText = formatValue(net.packet_loss_rate, 2) + ' %';
-                        document.getElementById('throughput-value').innerText = formatValue(net.throughput, 2) + ' Mbps';
+                        document.getElementById('throughput-value').innerText = formatValue(net.throughput * 1000, 1) + ' Kbps';
                         document.getElementById('packets-sent-value').innerText = (net.packets_sent || 0).toLocaleString();
                         document.getElementById('packets-dropped-value').innerText = (net.packets_dropped || 0).toLocaleString();
                         document.getElementById('uptime-value').innerText = formatValue(net.uptime / 3600, 1) + ' h';
@@ -728,22 +728,22 @@ HTML_TEMPLATE = """
                             // Pico 1
                             latencyChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"]?.latency_ms ?? null);
                             jitterChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"]?.jitter_ms ?? null);
-                            bandwidthChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"]?.bandwidth_mbps ?? null);
+                            bandwidthChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"] ? (net.nodes["Pico_1_Main"].bandwidth_mbps * 1000) : null);
                             
                             // Pico 2
                             latencyChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"]?.latency_ms ?? null);
                             jitterChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"]?.jitter_ms ?? null);
-                            bandwidthChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"]?.bandwidth_mbps ?? null);
+                            bandwidthChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"] ? (net.nodes["Pico_2_Dummy"].bandwidth_mbps * 1000) : null);
                             
                             // Pico 3
                             latencyChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"]?.latency_ms ?? null);
                             jitterChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"]?.jitter_ms ?? null);
-                            bandwidthChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"]?.bandwidth_mbps ?? null);
+                            bandwidthChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"] ? (net.nodes["Pico_3_Dummy"].bandwidth_mbps * 1000) : null);
                         } else {
                             // Fallback
                             latencyChart.data.datasets[0].data.push(net.avg_latency_ms || 0);
                             jitterChart.data.datasets[0].data.push(net.jitter_ms || 0);
-                            bandwidthChart.data.datasets[0].data.push(net.throughput || 0);
+                            bandwidthChart.data.datasets[0].data.push((net.throughput || 0) * 1000);
                         }
                         
                         if (latencyChart.data.labels.length > maxDataPoints) {

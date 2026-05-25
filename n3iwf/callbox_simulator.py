@@ -380,11 +380,11 @@ class CallboxSimulator:
                     total_bw = 0.0
                     node_configs = {}
                     if connected_picos >= 1:
-                        node_configs["Pico_1_Main"] = {"base_lat": 12, "bw_base": 35.0}
+                        node_configs["Pico_1_Main"] = {"base_lat": 12, "bw_base": 0.024} # 24 Kbps
                     if connected_picos >= 2:
-                        node_configs["Pico_2_Dummy"] = {"base_lat": 15, "bw_base": 30.0}
+                        node_configs["Pico_2_Dummy"] = {"base_lat": 15, "bw_base": 0.028} # 28 Kbps
                     if connected_picos >= 3:
-                        node_configs["Pico_3_Dummy"] = {"base_lat": 18, "bw_base": 35.0}
+                        node_configs["Pico_3_Dummy"] = {"base_lat": 18, "bw_base": 0.022} # 22 Kbps
                     
                     # Reset stats nodes so old disconnected ones don't linger
                     stats["nodes"] = {}
@@ -392,7 +392,7 @@ class CallboxSimulator:
                     for node_id, cfg in node_configs.items():
                         # Generate node-specific metrics
                         n_lat = cfg["base_lat"] + random.uniform(-JITTER_MS, JITTER_MS)
-                        n_bw = cfg["bw_base"] + random.uniform(-5.0, 5.0)
+                        n_bw = cfg["bw_base"] + random.uniform(-0.005, 0.005)
                         total_bw += n_bw
                         
                         history = node_latency_history[node_id]
@@ -411,14 +411,14 @@ class CallboxSimulator:
                         stats["nodes"][node_id] = {
                             "latency_ms": round(avg_lat, 1),
                             "jitter_ms": round(avg_jit, 2),
-                            "bandwidth_mbps": round(n_bw, 1)
+                            "bandwidth_mbps": round(n_bw, 3)
                         }
                     
                     # Update global averages for fallback
                     if len(node_configs) > 0:
                         stats["avg_latency_ms"] = round(sum([stats["nodes"][n]["latency_ms"] for n in node_configs]) / len(node_configs), 1)
                         stats["jitter_ms"] = round(sum([stats["nodes"][n]["jitter_ms"] for n in node_configs]) / len(node_configs), 2)
-                        stats["current_bandwidth_mbps"] = round(total_bw, 1)
+                        stats["current_bandwidth_mbps"] = round(total_bw, 3)
             
             time.sleep(1)
     
