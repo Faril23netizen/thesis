@@ -1,0 +1,1 @@
+{"pH": 7.44, "T": 25.0, "nh3_pct": 1.54, "actual_risk": "CAUTION", "rb_risk": "CAUTION", "fql_risk": "CAUTION", "dqn_risk": "CAUTION", "phase": "DQN", "reward": 0.94, "buffer_size": 10625, "accuracy": 0.94, "real_steps": 10625, "fql_eps": 0.05, "dqn_ready": true, "dqn_active": true}

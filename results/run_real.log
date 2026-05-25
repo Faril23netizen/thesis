@@ -1,0 +1,10 @@
+[HA] Import failed: No module named 'homeassistant_bridge'
+[2026-05-24 01:33:13] [INFO] Pico monitor log: /home/ubuntu/thesis/results/hasil_real/pico_monitor.log
+[2026-05-24 01:33:13] [INFO]   Run in second terminal: tail -f results/hasil_real/pico_monitor.log
+[2026-05-24 01:33:13] [INFO] =================================================================
+[2026-05-24 01:33:13] [INFO] Aquaculture NH₃ Risk Monitoring System — Raspberry Pi 4
+[2026-05-24 01:33:13] [INFO]   Mode: MONITORING ONLY (no aerator control)
+[2026-05-24 01:33:13] [INFO]   Progressive Learning: Rule-Based → FQL → DQN
+[2026-05-24 01:33:13] [INFO] =================================================================
+[2026-05-24 01:33:13] [INFO] Q-table loaded from /home/ubuntu/thesis/results/hasil_real/qtable.json (step=0, eps=0.300)
+[2026-05-24 01:33:13] [INFO] PHASE A — Waiting for Pico WH connection...

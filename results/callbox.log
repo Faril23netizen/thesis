@@ -1,0 +1,480 @@
+[2026-05-24 01:33:01] [INFO] ======================================================================
+[2026-05-24 01:33:01] [INFO] 5G Callbox Simulator Started
+[2026-05-24 01:33:01] [INFO] ======================================================================
+[2026-05-24 01:33:01] [INFO] Callbox IP: 10.42.0.1
+[2026-05-24 01:33:01] [INFO] IPsec Tunnel IP: 192.168.100.1
+[2026-05-24 01:33:01] [INFO] Base Latency: 10ms ± 5ms
+[2026-05-24 01:33:01] [INFO] Packet Loss Rate: 1.0%
+[2026-05-24 01:33:01] [INFO] Bandwidth: 100 Mbps
+[2026-05-24 01:33:01] [INFO] ======================================================================
+[2026-05-24 01:33:01] [INFO] Setting up IPsec tunnel (Callbox side)...
+[2026-05-24 01:33:01] [INFO] IPsec config files created in /tmp
+[2026-05-24 01:33:01] [INFO] Config will be merged with N3IWF client config
+[2026-05-24 01:33:01] [INFO] [AMF] UE registered: n3iwf-client
+[2026-05-24 01:33:01] [INFO] [SMF] Session created: session-001 for UE n3iwf-client
+[2026-05-24 01:33:01] [INFO] Stats saver started, will save to results/network/callbox_stats.json
+[2026-05-24 01:33:01] [INFO] Callbox simulator ready. Waiting for N3IWF client...
+[2026-05-24 01:33:01] [DEBUG] Stats saved: uptime=0s, ipsec=DOWN
+[2026-05-24 01:33:06] [DEBUG] Stats saved: uptime=5s, ipsec=DOWN
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           9s
+  IPsec Status:     DOWN
+  Active Tunnels:   0
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       0
+  Packets TX:       0
+  Packets Dropped:  0
+  Avg Latency:      0.00ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:33:11] [DEBUG] Stats saved: uptime=10s, ipsec=DOWN
+[2026-05-24 01:33:16] [DEBUG] Stats saved: uptime=15s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           19s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       90
+  Packets TX:       90
+  Packets Dropped:  0
+  Avg Latency:      9.95ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:33:21] [DEBUG] Stats saved: uptime=20s, ipsec=ESTABLISHED
+[2026-05-24 01:33:26] [DEBUG] Stats saved: uptime=25s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           29s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       190
+  Packets TX:       190
+  Packets Dropped:  0
+  Avg Latency:      10.63ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:33:31] [DEBUG] Stats saved: uptime=30s, ipsec=ESTABLISHED
+[2026-05-24 01:33:36] [DEBUG] Stats saved: uptime=35s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           39s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       290
+  Packets TX:       290
+  Packets Dropped:  0
+  Avg Latency:      10.64ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:33:41] [DEBUG] Stats saved: uptime=40s, ipsec=ESTABLISHED
+[2026-05-24 01:33:46] [DEBUG] Stats saved: uptime=45s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           49s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       390
+  Packets TX:       390
+  Packets Dropped:  0
+  Avg Latency:      10.26ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:33:51] [DEBUG] Stats saved: uptime=50s, ipsec=ESTABLISHED
+[2026-05-24 01:33:56] [DEBUG] Stats saved: uptime=55s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           59s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       490
+  Packets TX:       490
+  Packets Dropped:  0
+  Avg Latency:      10.42ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:34:01] [DEBUG] Stats saved: uptime=60s, ipsec=ESTABLISHED
+[2026-05-24 01:34:06] [DEBUG] Stats saved: uptime=65s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           69s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       590
+  Packets TX:       590
+  Packets Dropped:  0
+  Avg Latency:      10.46ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:34:11] [DEBUG] Stats saved: uptime=70s, ipsec=ESTABLISHED
+[2026-05-24 01:34:16] [DEBUG] Stats saved: uptime=75s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           79s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       690
+  Packets TX:       690
+  Packets Dropped:  1
+  Avg Latency:      10.21ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:34:21] [DEBUG] Stats saved: uptime=80s, ipsec=ESTABLISHED
+[2026-05-24 01:34:26] [DEBUG] Stats saved: uptime=85s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           89s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       790
+  Packets TX:       790
+  Packets Dropped:  1
+  Avg Latency:      10.21ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:34:31] [DEBUG] Stats saved: uptime=90s, ipsec=ESTABLISHED
+[2026-05-24 01:34:36] [DEBUG] Stats saved: uptime=95s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           99s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       890
+  Packets TX:       890
+  Packets Dropped:  1
+  Avg Latency:      10.18ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:34:41] [DEBUG] Stats saved: uptime=100s, ipsec=ESTABLISHED
+[2026-05-24 01:34:46] [DEBUG] Stats saved: uptime=105s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           109s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       990
+  Packets TX:       990
+  Packets Dropped:  1
+  Avg Latency:      10.04ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:34:51] [DEBUG] Stats saved: uptime=110s, ipsec=ESTABLISHED
+[2026-05-24 01:34:56] [DEBUG] Stats saved: uptime=115s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           119s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       1090
+  Packets TX:       1090
+  Packets Dropped:  1
+  Avg Latency:      10.29ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:35:01] [DEBUG] Stats saved: uptime=120s, ipsec=ESTABLISHED
+[2026-05-24 01:35:06] [DEBUG] Stats saved: uptime=125s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           129s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       1190
+  Packets TX:       1190
+  Packets Dropped:  1
+  Avg Latency:      10.35ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:35:11] [DEBUG] Stats saved: uptime=130s, ipsec=ESTABLISHED
+[2026-05-24 01:35:16] [DEBUG] Stats saved: uptime=135s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           139s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       1290
+  Packets TX:       1290
+  Packets Dropped:  1
+  Avg Latency:      10.15ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:35:21] [DEBUG] Stats saved: uptime=140s, ipsec=ESTABLISHED
+[2026-05-24 01:35:26] [DEBUG] Stats saved: uptime=145s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           149s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       1390
+  Packets TX:       1390
+  Packets Dropped:  1
+  Avg Latency:      10.32ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:35:31] [DEBUG] Stats saved: uptime=150s, ipsec=ESTABLISHED
+[2026-05-24 01:35:36] [DEBUG] Stats saved: uptime=155s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           159s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       1490
+  Packets TX:       1490
+  Packets Dropped:  2
+  Avg Latency:      10.21ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:35:41] [DEBUG] Stats saved: uptime=160s, ipsec=ESTABLISHED
+[2026-05-24 01:35:46] [DEBUG] Stats saved: uptime=165s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           169s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       1590
+  Packets TX:       1590
+  Packets Dropped:  2
+  Avg Latency:      9.99ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:35:51] [DEBUG] Stats saved: uptime=170s, ipsec=ESTABLISHED
+[2026-05-24 01:35:56] [DEBUG] Stats saved: uptime=175s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           179s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       1690
+  Packets TX:       1690
+  Packets Dropped:  2
+  Avg Latency:      10.15ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:36:01] [DEBUG] Stats saved: uptime=180s, ipsec=ESTABLISHED
+[2026-05-24 01:36:06] [DEBUG] Stats saved: uptime=185s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           189s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       1790
+  Packets TX:       1790
+  Packets Dropped:  2
+  Avg Latency:      10.08ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:36:11] [DEBUG] Stats saved: uptime=190s, ipsec=ESTABLISHED
+[2026-05-24 01:36:16] [DEBUG] Stats saved: uptime=195s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           199s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       1890
+  Packets TX:       1890
+  Packets Dropped:  2
+  Avg Latency:      10.07ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:36:21] [DEBUG] Stats saved: uptime=200s, ipsec=ESTABLISHED
+[2026-05-24 01:36:26] [DEBUG] Stats saved: uptime=205s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           209s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       1990
+  Packets TX:       1990
+  Packets Dropped:  2
+  Avg Latency:      10.17ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:36:31] [DEBUG] Stats saved: uptime=210s, ipsec=ESTABLISHED
+[2026-05-24 01:36:36] [DEBUG] Stats saved: uptime=215s, ipsec=ESTABLISHED
+
+======================================================================
+  5G CALLBOX SIMULATOR STATUS
+======================================================================
+  Uptime:           219s
+  IPsec Status:     ESTABLISHED
+  Active Tunnels:   2
+
+  AMF Status:       RUNNING
+  SMF Status:       RUNNING
+  UPF Status:       RUNNING
+
+  Packets RX:       2090
+  Packets TX:       2090
+  Packets Dropped:  2
+  Avg Latency:      9.93ms
+  Bandwidth:        100 Mbps
+======================================================================
+
+[2026-05-24 01:36:41] [DEBUG] Stats saved: uptime=220s, ipsec=ESTABLISHED
+[2026-05-24 01:36:46] [DEBUG] Stats saved: uptime=225s, ipsec=ESTABLISHED

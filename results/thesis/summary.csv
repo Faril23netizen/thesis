@@ -1,0 +1,16 @@
+Metric,Value
+total_steps,10625
+rb_steps,2000
+fql_steps,8001
+dqn_steps,624
+pH_mean,7.435514164705881
+pH_std,0.023857202869843552
+pH_min,7.34
+pH_max,7.507
+T_mean,25.0
+T_std,0.0
+T_min,25.0
+T_max,25.0
+rb_reward_mean,1.0
+fql_reward_mean,0.9190101237345332
+dqn_reward_mean,1.0
