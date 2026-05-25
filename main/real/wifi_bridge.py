@@ -1,20 +1,8 @@
-"""
-WiFi Bridge — bidirectional communication RPi4/5 <-> Pico WH
-=============================================================
-N3IWF Local Edge Service via TCP Sockets.
-
-RPi5 acts as the TCP Server, waiting for the Pico WH to connect.
-Receive : "DATA:ph_x1000,temp_x100,risk\\n"
-Send    : "QTABLE:[[...9x4 floats...]]\\n"
-Receive : "ACK:QTABLE_LOADED\\n"
-
-Other lines from Pico ("> ...", "# ...") are logged then ignored.
-"""
-
 import os
 import re
 import time
 import socket
+import select
 import logging
 
 logger = logging.getLogger(__name__)
@@ -40,34 +28,31 @@ DEFAULT_PORT = 5000
 ACK_TIMEOUT  = 10      # seconds to wait for ACK after sending Q-table
 RECONNECT_DELAY = 2    # seconds between reconnect attempts
 
-# Regex for DATA: lines
+# Regex for DATA: and DUMMY: lines
 _DATA_RE = re.compile(r"^DATA:(-?\d+),(-?\d+),([0-3])$")
+_DUMMY_RE = re.compile(r"^DUMMY:(-?\d+),(-?\d+),([0-3])$")
 
 class WiFiBridge:
-    """WiFi communication bridge (TCP Server) for N3IWF."""
+    """WiFi communication bridge (TCP Server) supporting multiple Pico WH nodes."""
 
     def __init__(self, host: str = "0.0.0.0", port: int = DEFAULT_PORT):
         self.host = host
         self.port = port
-        self.server_socket: socket.socket | None = None
-        self.client_socket: socket.socket | None = None
-        self.client_addr = None
-        self._buffer = ""
+        self.server_socket = None
+        self.clients = {}  # socket -> buffer string
+        self.main_client = None  # The node sending real DATA
 
     # ── Connection ───────────────────────────────────────────────────────── #
 
     def connect(self) -> bool:
-        """
-        Start TCP Server and wait for Pico to connect.
-        Blocks until connection is established.
-        Returns True on success.
-        """
+        """Start TCP Server and wait for at least one Pico to connect."""
         if self.server_socket is None:
             try:
                 self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self.server_socket.bind((self.host, self.port))
-                self.server_socket.listen(1)
+                self.server_socket.listen(5)
+                self.server_socket.setblocking(False)
                 logger.info(f"N3IWF WiFi Bridge listening on {self.host}:{self.port}")
             except OSError as e:
                 logger.error(f"Failed to bind WiFi server: {e}")
@@ -75,171 +60,177 @@ class WiFiBridge:
 
         logger.info("Waiting for Pico WH to connect over Wi-Fi...")
         try:
-            # Setting a timeout so it doesn't block forever if we want to interrupt
-            self.server_socket.settimeout(5.0)
+            # Block until the first client connects
             while True:
-                try:
-                    self.client_socket, self.client_addr = self.server_socket.accept()
-                    self.client_socket.settimeout(1.0) # Short timeout for reading
-                    logger.info(f"Connected to Pico WH at {self.client_addr}")
-                    self._buffer = ""
+                read_sockets, _, _ = select.select([self.server_socket], [], [], 1.0)
+                if read_sockets:
+                    client, addr = self.server_socket.accept()
+                    client.setblocking(False)
+                    self.clients[client] = ""
+                    logger.info(f"Connected to Pico WH at {addr}")
                     return True
-                except socket.timeout:
-                    # Just loop and wait again, allows Ctrl+C
-                    continue
         except KeyboardInterrupt:
             logger.info("Connection wait interrupted by user.")
             return False
-        except OSError as e:
-            logger.error(f"Error accepting connection: {e}")
-            return False
 
     def disconnect(self) -> None:
-        """Close the client connection."""
-        if self.client_socket:
-            try:
-                self.client_socket.close()
-            except OSError:
-                pass
-        self.client_socket = None
-        self.client_addr = None
-        logger.info("WiFi client connection closed.")
+        """Close all client connections and server socket."""
+        for client in list(self.clients.keys()):
+            client.close()
+        self.clients.clear()
+        self.main_client = None
+        
+        if self.server_socket:
+            self.server_socket.close()
+            self.server_socket = None
+        logger.info("WiFi bridge disconnected.")
 
     def is_connected(self) -> bool:
-        """Check whether the client is currently connected."""
-        return self.client_socket is not None
+        """Check whether at least one real client is connected."""
+        return len(self.clients) > 0
 
     def reconnect(self) -> bool:
-        """
-        Attempt to wait for a new connection after a drop.
-        Returns True on success.
-        """
+        """Attempt to wait for a new connection after a drop."""
         logger.info("Attempting to wait for Pico reconnect...")
-        self.disconnect()
         time.sleep(RECONNECT_DELAY)
+        # Server socket remains open, just wait for new connections
         return self.connect()
-
-    def _readline(self) -> str | None:
-        """Helper to read a complete newline-terminated string from the socket."""
-        if not self.is_connected():
-            return None
-            
-        while "\n" not in self._buffer:
-            try:
-                data = self.client_socket.recv(1024).decode("utf-8", errors="ignore")
-                if not data:
-                    # Client closed connection
-                    raise OSError("Connection closed by peer")
-                self._buffer += data
-            except socket.timeout:
-                return None  # No data right now
-            except OSError as e:
-                logger.warning(f"WiFi read error: {e}")
-                self.disconnect()
-                return None
-
-        # Extract the first line and keep the rest in the buffer
-        line, self._buffer = self._buffer.split("\n", 1)
-        return line.strip()
 
     # ── Read data ────────────────────────────────────────────────────────── #
 
     def read_data_line(self) -> dict | None:
         """
-        Read one line from Wi-Fi.
-
-        If it starts with "DATA:" -> parse and return:
-          {"pH": float, "T": float, "risk": int, "latency_ms": float}
-
-        Other lines (monitor/comment/ACK) -> logged then return None.
-        If connection drops -> attempt automatic reconnect.
+        Polls all connected sockets.
+        Accepts new clients seamlessly (Node 2+).
+        Reads lines from all clients.
+        If DATA: comes from main_client, parses and returns it to RL Agent.
+        If DUMMY: comes from dummy clients, logs it to prove QoS traffic.
         """
-        if not self.is_connected():
-            logger.warning("WiFi disconnected, waiting for Pico to reconnect...")
-            if not self.reconnect():
-                return None
-
-        line = self._readline()
-        if not line:
+        if not self.server_socket:
             return None
 
-        # Monitor/comment lines from Pico -> dedicated pico_monitor.log
-        if line.startswith(">") or line.startswith("#"):
-            _pico_log.debug(line)
+        # Prepare sockets to read
+        sockets_to_monitor = [self.server_socket] + list(self.clients.keys())
+        try:
+            read_sockets, _, _ = select.select(sockets_to_monitor, [], [], 0.05)
+        except OSError:
             return None
 
-        # ACK lines -> both main log and pico_monitor.log
-        if line.startswith("ACK:"):
-            logger.info(f"[pico] {line}")
-            _pico_log.debug(line)
-            return None
+        for sock in read_sockets:
+            if sock == self.server_socket:
+                # New client connecting
+                client, addr = self.server_socket.accept()
+                client.setblocking(False)
+                self.clients[client] = ""
+                logger.info(f"New Multi-Node connection established from {addr}")
+            else:
+                # Existing client sending data
+                try:
+                    data = sock.recv(1024).decode("utf-8", errors="ignore")
+                    if not data:
+                        # Client disconnected
+                        addr = sock.getpeername()
+                        logger.warning(f"Client {addr} disconnected.")
+                        if sock == self.main_client:
+                            self.main_client = None
+                        del self.clients[sock]
+                        sock.close()
+                        continue
+                    self.clients[sock] += data
+                except (socket.timeout, BlockingIOError):
+                    continue
+                except OSError as e:
+                    if sock == self.main_client:
+                        self.main_client = None
+                    del self.clients[sock]
+                    sock.close()
+                    continue
 
-        # Parse DATA: line
-        m = _DATA_RE.match(line)
-        if not m:
-            logger.debug(f"[pico] unknown line: {line}")
-            return None
+        # Process buffered lines for all clients
+        parsed_data = None
+        for sock in list(self.clients.keys()):
+            while "\n" in self.clients[sock]:
+                line, self.clients[sock] = self.clients[sock].split("\n", 1)
+                line = line.strip()
 
-        ph_x1000  = int(m.group(1))
-        temp_x100 = int(m.group(2))
-        risk      = int(m.group(3))
+                if line.startswith(">") or line.startswith("#") or line.startswith("ACK:"):
+                    _pico_log.debug(line)
+                    continue
 
-        return {
-            "pH":         ph_x1000  / 1000.0,
-            "T":          temp_x100 / 100.0,
-            "risk":       risk,
-            "latency_ms": 0.0,  # Can be calculated if needed
-        }
+                if line.startswith("DATA:"):
+                    # Assign the first node that sends DATA as the main_client (sensor node)
+                    if self.main_client is None:
+                        self.main_client = sock
+                        logger.info("Main Sensor Node registered.")
+                    
+                    if sock == self.main_client:
+                        m = _DATA_RE.match(line)
+                        if m:
+                            parsed_data = {
+                                "pH": int(m.group(1)) / 1000.0,
+                                "T": int(m.group(2)) / 100.0,
+                                "risk": int(m.group(3)),
+                                "latency_ms": 0.0
+                            }
+                
+                elif line.startswith("DUMMY:"):
+                    # Dummy payload from Node 2+ (Purely for QoS traffic testing)
+                    _pico_log.debug(f"[QoS Traffic] Node {sock.getpeername()}: {line}")
+
+        return parsed_data
 
     # ── Send Q-table ─────────────────────────────────────────────────────── #
 
     def send_qtable(self, qtable_string: str) -> bool:
         """
-        Send Q-table to Pico and wait for ACK.
-        
-        Format: "QTABLE:[[row0],[row1],...,[row8]]\\n"
-        Expected ACK: "ACK:QTABLE_LOADED\\n" or "ACK:QTABLE_ERROR\\n"
-        
-        Returns True if ACK received successfully.
+        Broadcasts Q-table to ALL connected Picos (Main and Dummys) 
+        to ensure network bandwidth load is measured accurately.
+        Only waits for ACK from the Main Client.
         """
-        if not self.is_connected():
-            logger.warning("Not connected — cannot send Q-table.")
+        if not self.clients:
+            logger.warning("No clients connected — cannot send Q-table.")
             return False
 
-        try:
-            # Send Q-table
-            msg = qtable_string + "\n"
-            self.client_socket.sendall(msg.encode("utf-8"))
-            logger.info(f"Q-table sent to Pico ({len(msg)} bytes)")
+        msg = (qtable_string + "\n").encode("utf-8")
+        
+        # Broadcast to all nodes
+        for sock in list(self.clients.keys()):
+            try:
+                sock.sendall(msg)
+            except OSError:
+                pass
+                
+        logger.info(f"Q-table broadcasted to {len(self.clients)} Node(s) ({len(msg)} bytes)")
 
-            # Wait for ACK with timeout
-            start_time = time.time()
-            while time.time() - start_time < ACK_TIMEOUT:
-                line = self._readline()
-                if not line:
-                    time.sleep(0.1)
-                    continue
+        if not self.main_client:
+            return True # If no main client yet, assume success for dummies
 
-                # Monitor/comment lines -> log and continue waiting
-                if line.startswith(">") or line.startswith("#"):
-                    _pico_log.debug(line)
-                    continue
-
-                # ACK received
-                if line.startswith("ACK:"):
-                    logger.info(f"[pico] {line}")
-                    _pico_log.debug(line)
-                    if "QTABLE_LOADED" in line:
-                        return True
-                    elif "QTABLE_ERROR" in line:
-                        logger.error("Pico reported Q-table error")
+        # Wait for ACK from main_client
+        start_time = time.time()
+        while time.time() - start_time < ACK_TIMEOUT:
+            try:
+                read_sockets, _, _ = select.select([self.main_client], [], [], 0.1)
+                if read_sockets:
+                    sock = read_sockets[0]
+                    data = sock.recv(1024).decode("utf-8", errors="ignore")
+                    if not data:
                         return False
+                    self.clients[sock] += data
+                    
+                    while "\n" in self.clients[sock]:
+                        line, self.clients[sock] = self.clients[sock].split("\n", 1)
+                        line = line.strip()
+                        
+                        if line.startswith("ACK:"):
+                            _pico_log.debug(line)
+                            if "QTABLE_LOADED" in line:
+                                return True
+                            elif "QTABLE_ERROR" in line:
+                                logger.error("Main Pico reported Q-table error")
+                                return False
+            except (OSError, ValueError):
+                return False
 
-            # Timeout
-            logger.warning(f"Q-table ACK timeout after {ACK_TIMEOUT}s")
-            return False
+        logger.warning(f"Q-table ACK timeout after {ACK_TIMEOUT}s")
+        return False
 
-        except OSError as e:
-            logger.error(f"Error sending Q-table: {e}")
-            self.disconnect()
-            return False
