@@ -501,6 +501,31 @@ HTML_TEMPLATE = """
                         }
                     }
                 }
+                }
+            };
+        }
+
+        function createMultiChartConfig(yAxisTitle) {
+            return {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Pico 1 (Main)', data: [], borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
+                        { label: 'Pico 2 (Dummy)', data: [], borderColor: '#3b82f6', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
+                        { label: 'Pico 3 (Dummy)', data: [], borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { labels: { color: '#e2e8f0' } } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 }, grid: { color: '#334155', drawBorder: false } },
+                        y: { type: 'linear', display: true, position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' } }
+                    }
+                }
             };
         }
 
@@ -509,9 +534,9 @@ HTML_TEMPLATE = """
         const phChart = new Chart(document.getElementById('phChart').getContext('2d'), createChartConfig('pH Level', '#3b82f6', 'pH'));
         const tempChart = new Chart(document.getElementById('tempChart').getContext('2d'), createChartConfig('Temperature', '#ef4444', '°C'));
         const nh3Chart = new Chart(document.getElementById('nh3Chart').getContext('2d'), createChartConfig('NH3 Toxicity', '#f59e0b', '%'));
-        const latencyChart = new Chart(document.getElementById('latencyChart').getContext('2d'), createChartConfig('Latency', '#10b981', 'ms'));
-        const jitterChart = new Chart(document.getElementById('jitterChart').getContext('2d'), createChartConfig('Jitter', '#8b5cf6', 'ms'));
-        const bandwidthChart = new Chart(document.getElementById('bandwidthChart').getContext('2d'), createChartConfig('Bandwidth', '#3b82f6', 'Mbps'));
+        const latencyChart = new Chart(document.getElementById('latencyChart').getContext('2d'), createMultiChartConfig('ms'));
+        const jitterChart = new Chart(document.getElementById('jitterChart').getContext('2d'), createMultiChartConfig('ms'));
+        const bandwidthChart = new Chart(document.getElementById('bandwidthChart').getContext('2d'), createMultiChartConfig('Mbps'));
 
         function formatValue(val, decimals=2) {
             return val !== null && val !== undefined && val !== 'null' ? parseFloat(val).toFixed(decimals) : '--';
@@ -599,22 +624,43 @@ HTML_TEMPLATE = """
                         document.getElementById('smf-status').innerText = (net.smf_sessions || 0) + ' PDU';
                         document.getElementById('upf-status').innerText = (net.upf_packets || 0).toLocaleString() + ' Pkts';
 
-                        // Update Network Charts
+                        // Update Network Charts (Multi-line)
                         const timeLabel = new Date().toLocaleTimeString();
                         
                         latencyChart.data.labels.push(timeLabel);
-                        latencyChart.data.datasets[0].data.push(net.avg_latency_ms || 0);
-                        if (latencyChart.data.labels.length > maxDataPoints) { latencyChart.data.labels.shift(); latencyChart.data.datasets[0].data.shift(); }
-                        latencyChart.update('none');
-
                         jitterChart.data.labels.push(timeLabel);
-                        jitterChart.data.datasets[0].data.push(net.jitter_ms || 0);
-                        if (jitterChart.data.labels.length > maxDataPoints) { jitterChart.data.labels.shift(); jitterChart.data.datasets[0].data.shift(); }
-                        jitterChart.update('none');
-
                         bandwidthChart.data.labels.push(timeLabel);
-                        bandwidthChart.data.datasets[0].data.push(net.current_bandwidth_mbps || 0);
-                        if (bandwidthChart.data.labels.length > maxDataPoints) { bandwidthChart.data.labels.shift(); bandwidthChart.data.datasets[0].data.shift(); }
+                        
+                        if (net.nodes) {
+                            // Pico 1
+                            latencyChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"]?.latency_ms || 0);
+                            jitterChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"]?.jitter_ms || 0);
+                            bandwidthChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"]?.bandwidth_mbps || 0);
+                            
+                            // Pico 2
+                            latencyChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"]?.latency_ms || 0);
+                            jitterChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"]?.jitter_ms || 0);
+                            bandwidthChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"]?.bandwidth_mbps || 0);
+                            
+                            // Pico 3
+                            latencyChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"]?.latency_ms || 0);
+                            jitterChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"]?.jitter_ms || 0);
+                            bandwidthChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"]?.bandwidth_mbps || 0);
+                        } else {
+                            // Fallback
+                            latencyChart.data.datasets[0].data.push(net.avg_latency_ms || 0);
+                            jitterChart.data.datasets[0].data.push(net.jitter_ms || 0);
+                            bandwidthChart.data.datasets[0].data.push(net.current_bandwidth_mbps || 0);
+                        }
+                        
+                        if (latencyChart.data.labels.length > maxDataPoints) {
+                            latencyChart.data.labels.shift(); latencyChart.data.datasets.forEach(d => d.data.shift());
+                            jitterChart.data.labels.shift(); jitterChart.data.datasets.forEach(d => d.data.shift());
+                            bandwidthChart.data.labels.shift(); bandwidthChart.data.datasets.forEach(d => d.data.shift());
+                        }
+                        
+                        latencyChart.update('none');
+                        jitterChart.update('none');
                         bandwidthChart.update('none');
                     }
                 }

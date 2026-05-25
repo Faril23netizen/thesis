@@ -61,14 +61,24 @@ stats = {
     "packets_dropped": 0,
     "active_tunnels": 0,
     "avg_latency_ms": 0,
+    "jitter_ms": 0,
     "current_bandwidth_mbps": BANDWIDTH_MBPS,
     "ipsec_status": "DOWN",
     "amf_status": "RUNNING",
     "smf_status": "RUNNING",
     "upf_status": "RUNNING",
+    "nodes": {
+        "Pico_1_Main": {"latency_ms": 0, "jitter_ms": 0, "bandwidth_mbps": 0},
+        "Pico_2_Dummy": {"latency_ms": 0, "jitter_ms": 0, "bandwidth_mbps": 0},
+        "Pico_3_Dummy": {"latency_ms": 0, "jitter_ms": 0, "bandwidth_mbps": 0}
+    }
 }
 
-latency_history = deque(maxlen=100)
+node_latency_history = {
+    "Pico_1_Main": [],
+    "Pico_2_Dummy": [],
+    "Pico_3_Dummy": []
+}
 stats_lock = threading.Lock()
 
 
@@ -361,24 +371,41 @@ class CallboxSimulator:
                     if random.random() < PACKET_LOSS_RATE:
                         stats["packets_dropped"] += 1
                     
-                    # Update latency history (Rolling Window: max 20)
-                    latency_history.append(current_lat)
-                    if len(latency_history) > 20:
-                        latency_history.pop(0)
+                    # Update per-node latency and jitter
+                    total_bw = 0.0
+                    node_configs = {
+                        "Pico_1_Main":  {"base_lat": 12, "bw_base": 35.0},
+                        "Pico_2_Dummy": {"base_lat": 15, "bw_base": 30.0},
+                        "Pico_3_Dummy": {"base_lat": 18, "bw_base": 35.0}
+                    }
+
+                    for node_id, cfg in node_configs.items():
+                        # Generate node-specific metrics
+                        n_lat = cfg["base_lat"] + random.uniform(-JITTER_MS, JITTER_MS)
+                        n_bw = cfg["bw_base"] + random.uniform(-5.0, 5.0)
+                        total_bw += n_bw
                         
-                    if len(latency_history) > 0:
-                        stats["avg_latency_ms"] = sum(latency_history) / len(latency_history)
+                        history = node_latency_history[node_id]
+                        history.append(n_lat)
+                        if len(history) > 20:
+                            history.pop(0)
+                            
+                        avg_lat = sum(history) / len(history) if len(history) > 0 else 0
+                        
+                        if len(history) > 1:
+                            diffs = [abs(history[i] - history[i-1]) for i in range(1, len(history))]
+                            avg_jit = sum(diffs) / len(diffs)
+                        else:
+                            avg_jit = 0.0
+                            
+                        stats["nodes"][node_id]["latency_ms"] = round(avg_lat, 1)
+                        stats["nodes"][node_id]["jitter_ms"] = round(avg_jit, 2)
+                        stats["nodes"][node_id]["bandwidth_mbps"] = round(n_bw, 1)
                     
-                    if len(latency_history) > 1:
-                        diffs = [abs(latency_history[i] - latency_history[i-1]) for i in range(1, len(latency_history))]
-                        stats["jitter_ms"] = sum(diffs) / len(diffs)
-                    else:
-                        stats["jitter_ms"] = 0.0
-                        
-                    # Simulate dynamic bandwidth
-                    base_bw = 100.0
-                    noise = random.uniform(-15.0, 5.0) # fluctuates between 85 and 105 Mbps
-                    stats["current_bandwidth_mbps"] = round(base_bw + noise, 1)
+                    # Update global averages for fallback
+                    stats["avg_latency_ms"] = round(sum([stats["nodes"][n]["latency_ms"] for n in node_configs]) / 3, 1)
+                    stats["jitter_ms"] = round(sum([stats["nodes"][n]["jitter_ms"] for n in node_configs]) / 3, 2)
+                    stats["current_bandwidth_mbps"] = round(total_bw, 1)
             
             time.sleep(1)
     
