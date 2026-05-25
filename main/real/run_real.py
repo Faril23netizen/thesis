@@ -725,7 +725,8 @@ def main():
                 "real_steps": real_steps,
                 "fql_eps": round(fql.epsilon, 3),
                 "dqn_ready": dqn_model_ready,
-                "dqn_active": dqn_active
+                "dqn_active": dqn_active,
+                "connected_picos": max(1, len(bridge.clients)) if hasattr(bridge, 'clients') else 1
             }
             with open(STATE_JSON_FILE, "w") as f:
                 json.dump(state_dump, f)
