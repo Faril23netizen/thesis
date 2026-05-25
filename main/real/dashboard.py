@@ -404,6 +404,9 @@ HTML_TEMPLATE = """
                         <div class="chart-container">
                             <canvas id="jitterChart"></canvas>
                         </div>
+                        <div class="chart-container">
+                            <canvas id="bandwidthChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -508,6 +511,7 @@ HTML_TEMPLATE = """
         const nh3Chart = new Chart(document.getElementById('nh3Chart').getContext('2d'), createChartConfig('NH3 Toxicity', '#f59e0b', '%'));
         const latencyChart = new Chart(document.getElementById('latencyChart').getContext('2d'), createChartConfig('Latency', '#10b981', 'ms'));
         const jitterChart = new Chart(document.getElementById('jitterChart').getContext('2d'), createChartConfig('Jitter', '#8b5cf6', 'ms'));
+        const bandwidthChart = new Chart(document.getElementById('bandwidthChart').getContext('2d'), createChartConfig('Bandwidth', '#3b82f6', 'Mbps'));
 
         function formatValue(val, decimals=2) {
             return val !== null && val !== undefined && val !== 'null' ? parseFloat(val).toFixed(decimals) : '--';
@@ -566,6 +570,7 @@ HTML_TEMPLATE = """
                             nh3Chart.resize();
                             latencyChart.resize();
                             jitterChart.resize();
+                            bandwidthChart.resize();
                         }
                         
                         document.getElementById('pico-status').innerText = 'Connected';
@@ -585,7 +590,7 @@ HTML_TEMPLATE = """
                         document.getElementById('latency-value').innerText = formatValue(net.avg_latency_ms, 1) + ' ms';
                         document.getElementById('jitter-value').innerText = formatValue(net.jitter_ms, 2) + ' ms';
                         document.getElementById('packet-loss-value').innerText = formatValue(net.packet_loss_rate, 2) + ' %';
-                        document.getElementById('throughput-value').innerText = formatValue(net.throughput, 2) + ' Mbps';
+                        document.getElementById('throughput-value').innerText = formatValue(net.current_bandwidth_mbps || net.throughput, 2) + ' Mbps';
                         document.getElementById('packets-sent-value').innerText = (net.packets_sent || 0).toLocaleString();
                         document.getElementById('packets-dropped-value').innerText = (net.packets_dropped || 0).toLocaleString();
                         document.getElementById('uptime-value').innerText = formatValue(net.uptime / 3600, 1) + ' h';
@@ -606,6 +611,11 @@ HTML_TEMPLATE = """
                         jitterChart.data.datasets[0].data.push(net.jitter_ms || 0);
                         if (jitterChart.data.labels.length > maxDataPoints) { jitterChart.data.labels.shift(); jitterChart.data.datasets[0].data.shift(); }
                         jitterChart.update('none');
+
+                        bandwidthChart.data.labels.push(timeLabel);
+                        bandwidthChart.data.datasets[0].data.push(net.current_bandwidth_mbps || 0);
+                        if (bandwidthChart.data.labels.length > maxDataPoints) { bandwidthChart.data.labels.shift(); bandwidthChart.data.datasets[0].data.shift(); }
+                        bandwidthChart.update('none');
                     }
                 }
                 

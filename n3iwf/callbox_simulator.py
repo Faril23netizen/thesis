@@ -361,8 +361,11 @@ class CallboxSimulator:
                     if random.random() < PACKET_LOSS_RATE:
                         stats["packets_dropped"] += 1
                     
-                    # Update latency history
+                    # Update latency history (Rolling Window: max 20)
                     latency_history.append(current_lat)
+                    if len(latency_history) > 20:
+                        latency_history.pop(0)
+                        
                     if len(latency_history) > 0:
                         stats["avg_latency_ms"] = sum(latency_history) / len(latency_history)
                     
@@ -371,6 +374,11 @@ class CallboxSimulator:
                         stats["jitter_ms"] = sum(diffs) / len(diffs)
                     else:
                         stats["jitter_ms"] = 0.0
+                        
+                    # Simulate dynamic bandwidth
+                    base_bw = 100.0
+                    noise = random.uniform(-15.0, 5.0) # fluctuates between 85 and 105 Mbps
+                    stats["current_bandwidth_mbps"] = round(base_bw + noise, 1)
             
             time.sleep(1)
     
