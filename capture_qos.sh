@@ -10,34 +10,33 @@ echo "=========================================================="
 echo "  [N3IWF QoS Monitor] Memulai Perekaman Wireshark (tshark)"
 echo "=========================================================="
 
-# Cek apakah tshark atau tcpdump tersedia
-CAPTURE_TOOL=""
-if command -v tshark &> /dev/null; then
-    CAPTURE_TOOL="tshark"
-elif command -v tcpdump &> /dev/null; then
-    CAPTURE_TOOL="tcpdump"
-else
-    echo "tshark dan tcpdump tidak ditemukan. Mencoba instalasi tcpdump..."
+# Cek apakah tshark sudah terinstall
+if ! command -v tshark &> /dev/null
+then
+    echo "tshark tidak ditemukan. Melakukan instalasi otomatis..."
+    echo "CATATAN: Pastikan Raspberry Pi Anda memiliki KONEKSI INTERNET yang aktif!"
+    
     sudo apt-get update
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tcpdump
-    if command -v tcpdump &> /dev/null; then
-        CAPTURE_TOOL="tcpdump"
-    else
-        echo "ERROR: Gagal menginstall tcpdump. Pastikan Raspberry Pi terhubung ke internet."
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tshark
+    
+    # Verifikasi apakah instalasi benar-benar berhasil
+    if ! command -v tshark &> /dev/null; then
+        echo "=========================================================="
+        echo "ERROR FATAL: Gagal mengunduh tshark!"
+        echo "Penyebab: Raspberry Pi Anda tidak terhubung ke internet (Gagal Resolusi DNS)."
+        echo "Solusi: Hubungkan Raspberry Pi ke internet (via WiFi atau Kabel LAN) lalu coba lagi."
+        echo "=========================================================="
         exit 1
     fi
+    echo "Instalasi tshark selesai."
 fi
 
 PCAP_FILE="results/network/qos_real.pcap"
 
 echo "Menangkap paket TCP port 5000 (N3IWF) dari semua Pico..."
-echo "Menggunakan tool: $CAPTURE_TOOL"
+echo "Menggunakan tool: tshark"
 echo "Tekan Ctrl+C untuk berhenti merekam."
 echo "Menyimpan ke: $PCAP_FILE"
 
 # Menggunakan interface 'any' untuk menangkap baik eth0, wlan0, maupun ipsec0
-if [ "$CAPTURE_TOOL" == "tshark" ]; then
-    sudo tshark -i any -f "tcp port 5000" -w "$PCAP_FILE"
-else
-    sudo tcpdump -i any "tcp port 5000" -w "$PCAP_FILE"
-fi
+sudo tshark -i any -f "tcp port 5000" -w "$PCAP_FILE"
