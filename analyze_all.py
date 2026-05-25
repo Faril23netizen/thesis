@@ -384,17 +384,15 @@ def plot_accuracy_comparison(data, ax):
     ax.set_ylim(0, 110)
 import matplotlib.gridspec as gridspec
 
-def plot_confusion_matrix(data, parent_ax, fig):
+def plot_confusion_matrix(data, grafik_dir):
     """Plot confusion matrix of AI Predictions vs Ground Truth (3 columns)"""
-    parent_ax.axis('off')
-    parent_ax.set_title('AI Confusion Matrix (RB vs FQL vs DQN)', fontweight='bold', y=1.05)
-    
-    gs = gridspec.GridSpecFromSubplotSpec(1, 3, subplot_spec=parent_ax.get_subplotspec(), wspace=0.1)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig.suptitle('AI Confusion Matrix (RB vs FQL vs DQN)', fontweight='bold')
     
     phases = ['RB', 'FQL', 'DQN']
     
     for i, phase in enumerate(phases):
-        ax = fig.add_subplot(gs[0, i])
+        ax = axes[i]
         
         phase_data = [d for d in data if d['mode'] == phase]
         if not phase_data:
@@ -441,7 +439,9 @@ def plot_confusion_matrix(data, parent_ax, fig):
         
         ax.set_title(f'{phase}\nAccuracy: {acc:.1f}%', fontweight='bold', fontsize=10)
 
-
+    plt.tight_layout()
+    plt.savefig(os.path.join(grafik_dir, '07_confusion_matrix.png'), dpi=150, bbox_inches='tight')
+    plt.close(fig)
 def plot_policy_map(data, ax):
     """Plot AI Policy Map (Decision Boundary over State Space)"""
     pH_vals = [d['pH'] for d in data]
@@ -679,9 +679,9 @@ def plot_jitter_timeline(timeline_data, ax):
 # ══════════════════════════════════════════════════════════════════════════════
 
 def generate_all_plots():
-    """Generate all plots and save to PDF"""
+    """Generate all plots individually and save to session grafik directory"""
     print("="*70)
-    print("  COMPLETE ANALYSIS - Generating All Plots")
+    print("  COMPLETE ANALYSIS - Generating Individual Plots")
     print("="*70)
     
     # Load data
@@ -697,6 +697,10 @@ def generate_all_plots():
         return False
     
     print(f"✅ Loaded {len(data)} data points")
+    
+    # Create grafik directory in the current session folder
+    grafik_dir = os.path.join(LATEST_SESSION, "grafik")
+    os.makedirs(grafik_dir, exist_ok=True)
     
     # Compute statistics
     print("\n[2/4] Computing statistics...")
@@ -719,98 +723,53 @@ def generate_all_plots():
     print(f"  DQN Avg Reward:     {stats['dqn_reward_mean']:.4f}")
     print("="*70)
     
-    # Save summary to CSV
-    with open(SUMMARY_CSV, 'w', newline='') as f:
+    # Save summary to CSV in session dir
+    session_summary = os.path.join(LATEST_SESSION, "summary.csv")
+    with open(session_summary, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(['Metric', 'Value'])
         for key, value in stats.items():
             writer.writerow([key, value])
     
-    print(f"\n✅ Summary saved: {SUMMARY_CSV}")
+    print(f"\n✅ Summary saved: {session_summary}")
     
     # Generate plots
-    print("\n[3/4] Generating plots...")
+    print(f"\n[3/4] Generating plots individually to {grafik_dir}...")
     
-    fig = plt.figure(figsize=(16, 35), constrained_layout=True)
-    fig.suptitle('Complete Analysis - Aquaculture Edge AI with N3IWF', 
-                 fontsize=16, fontweight='bold')
+    # Helper to save individual plots
+    def save_single_plot(filename, plot_func, *args, figsize=(10, 6)):
+        fig, ax = plt.subplots(figsize=figsize, constrained_layout=True)
+        plot_func(*args, ax)
+        path = os.path.join(grafik_dir, filename)
+        fig.savefig(path, dpi=150)
+        plt.close(fig)
+        print(f"  - Saved {filename}")
+
+    save_single_plot('01_water_quality.png', plot_water_quality, data, figsize=(12, 6))
+    save_single_plot('02_progressive_learning.png', plot_progressive_learning, data, figsize=(12, 6))
+    save_single_plot('03_action_distribution.png', plot_action_distribution, data)
+    save_single_plot('04_nh3_toxicity.png', plot_nh3_toxicity, data)
+    save_single_plot('05_epsilon_decay.png', plot_epsilon_decay, data)
+    save_single_plot('06_accuracy_comparison.png', plot_accuracy_comparison, data)
     
-    gs = gridspec.GridSpec(7, 2, figure=fig)
+    # Confusion matrix has a unique signature
+    plot_confusion_matrix(data, grafik_dir)
+    print(f"  - Saved 07_confusion_matrix.png")
     
-    # Plot 1: Water Quality
-    ax1 = fig.add_subplot(gs[0, :])
-    plot_water_quality(data, ax1)
-    
-    # Plot 2: Progressive Learning
-    ax2 = fig.add_subplot(gs[1, :])
-    plot_progressive_learning(data, ax2)
-    
-    # Plot 3: Action Distribution
-    ax3 = fig.add_subplot(gs[2, 0])
-    plot_action_distribution(data, ax3)
-    
-    # Plot 4: NH3 Toxicity
-    ax4 = fig.add_subplot(gs[2, 1])
-    plot_nh3_toxicity(data, ax4)
-    
-    # Plot 5: Epsilon Decay
-    ax5 = fig.add_subplot(gs[3, 0])
-    plot_epsilon_decay(data, ax5)
-    
-    # Plot 6: Accuracy Comparison
-    ax6 = fig.add_subplot(gs[3, 1])
-    plot_accuracy_comparison(data, ax6)
-    
-    # Plot 7: Confusion Matrix
-    ax7 = fig.add_subplot(gs[4, 0])
-    plot_confusion_matrix(data, ax7, fig)
-    
-    # Plot 8: Policy Map
-    ax8 = fig.add_subplot(gs[4, 1])
-    plot_policy_map(data, ax8)
-    
-    # Plot 9: Latency Timeline
-    ax9 = fig.add_subplot(gs[5, 0])
-    plot_latency_timeline(network_timeline, ax9)
-    
-    # Plot 10: Jitter Timeline
-    ax10 = fig.add_subplot(gs[5, 1])
-    plot_jitter_timeline(network_timeline, ax10)
-    
-    # Plot 11: Network Stats
-    ax11 = fig.add_subplot(gs[6, 0])
-    plot_network_stats(network_stats, ax11)
-    
-    # Plot 12: Network Details Table
-    ax12 = fig.add_subplot(gs[6, 1])
-    plot_network_details_table(network_stats, ax12)
-    
-    # Save to PDF
-    print("\n[4/4] Saving to PDF...")
-    pdf_path = PDF_OUTPUT
-    plt.savefig(pdf_path, dpi=150)
-    print(f"✅ PDF saved: {pdf_path}")
-    
-    # Save individual plots
-    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10, ax11, ax12], 1):
-        extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-        fig.savefig(os.path.join(PLOTS_DIR, f'plot_{i}.png'), 
-                   bbox_inches=extent.expanded(1.2, 1.2), dpi=150)
-    
-    print(f"✅ Individual plots saved: {PLOTS_DIR}/")
-    
-    plt.show()
+    save_single_plot('08_policy_map.png', plot_policy_map, data)
+    save_single_plot('09_latency_timeline.png', plot_latency_timeline, network_timeline, figsize=(12, 6))
+    save_single_plot('10_jitter_timeline.png', plot_jitter_timeline, network_timeline, figsize=(12, 6))
+    save_single_plot('11_network_stats.png', plot_network_stats, network_stats)
+    save_single_plot('12_network_details_table.png', plot_network_details_table, network_stats, figsize=(8, 4))
     
     print("\n" + "="*70)
     print("  ✅ ANALYSIS COMPLETE!")
     print("="*70)
-    print(f"  PDF:      {pdf_path}")
-    print(f"  Summary:  {SUMMARY_CSV}")
-    print(f"  Plots:    {PLOTS_DIR}/")
+    print(f"  Semua grafik berhasil disimpan di:")
+    print(f"  {grafik_dir}")
     print("="*70 + "\n")
     
     return True
-
 
 if __name__ == "__main__":
     success = generate_all_plots()
