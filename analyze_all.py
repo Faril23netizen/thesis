@@ -559,21 +559,21 @@ def plot_network_details_table(stats, ax):
     
     # IPsec Status
     ipsec_status = callbox.get('ipsec_status', 'UNKNOWN')
-    ipsec_emoji = '✅' if ipsec_status == 'ESTABLISHED' else '❌'
+    ipsec_emoji = '[OK]' if ipsec_status == 'ESTABLISHED' else '[FAIL]'
     table_data.append(['IPsec Tunnel', ipsec_status, ipsec_emoji])
     
     # Latency
     avg_latency = callbox.get('avg_latency_ms', 0)
-    latency_status = '✅' if avg_latency <= 15 else '⚠️' if avg_latency <= 25 else '❌'
+    latency_status = '[OK]' if avg_latency <= 15 else '[WARN]' if avg_latency <= 25 else '[FAIL]'
     table_data.append(['Avg Latency', f'{avg_latency:.2f} ms', latency_status])
     
     # Packet Loss
-    loss_status = '✅' if packet_loss_rate <= 1.5 else '⚠️' if packet_loss_rate <= 3 else '❌'
+    loss_status = '[OK]' if packet_loss_rate <= 1.5 else '[WARN]' if packet_loss_rate <= 3 else '[FAIL]'
     table_data.append(['Packet Loss', f'{packet_loss_rate:.2f} %', loss_status])
     
     # Throughput
     throughput = callbox.get('current_bandwidth_mbps', 100)
-    throughput_status = '✅' if throughput >= 90 else '⚠️' if throughput >= 70 else '❌'
+    throughput_status = '[OK]' if throughput >= 90 else '[WARN]' if throughput >= 70 else '[FAIL]'
     table_data.append(['Throughput', f'{throughput:.0f} Mbps', throughput_status])
     
     # Packets Sent
@@ -589,20 +589,20 @@ def plot_network_details_table(stats, ax):
     table_data.append(['Packets Dropped', f'{packets_dropped:,}', '-'])
     
     # Uptime
-    uptime_status = '✅' if uptime_hours >= 1 else '-'
+    uptime_status = '[OK]' if uptime_hours >= 1 else '-'
     table_data.append(['Uptime', f'{uptime_hours:.2f} hours', uptime_status])
     
     # 5G Core Status
     amf_status = callbox.get('amf_status', 'UNKNOWN')
-    amf_emoji = '✅' if amf_status == 'RUNNING' else '❌'
+    amf_emoji = '[OK]' if amf_status == 'RUNNING' else '[FAIL]'
     table_data.append(['AMF Status', amf_status, amf_emoji])
     
     smf_status = callbox.get('smf_status', 'UNKNOWN')
-    smf_emoji = '✅' if smf_status == 'RUNNING' else '❌'
+    smf_emoji = '[OK]' if smf_status == 'RUNNING' else '[FAIL]'
     table_data.append(['SMF Status', smf_status, smf_emoji])
     
     upf_status = callbox.get('upf_status', 'UNKNOWN')
-    upf_emoji = '✅' if upf_status == 'RUNNING' else '❌'
+    upf_emoji = '[OK]' if upf_status == 'RUNNING' else '[FAIL]'
     table_data.append(['UPF Status', upf_status, upf_emoji])
     
     # Create table
@@ -623,11 +623,11 @@ def plot_network_details_table(stats, ax):
     for i in range(1, len(table_data)):
         status = table_data[i][2]
         cell = table[(i, 2)]
-        if status == '✅':
+        if status == '[OK]':
             cell.set_facecolor('#d5f4e6')
-        elif status == '⚠️':
+        elif status == '[WARN]':
             cell.set_facecolor('#fff3cd')
-        elif status == '❌':
+        elif status == '[FAIL]':
             cell.set_facecolor('#f8d7da')
     
     ax.set_title('Network Performance Details (N3IWF + 5G Core)', fontsize=12, fontweight='bold', pad=20)
@@ -731,11 +731,11 @@ def generate_all_plots():
     # Generate plots
     print("\n[3/4] Generating plots...")
     
-    fig = plt.figure(figsize=(16, 35))
+    fig = plt.figure(figsize=(16, 35), constrained_layout=True)
     fig.suptitle('Complete Analysis - Aquaculture Edge AI with N3IWF', 
-                 fontsize=16, fontweight='bold', y=0.995)
+                 fontsize=16, fontweight='bold')
     
-    gs = gridspec.GridSpec(7, 2, figure=fig, hspace=0.40, wspace=0.30)
+    gs = gridspec.GridSpec(7, 2, figure=fig)
     
     # Plot 1: Water Quality
     ax1 = fig.add_subplot(gs[0, :])
@@ -785,12 +785,10 @@ def generate_all_plots():
     ax12 = fig.add_subplot(gs[6, 1])
     plot_network_details_table(network_stats, ax12)
     
-    plt.tight_layout(rect=[0, 0, 1, 0.99])
-    
     # Save to PDF
     print("\n[4/4] Saving to PDF...")
     pdf_path = PDF_OUTPUT
-    plt.savefig(pdf_path, dpi=150, bbox_inches='tight')
+    plt.savefig(pdf_path, dpi=150)
     print(f"✅ PDF saved: {pdf_path}")
     
     # Save individual plots
