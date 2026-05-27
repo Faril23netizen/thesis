@@ -1,0 +1,8 @@
+[2026-05-26 21:34:04] [INFO] Folder sesi baru dibuat: /home/ubuntu/thesis/results/hasil_real/session_20260526_213404
+[2026-05-26 21:34:04] [INFO] PHASE B — FQL learning risk prediction from real Pico data...
+[2026-05-26 21:34:23] [INFO] [RB][Step:   10] pH:7.524 T:0.0°C NH₃:0.27% | Risk: Actual=SAFE RB=SAFE FQL=WARNING  | Acc:0.00% Buffer:10
+[2026-05-26 21:34:25] [INFO] System stopping — saving data...
+[2026-05-26 21:34:25] [INFO] Q-table saved: /home/ubuntu/thesis/results/hasil_real/session_20260526_213404/qtable.json
+[2026-05-26 21:34:25] [INFO] DQN buffer saved: /home/ubuntu/thesis/results/hasil_real/session_20260526_213404/dqn_buffer.json (11 transitions)
+[2026-05-26 21:34:25] [INFO] System stopped — data saved.
+[2026-05-26 21:34:25] [INFO] Sistem berhenti total.
