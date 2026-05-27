@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "G:/rule_based/data_collection_test"
+    "cmake.sourceDirectory": "G:/rule_based/data_collection_test",
+    "cmake.ignoreCMakeListsMissing": true
 }
