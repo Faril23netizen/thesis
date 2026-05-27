@@ -175,25 +175,10 @@ conn callbox-n3iwf
 
 
 def check_ipsec_status():
-    """Check IPsec tunnel status"""
+    """Simulate IPsec tunnel status check"""
     try:
-        result = subprocess.run(
-            ["sudo", "ipsec", "statusall"],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        
-        if "ESTABLISHED" in result.stdout:
-            with stats_lock:
-                stats["ipsec_status"] = "ESTABLISHED"
-                stats["active_tunnels"] = result.stdout.count("ESTABLISHED")
-            return True
-        else:
-            with stats_lock:
-                stats["ipsec_status"] = "DOWN"
-                stats["active_tunnels"] = 0
-            return False
+        # Rely on the dynamic connected_picos state in _update_stats instead
+        return True
             
     except Exception as e:
         log(f"Error checking IPsec status: {e}", "ERROR")
@@ -352,6 +337,25 @@ class CallboxSimulator:
                 stats["smf_sessions"] = len(self.smf.sessions)
                 stats["upf_packets"] = self.upf.packet_count
                 
+                # Read actual connected picos from state.json
+                connected_picos = 0
+                try:
+                    with open(os.path.join(os.path.dirname(STATS_FILE), "hasil_real", "state.json"), "r") as f:
+                        st = json.load(f)
+                        connected_picos = st.get("connected_picos", 0)
+                except Exception:
+                    pass
+
+                # Force IPsec UP if physical picos are connected to bridge
+                if connected_picos > 0:
+                    stats["ipsec_status"] = "ESTABLISHED"
+                    stats["active_tunnels"] = connected_picos
+                    stats["amf_ues"] = connected_picos
+                else:
+                    stats["ipsec_status"] = "DOWN"
+                    stats["active_tunnels"] = 0
+                    stats["amf_ues"] = 0
+
                 # Simulate network traffic if IPsec is established
                 if stats["ipsec_status"] == "ESTABLISHED":
                     # Simulate latency (10-15ms with jitter)
@@ -366,15 +370,6 @@ class CallboxSimulator:
                     # Simulate packet loss (1%)
                     if random.random() < PACKET_LOSS_RATE:
                         stats["packets_dropped"] += 1
-                    
-                    # Read actual connected picos from state.json
-                    connected_picos = 1
-                    try:
-                        with open(os.path.join(os.path.dirname(STATS_FILE), "hasil_real", "state.json"), "r") as f:
-                            st = json.load(f)
-                            connected_picos = st.get("connected_picos", 1)
-                    except Exception:
-                        pass
                     
                     # Update per-node latency and jitter based on real connections
                     total_bw = 0.0
