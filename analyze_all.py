@@ -85,8 +85,10 @@ def load_comparison_data():
     """Load data from comparison.csv"""
     data = []
     try:
-        with open(COMPARISON_CSV, 'r') as f:
-            reader = csv.DictReader(f)
+        with open(COMPARISON_CSV, 'r', encoding='utf-8') as f:
+            content = f.read().replace('\x00', '')
+            import io
+            reader = csv.DictReader(io.StringIO(content))
             for row in reader:
                 try:
                     # Skip rows with missing or None values
@@ -154,8 +156,10 @@ def load_network_timeline():
     """Load network timeline data"""
     timeline = []
     try:
-        with open(NETWORK_TIMELINE, 'r') as f:
-            reader = csv.DictReader(f)
+        with open(NETWORK_TIMELINE, 'r', encoding='utf-8') as f:
+            content = f.read().replace('\x00', '')
+            import io
+            reader = csv.DictReader(io.StringIO(content))
             for row in reader:
                 try:
                     timeline.append({
@@ -705,7 +709,7 @@ def generate_all_plots():
         print("   Run the system first: python3 main/real/run_real.py")
         return False
     
-    print(f"✅ Loaded {len(data)} data points")
+    print(f"[OK] Loaded {len(data)} data points")
     
     # Create grafik directory in the current session folder
     grafik_dir = os.path.join(LATEST_SESSION, "grafik")
@@ -740,7 +744,7 @@ def generate_all_plots():
         for key, value in stats.items():
             writer.writerow([key, value])
     
-    print(f"\n✅ Summary saved: {session_summary}")
+    print(f"\n[OK] Summary saved: {session_summary}")
     
     # Generate plots
     print(f"\n[3/4] Generating plots individually to {grafik_dir}...")
@@ -773,7 +777,7 @@ def generate_all_plots():
     save_single_plot('12_network_details_table.png', plot_network_details_table, network_stats, figsize=(8, 4))
     
     print("\n" + "="*70)
-    print("  ✅ ANALYSIS COMPLETE!")
+    print("  [OK] ANALYSIS COMPLETE!")
     print("="*70)
     print(f"  Semua grafik berhasil disimpan di:")
     print(f"  {grafik_dir}")
