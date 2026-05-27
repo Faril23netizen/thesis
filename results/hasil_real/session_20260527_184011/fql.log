@@ -1,0 +1,2077 @@
+[2026-05-27 18:40:11] [INFO] Folder sesi baru dibuat: /home/ubuntu/thesis/results/hasil_real/session_20260527_184011
+[2026-05-27 18:40:11] [INFO] PHASE B — FQL learning risk prediction from real Pico data...
+[2026-05-27 18:40:30] [INFO] [RB][Step:   10] pH:7.547 T:25.0°C NH₃:1.96% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:0.00% Buffer:10
+[2026-05-27 18:40:50] [INFO] [RB][Step:   20] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:0.00% Buffer:20
+[2026-05-27 18:41:10] [INFO] [RB][Step:   30] pH:7.541 T:25.0°C NH₃:1.93% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:0.00% Buffer:30
+[2026-05-27 18:41:30] [INFO] [RB][Step:   40] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:0.00% Buffer:40
+[2026-05-27 18:41:50] [INFO] [RB][Step:   50] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CRITICAL  | Acc:0.00% Buffer:50
+[2026-05-27 18:42:10] [INFO] [RB][Step:   60] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:0.00% Buffer:60
+[2026-05-27 18:42:30] [INFO] [RB][Step:   70] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:0.00% Buffer:70
+[2026-05-27 18:42:50] [INFO] [RB][Step:   80] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:0.00% Buffer:80
+[2026-05-27 18:43:10] [INFO] [RB][Step:   90] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:0.00% Buffer:90
+[2026-05-27 18:43:30] [INFO]   Convergence progress: steps 5% | windows 20% | accuracy 99%
+[2026-05-27 18:43:30] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 18:43:30] [INFO] [RB][Step:  100] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:100
+[2026-05-27 18:43:30] [INFO] -----------------------------------------------------------------
+[2026-05-27 18:43:30] [INFO] [RB] Real steps: 100 | FQL steps: 100 | Avg Accuracy: 74.00% | Converged: False | DQN Buffer: 100
+[2026-05-27 18:43:30] [INFO] -----------------------------------------------------------------
+[2026-05-27 18:43:51] [INFO] [RB][Step:  110] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:110
+[2026-05-27 18:44:11] [INFO] [RB][Step:  120] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:74.00% Buffer:120
+[2026-05-27 18:44:31] [INFO] [RB][Step:  130] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:130
+[2026-05-27 18:44:51] [INFO] [RB][Step:  140] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:140
+[2026-05-27 18:45:11] [INFO] [RB][Step:  150] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:150
+[2026-05-27 18:45:31] [INFO] [RB][Step:  160] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:160
+[2026-05-27 18:45:51] [INFO] [RB][Step:  170] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:170
+[2026-05-27 18:46:11] [INFO] [RB][Step:  180] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:180
+[2026-05-27 18:46:31] [INFO] [RB][Step:  190] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:190
+[2026-05-27 18:46:51] [INFO]   Convergence progress: steps 10% | windows 40% | accuracy 100%
+[2026-05-27 18:46:51] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 18:46:51] [INFO] [RB][Step:  200] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:82.00% Buffer:200
+[2026-05-27 18:46:51] [INFO] -----------------------------------------------------------------
+[2026-05-27 18:46:51] [INFO] [RB] Real steps: 200 | FQL steps: 200 | Avg Accuracy: 82.00% | Converged: False | DQN Buffer: 200
+[2026-05-27 18:46:51] [INFO] -----------------------------------------------------------------
+[2026-05-27 18:47:11] [INFO] [RB][Step:  210] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:82.00% Buffer:210
+[2026-05-27 18:47:31] [INFO] [RB][Step:  220] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:82.00% Buffer:220
+[2026-05-27 18:47:51] [INFO] [RB][Step:  230] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:82.00% Buffer:230
+[2026-05-27 18:48:11] [INFO] [RB][Step:  240] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CRITICAL  | Acc:82.00% Buffer:240
+[2026-05-27 18:48:31] [INFO] [RB][Step:  250] pH:7.547 T:25.0°C NH₃:1.96% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:82.00% Buffer:250
+[2026-05-27 18:48:51] [INFO] [RB][Step:  260] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:82.00% Buffer:260
+[2026-05-27 18:49:12] [INFO] [RB][Step:  270] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:82.00% Buffer:270
+[2026-05-27 18:49:32] [INFO] [RB][Step:  280] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:82.00% Buffer:280
+[2026-05-27 18:49:52] [INFO] [RB][Step:  290] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:82.00% Buffer:290
+[2026-05-27 18:50:12] [INFO]   Convergence progress: steps 15% | windows 60% | accuracy 99%
+[2026-05-27 18:50:12] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 18:50:12] [INFO] [RB][Step:  300] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:300
+[2026-05-27 18:50:12] [INFO] -----------------------------------------------------------------
+[2026-05-27 18:50:12] [INFO] [RB] Real steps: 300 | FQL steps: 300 | Avg Accuracy: 74.00% | Converged: False | DQN Buffer: 300
+[2026-05-27 18:50:12] [INFO] -----------------------------------------------------------------
+[2026-05-27 18:50:32] [INFO] [RB][Step:  310] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:310
+[2026-05-27 18:50:52] [INFO] [RB][Step:  320] pH:7.547 T:25.0°C NH₃:1.96% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:320
+[2026-05-27 18:51:12] [INFO] [RB][Step:  330] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:330
+[2026-05-27 18:51:32] [INFO] [RB][Step:  340] pH:7.541 T:25.0°C NH₃:1.93% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:340
+[2026-05-27 18:51:52] [INFO] [RB][Step:  350] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CRITICAL  | Acc:74.00% Buffer:350
+[2026-05-27 18:52:12] [INFO] [RB][Step:  360] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:360
+[2026-05-27 18:52:32] [INFO] [RB][Step:  370] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:370
+[2026-05-27 18:52:52] [INFO] [RB][Step:  380] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:380
+[2026-05-27 18:53:12] [INFO] [RB][Step:  390] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:74.00% Buffer:390
+[2026-05-27 18:53:32] [INFO]   Convergence progress: steps 20% | windows 80% | accuracy 100%
+[2026-05-27 18:53:32] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 18:53:32] [INFO] [RB][Step:  400] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:75.00% Buffer:400
+[2026-05-27 18:53:32] [INFO] -----------------------------------------------------------------
+[2026-05-27 18:53:32] [INFO] [RB] Real steps: 400 | FQL steps: 400 | Avg Accuracy: 75.00% | Converged: False | DQN Buffer: 400
+[2026-05-27 18:53:32] [INFO] -----------------------------------------------------------------
+[2026-05-27 18:53:52] [INFO] [RB][Step:  410] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:75.00% Buffer:410
+[2026-05-27 18:54:13] [INFO] [RB][Step:  420] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:75.00% Buffer:420
+[2026-05-27 18:54:33] [INFO] [RB][Step:  430] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:75.00% Buffer:430
+[2026-05-27 18:54:53] [INFO] [RB][Step:  440] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:75.00% Buffer:440
+[2026-05-27 18:55:13] [INFO] [RB][Step:  450] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:75.00% Buffer:450
+[2026-05-27 18:55:33] [INFO] [RB][Step:  460] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:75.00% Buffer:460
+[2026-05-27 18:55:53] [INFO] [RB][Step:  470] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:75.00% Buffer:470
+[2026-05-27 18:56:13] [INFO] [RB][Step:  480] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:75.00% Buffer:480
+[2026-05-27 18:56:33] [INFO] [RB][Step:  490] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:75.00% Buffer:490
+[2026-05-27 18:56:53] [INFO]   Convergence progress: steps 25% | windows 100% | accuracy 100%
+[2026-05-27 18:56:53] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 18:56:53] [INFO] [RB][Step:  500] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:88.00% Buffer:500
+[2026-05-27 18:56:53] [INFO] -----------------------------------------------------------------
+[2026-05-27 18:56:53] [INFO] [RB] Real steps: 500 | FQL steps: 500 | Avg Accuracy: 88.00% | Converged: False | DQN Buffer: 500
+[2026-05-27 18:56:53] [INFO] -----------------------------------------------------------------
+[2026-05-27 18:57:13] [INFO] [RB][Step:  510] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:88.00% Buffer:510
+[2026-05-27 18:57:33] [INFO] [RB][Step:  520] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:88.00% Buffer:520
+[2026-05-27 18:57:53] [INFO] [RB][Step:  530] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:88.00% Buffer:530
+[2026-05-27 18:58:13] [INFO] [RB][Step:  540] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:88.00% Buffer:540
+[2026-05-27 18:58:33] [INFO] [RB][Step:  550] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:88.00% Buffer:550
+[2026-05-27 18:58:53] [INFO] [RB][Step:  560] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:88.00% Buffer:560
+[2026-05-27 18:59:14] [INFO] [RB][Step:  570] pH:7.547 T:25.0°C NH₃:1.96% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:88.00% Buffer:570
+[2026-05-27 18:59:34] [INFO] [RB][Step:  580] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:88.00% Buffer:580
+[2026-05-27 18:59:54] [INFO] [RB][Step:  590] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:88.00% Buffer:590
+[2026-05-27 19:00:14] [INFO]   Convergence progress: steps 30% | windows 100% | accuracy 100%
+[2026-05-27 19:00:14] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:00:14] [INFO] [RB][Step:  600] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:78.00% Buffer:600
+[2026-05-27 19:00:14] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:00:14] [INFO] [RB] Real steps: 600 | FQL steps: 600 | Avg Accuracy: 78.00% | Converged: False | DQN Buffer: 600
+[2026-05-27 19:00:14] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:00:34] [INFO] [RB][Step:  610] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:78.00% Buffer:610
+[2026-05-27 19:00:54] [INFO] [RB][Step:  620] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:78.00% Buffer:620
+[2026-05-27 19:01:14] [INFO] [RB][Step:  630] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:78.00% Buffer:630
+[2026-05-27 19:01:34] [INFO] [RB][Step:  640] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:78.00% Buffer:640
+[2026-05-27 19:01:54] [INFO] [RB][Step:  650] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:78.00% Buffer:650
+[2026-05-27 19:02:14] [INFO] [RB][Step:  660] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:78.00% Buffer:660
+[2026-05-27 19:02:34] [INFO] [RB][Step:  670] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:78.00% Buffer:670
+[2026-05-27 19:02:54] [INFO] [RB][Step:  680] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:78.00% Buffer:680
+[2026-05-27 19:03:14] [INFO] [RB][Step:  690] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:78.00% Buffer:690
+[2026-05-27 19:03:34] [INFO]   Convergence progress: steps 35% | windows 100% | accuracy 100%
+[2026-05-27 19:03:34] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:03:34] [INFO] [RB][Step:  700] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:700
+[2026-05-27 19:03:34] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:03:34] [INFO] [RB] Real steps: 700 | FQL steps: 700 | Avg Accuracy: 89.00% | Converged: False | DQN Buffer: 700
+[2026-05-27 19:03:34] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:03:54] [INFO] [RB][Step:  710] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:710
+[2026-05-27 19:04:15] [INFO] [RB][Step:  720] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:720
+[2026-05-27 19:04:35] [INFO] [RB][Step:  730] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:730
+[2026-05-27 19:04:55] [INFO] [RB][Step:  740] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:740
+[2026-05-27 19:05:15] [INFO] [RB][Step:  750] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:750
+[2026-05-27 19:05:35] [INFO] [RB][Step:  760] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:760
+[2026-05-27 19:05:55] [INFO] [RB][Step:  770] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:770
+[2026-05-27 19:06:15] [INFO] [RB][Step:  780] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:780
+[2026-05-27 19:06:35] [INFO] [RB][Step:  790] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:790
+[2026-05-27 19:06:55] [INFO]   Convergence progress: steps 40% | windows 100% | accuracy 100%
+[2026-05-27 19:06:55] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:06:55] [INFO] [RB][Step:  800] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:800
+[2026-05-27 19:06:55] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:06:55] [INFO] [RB] Real steps: 800 | FQL steps: 800 | Avg Accuracy: 89.00% | Converged: False | DQN Buffer: 800
+[2026-05-27 19:06:55] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:07:15] [INFO] [RB][Step:  810] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:89.00% Buffer:810
+[2026-05-27 19:07:35] [INFO] [RB][Step:  820] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:820
+[2026-05-27 19:07:55] [INFO] [RB][Step:  830] pH:7.547 T:25.0°C NH₃:1.96% | Risk: Actual=CAUTION RB=CAUTION FQL=CRITICAL  | Acc:89.00% Buffer:830
+[2026-05-27 19:08:15] [INFO] [RB][Step:  840] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:840
+[2026-05-27 19:08:35] [INFO] [RB][Step:  850] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:850
+[2026-05-27 19:08:55] [INFO] [RB][Step:  860] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:860
+[2026-05-27 19:09:15] [INFO] [RB][Step:  870] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:870
+[2026-05-27 19:09:35] [INFO] [RB][Step:  880] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:880
+[2026-05-27 19:09:56] [INFO] [RB][Step:  890] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:89.00% Buffer:890
+[2026-05-27 19:10:16] [INFO]   Convergence progress: steps 45% | windows 100% | accuracy 100%
+[2026-05-27 19:10:16] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:10:16] [INFO] [RB][Step:  900] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:900
+[2026-05-27 19:10:16] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:10:16] [INFO] [RB] Real steps: 900 | FQL steps: 900 | Avg Accuracy: 85.00% | Converged: False | DQN Buffer: 900
+[2026-05-27 19:10:16] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:10:36] [INFO] [RB][Step:  910] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:910
+[2026-05-27 19:10:56] [INFO] [RB][Step:  920] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:920
+[2026-05-27 19:11:16] [INFO] [RB][Step:  930] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:930
+[2026-05-27 19:11:36] [INFO] [RB][Step:  940] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:940
+[2026-05-27 19:11:56] [INFO] [RB][Step:  950] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:950
+[2026-05-27 19:12:16] [INFO] [RB][Step:  960] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:960
+[2026-05-27 19:12:36] [INFO] [RB][Step:  970] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:970
+[2026-05-27 19:12:56] [INFO] [RB][Step:  980] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:980
+[2026-05-27 19:13:16] [INFO] [RB][Step:  990] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:990
+[2026-05-27 19:13:36] [INFO]   Convergence progress: steps 50% | windows 100% | accuracy 100%
+[2026-05-27 19:13:36] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:13:36] [INFO] [RB][Step: 1000] pH:7.552 T:25.0°C NH₃:1.98% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:1000
+[2026-05-27 19:13:36] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:13:36] [INFO] [RB] Real steps: 1000 | FQL steps: 1000 | Avg Accuracy: 85.00% | Converged: False | DQN Buffer: 1000
+[2026-05-27 19:13:36] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:13:56] [INFO] [RB][Step: 1010] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:1010
+[2026-05-27 19:14:17] [INFO] [RB][Step: 1020] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:1020
+[2026-05-27 19:14:37] [INFO] [RB][Step: 1030] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:1030
+[2026-05-27 19:14:57] [INFO] [RB][Step: 1040] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:1040
+[2026-05-27 19:15:17] [INFO] [RB][Step: 1050] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:1050
+[2026-05-27 19:15:37] [INFO] [RB][Step: 1060] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:1060
+[2026-05-27 19:15:57] [INFO] [RB][Step: 1070] pH:7.541 T:25.0°C NH₃:1.93% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:85.00% Buffer:1070
+[2026-05-27 19:16:17] [INFO] [RB][Step: 1080] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:1080
+[2026-05-27 19:16:37] [INFO] [RB][Step: 1090] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:85.00% Buffer:1090
+[2026-05-27 19:16:57] [INFO]   Convergence progress: steps 55% | windows 100% | accuracy 100%
+[2026-05-27 19:16:57] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:16:57] [INFO] [RB][Step: 1100] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1100
+[2026-05-27 19:16:57] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:16:57] [INFO] [RB] Real steps: 1100 | FQL steps: 1100 | Avg Accuracy: 91.00% | Converged: False | DQN Buffer: 1100
+[2026-05-27 19:16:57] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:17:17] [INFO] [RB][Step: 1110] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1110
+[2026-05-27 19:17:37] [INFO] [RB][Step: 1120] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1120
+[2026-05-27 19:17:57] [INFO] [RB][Step: 1130] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1130
+[2026-05-27 19:18:17] [INFO] [RB][Step: 1140] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1140
+[2026-05-27 19:18:37] [INFO] [RB][Step: 1150] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1150
+[2026-05-27 19:18:57] [INFO] [RB][Step: 1160] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1160
+[2026-05-27 19:19:17] [INFO] [RB][Step: 1170] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1170
+[2026-05-27 19:19:37] [INFO] [RB][Step: 1180] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1180
+[2026-05-27 19:19:58] [INFO] [RB][Step: 1190] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1190
+[2026-05-27 19:20:18] [INFO]   Convergence progress: steps 60% | windows 100% | accuracy 100%
+[2026-05-27 19:20:18] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:20:18] [INFO] [RB][Step: 1200] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1200
+[2026-05-27 19:20:18] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:20:18] [INFO] [RB] Real steps: 1200 | FQL steps: 1200 | Avg Accuracy: 91.00% | Converged: False | DQN Buffer: 1200
+[2026-05-27 19:20:18] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:20:38] [INFO] [RB][Step: 1210] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1210
+[2026-05-27 19:20:58] [INFO] [RB][Step: 1220] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1220
+[2026-05-27 19:21:18] [INFO] [RB][Step: 1230] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1230
+[2026-05-27 19:21:38] [INFO] [RB][Step: 1240] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1240
+[2026-05-27 19:21:58] [INFO] [RB][Step: 1250] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1250
+[2026-05-27 19:22:18] [INFO] [RB][Step: 1260] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1260
+[2026-05-27 19:22:38] [INFO] [RB][Step: 1270] pH:7.541 T:25.0°C NH₃:1.93% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1270
+[2026-05-27 19:22:58] [INFO] [RB][Step: 1280] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1280
+[2026-05-27 19:23:18] [INFO] [RB][Step: 1290] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1290
+[2026-05-27 19:23:38] [INFO]   Convergence progress: steps 65% | windows 100% | accuracy 100%
+[2026-05-27 19:23:38] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:23:38] [INFO] [RB][Step: 1300] pH:7.547 T:25.0°C NH₃:1.96% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1300
+[2026-05-27 19:23:38] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:23:38] [INFO] [RB] Real steps: 1300 | FQL steps: 1300 | Avg Accuracy: 87.00% | Converged: False | DQN Buffer: 1300
+[2026-05-27 19:23:38] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:23:58] [INFO] [RB][Step: 1310] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1310
+[2026-05-27 19:24:18] [INFO] [RB][Step: 1320] pH:7.541 T:25.0°C NH₃:1.93% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1320
+[2026-05-27 19:24:38] [INFO] [RB][Step: 1330] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1330
+[2026-05-27 19:24:59] [INFO] [RB][Step: 1340] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1340
+[2026-05-27 19:25:19] [INFO] [RB][Step: 1350] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1350
+[2026-05-27 19:25:39] [INFO] [RB][Step: 1360] pH:7.552 T:25.0°C NH₃:1.98% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1360
+[2026-05-27 19:25:59] [INFO] [RB][Step: 1370] pH:7.552 T:25.0°C NH₃:1.98% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1370
+[2026-05-27 19:26:19] [INFO] [RB][Step: 1380] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:87.00% Buffer:1380
+[2026-05-27 19:26:39] [INFO] [RB][Step: 1390] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:87.00% Buffer:1390
+[2026-05-27 19:26:59] [INFO]   Convergence progress: steps 70% | windows 100% | accuracy 100%
+[2026-05-27 19:26:59] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:26:59] [INFO] [RB][Step: 1400] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:84.00% Buffer:1400
+[2026-05-27 19:26:59] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:26:59] [INFO] [RB] Real steps: 1400 | FQL steps: 1400 | Avg Accuracy: 84.00% | Converged: False | DQN Buffer: 1400
+[2026-05-27 19:26:59] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:27:19] [INFO] [RB][Step: 1410] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:84.00% Buffer:1410
+[2026-05-27 19:27:39] [INFO] [RB][Step: 1420] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:84.00% Buffer:1420
+[2026-05-27 19:27:59] [INFO] [RB][Step: 1430] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:84.00% Buffer:1430
+[2026-05-27 19:28:19] [INFO] [RB][Step: 1440] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:84.00% Buffer:1440
+[2026-05-27 19:28:39] [INFO] [RB][Step: 1450] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:84.00% Buffer:1450
+[2026-05-27 19:28:59] [INFO] [RB][Step: 1460] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:84.00% Buffer:1460
+[2026-05-27 19:29:19] [INFO] [RB][Step: 1470] pH:7.552 T:25.0°C NH₃:1.98% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:84.00% Buffer:1470
+[2026-05-27 19:29:39] [INFO] [RB][Step: 1480] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:84.00% Buffer:1480
+[2026-05-27 19:29:59] [INFO] [RB][Step: 1490] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:84.00% Buffer:1490
+[2026-05-27 19:30:20] [INFO]   Convergence progress: steps 75% | windows 100% | accuracy 100%
+[2026-05-27 19:30:20] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:30:20] [INFO] [RB][Step: 1500] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:1500
+[2026-05-27 19:30:20] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:30:20] [INFO] [RB] Real steps: 1500 | FQL steps: 1500 | Avg Accuracy: 89.00% | Converged: False | DQN Buffer: 1500
+[2026-05-27 19:30:20] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:30:40] [INFO] [RB][Step: 1510] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:1510
+[2026-05-27 19:31:00] [INFO] [RB][Step: 1520] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:1520
+[2026-05-27 19:31:20] [INFO] [RB][Step: 1530] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:1530
+[2026-05-27 19:31:40] [INFO] [RB][Step: 1540] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:1540
+[2026-05-27 19:32:00] [INFO] [RB][Step: 1550] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:89.00% Buffer:1550
+[2026-05-27 19:32:20] [INFO] [RB][Step: 1560] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:1560
+[2026-05-27 19:32:40] [INFO] [RB][Step: 1570] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:1570
+[2026-05-27 19:33:00] [INFO] [RB][Step: 1580] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:1580
+[2026-05-27 19:33:20] [INFO] [RB][Step: 1590] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:1590
+[2026-05-27 19:33:40] [INFO]   Convergence progress: steps 80% | windows 100% | accuracy 100%
+[2026-05-27 19:33:40] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:33:40] [INFO] [RB][Step: 1600] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:81.00% Buffer:1600
+[2026-05-27 19:33:40] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:33:40] [INFO] [RB] Real steps: 1600 | FQL steps: 1600 | Avg Accuracy: 81.00% | Converged: False | DQN Buffer: 1600
+[2026-05-27 19:33:40] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:34:00] [INFO] [RB][Step: 1610] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:81.00% Buffer:1610
+[2026-05-27 19:34:20] [INFO] [RB][Step: 1620] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:81.00% Buffer:1620
+[2026-05-27 19:34:40] [INFO] [RB][Step: 1630] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:81.00% Buffer:1630
+[2026-05-27 19:35:01] [INFO] [RB][Step: 1640] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:81.00% Buffer:1640
+[2026-05-27 19:35:21] [INFO] [RB][Step: 1650] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:81.00% Buffer:1650
+[2026-05-27 19:35:41] [INFO] [RB][Step: 1660] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:81.00% Buffer:1660
+[2026-05-27 19:36:01] [INFO] [RB][Step: 1670] pH:7.547 T:25.0°C NH₃:1.96% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:81.00% Buffer:1670
+[2026-05-27 19:36:21] [INFO] [RB][Step: 1680] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:81.00% Buffer:1680
+[2026-05-27 19:36:41] [INFO] [RB][Step: 1690] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:81.00% Buffer:1690
+[2026-05-27 19:37:01] [INFO]   Convergence progress: steps 85% | windows 100% | accuracy 100%
+[2026-05-27 19:37:01] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:37:01] [INFO] [RB][Step: 1700] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:1700
+[2026-05-27 19:37:01] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:37:01] [INFO] [RB] Real steps: 1700 | FQL steps: 1700 | Avg Accuracy: 90.00% | Converged: False | DQN Buffer: 1700
+[2026-05-27 19:37:01] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:37:21] [INFO] [RB][Step: 1710] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:1710
+[2026-05-27 19:37:41] [INFO] [RB][Step: 1720] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:1720
+[2026-05-27 19:38:01] [INFO] [RB][Step: 1730] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:1730
+[2026-05-27 19:38:21] [INFO] [RB][Step: 1740] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:1740
+[2026-05-27 19:38:41] [INFO] [RB][Step: 1750] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:1750
+[2026-05-27 19:39:01] [INFO] [RB][Step: 1760] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:1760
+[2026-05-27 19:39:21] [INFO] [RB][Step: 1770] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:90.00% Buffer:1770
+[2026-05-27 19:39:41] [INFO] [RB][Step: 1780] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:1780
+[2026-05-27 19:40:01] [INFO] [RB][Step: 1790] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:1790
+[2026-05-27 19:40:22] [INFO]   Convergence progress: steps 90% | windows 100% | accuracy 100%
+[2026-05-27 19:40:22] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:40:22] [INFO] [RB][Step: 1800] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1800
+[2026-05-27 19:40:22] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:40:22] [INFO] [RB] Real steps: 1800 | FQL steps: 1800 | Avg Accuracy: 91.00% | Converged: False | DQN Buffer: 1800
+[2026-05-27 19:40:22] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:40:42] [INFO] [RB][Step: 1810] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1810
+[2026-05-27 19:41:02] [INFO] [RB][Step: 1820] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1820
+[2026-05-27 19:41:22] [INFO] [RB][Step: 1830] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1830
+[2026-05-27 19:41:42] [INFO] [RB][Step: 1840] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1840
+[2026-05-27 19:42:02] [INFO] [RB][Step: 1850] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1850
+[2026-05-27 19:42:22] [INFO] [RB][Step: 1860] pH:7.547 T:25.0°C NH₃:1.96% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1860
+[2026-05-27 19:42:42] [INFO] [RB][Step: 1870] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1870
+[2026-05-27 19:43:02] [INFO] [RB][Step: 1880] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CRITICAL  | Acc:91.00% Buffer:1880
+[2026-05-27 19:43:22] [INFO] [RB][Step: 1890] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:1890
+[2026-05-27 19:43:42] [INFO]   Convergence progress: steps 95% | windows 100% | accuracy 100%
+[2026-05-27 19:43:42] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:43:42] [INFO] [RB][Step: 1900] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1900
+[2026-05-27 19:43:42] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:43:42] [INFO] [RB] Real steps: 1900 | FQL steps: 1900 | Avg Accuracy: 87.00% | Converged: False | DQN Buffer: 1900
+[2026-05-27 19:43:42] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:44:02] [INFO] [RB][Step: 1910] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1910
+[2026-05-27 19:44:22] [INFO] [RB][Step: 1920] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1920
+[2026-05-27 19:44:42] [INFO] [RB][Step: 1930] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1930
+[2026-05-27 19:45:02] [INFO] [RB][Step: 1940] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1940
+[2026-05-27 19:45:22] [INFO] [RB][Step: 1950] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CRITICAL  | Acc:87.00% Buffer:1950
+[2026-05-27 19:45:43] [INFO] [RB][Step: 1960] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1960
+[2026-05-27 19:46:03] [INFO] [RB][Step: 1970] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1970
+[2026-05-27 19:46:23] [INFO] [RB][Step: 1980] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1980
+[2026-05-27 19:46:43] [INFO] [RB][Step: 1990] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:87.00% Buffer:1990
+[2026-05-27 19:47:03] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 19:47:03] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:47:03] [INFO] =================================================================
+[2026-05-27 19:47:03] [INFO] === FQL CONVERGED === Step: 2000 | Real: 2000 | Avg Accuracy: 90.00% ===
+[2026-05-27 19:47:03] [INFO] =================================================================
+[2026-05-27 19:47:03] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:47:03] [INFO] Q-table saved to /home/ubuntu/thesis/results/hasil_real/session_20260527_184011/qtable.json
+[2026-05-27 19:47:03] [INFO] Q-table successfully sent to Pico WH
+[2026-05-27 19:47:03] [INFO] [FQL] Phase started at real_step=2000. DQN unlocks after 1000 more real steps.
+[2026-05-27 19:47:03] [INFO] [FQL][Step: 2000] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2000
+[2026-05-27 19:47:03] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:47:03] [INFO] [FQL] Real steps: 2000 | FQL steps: 2000 | Avg Accuracy: 90.00% | Converged: True | DQN Buffer: 2000
+[2026-05-27 19:47:03] [INFO] [FQL] Steps in FQL phase: 0 / 1000 | DQN unlocks in 1000 more real steps
+[2026-05-27 19:47:03] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:47:05] [INFO] Sending updated Q-table to Pico (step=2001, AvgR=+1.0000)...
+[2026-05-27 19:47:05] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:47:05] [INFO] Updated Q-table sent and saved.
+[2026-05-27 19:47:23] [INFO] [FQL][Step: 2010] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2010
+[2026-05-27 19:47:43] [INFO] [FQL][Step: 2020] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2020
+[2026-05-27 19:48:03] [INFO] [FQL][Step: 2030] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2030
+[2026-05-27 19:48:23] [INFO] [FQL][Step: 2040] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2040
+[2026-05-27 19:48:43] [INFO] [FQL][Step: 2050] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2050
+[2026-05-27 19:49:03] [INFO] [FQL][Step: 2060] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2060
+[2026-05-27 19:49:23] [INFO] [FQL][Step: 2070] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2070
+[2026-05-27 19:49:43] [INFO] [FQL][Step: 2080] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2080
+[2026-05-27 19:50:03] [INFO] [FQL][Step: 2090] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2090
+[2026-05-27 19:50:23] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 19:50:23] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:50:23] [INFO] [FQL][Step: 2100] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:94.00% Buffer:2100
+[2026-05-27 19:50:23] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:50:23] [INFO] [FQL] Real steps: 2100 | FQL steps: 2100 | Avg Accuracy: 94.00% | Converged: True | DQN Buffer: 2100
+[2026-05-27 19:50:23] [INFO] [FQL] Steps in FQL phase: 100 / 1000 | DQN unlocks in 900 more real steps
+[2026-05-27 19:50:23] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:50:43] [INFO] [FQL][Step: 2110] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:2110
+[2026-05-27 19:51:04] [INFO] [FQL][Step: 2120] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:2120
+[2026-05-27 19:51:24] [INFO] [FQL][Step: 2130] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:2130
+[2026-05-27 19:51:44] [INFO] [FQL][Step: 2140] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:2140
+[2026-05-27 19:52:04] [INFO] [FQL][Step: 2150] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:2150
+[2026-05-27 19:52:24] [INFO] [FQL][Step: 2160] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:2160
+[2026-05-27 19:52:44] [INFO] [FQL][Step: 2170] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:2170
+[2026-05-27 19:53:04] [INFO] [FQL][Step: 2180] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:2180
+[2026-05-27 19:53:24] [INFO] [FQL][Step: 2190] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:2190
+[2026-05-27 19:53:44] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 19:53:44] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:53:44] [INFO] [FQL][Step: 2200] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:2200
+[2026-05-27 19:53:44] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:53:44] [INFO] [FQL] Real steps: 2200 | FQL steps: 2200 | Avg Accuracy: 92.00% | Converged: True | DQN Buffer: 2200
+[2026-05-27 19:53:44] [INFO] [FQL] Steps in FQL phase: 200 / 1000 | DQN unlocks in 800 more real steps
+[2026-05-27 19:53:44] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:54:04] [INFO] [FQL][Step: 2210] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:2210
+[2026-05-27 19:54:24] [INFO] [FQL][Step: 2220] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:2220
+[2026-05-27 19:54:44] [INFO] [FQL][Step: 2230] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:2230
+[2026-05-27 19:55:04] [INFO] [FQL][Step: 2240] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:2240
+[2026-05-27 19:55:24] [INFO] [FQL][Step: 2250] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:2250
+[2026-05-27 19:55:44] [INFO] [FQL][Step: 2260] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:2260
+[2026-05-27 19:56:04] [INFO] [FQL][Step: 2270] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:2270
+[2026-05-27 19:56:25] [INFO] [FQL][Step: 2280] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:2280
+[2026-05-27 19:56:45] [INFO] [FQL][Step: 2290] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:2290
+[2026-05-27 19:57:05] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 19:57:05] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 19:57:05] [INFO] [FQL][Step: 2300] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:2300
+[2026-05-27 19:57:05] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:57:05] [INFO] [FQL] Real steps: 2300 | FQL steps: 2300 | Avg Accuracy: 91.00% | Converged: True | DQN Buffer: 2300
+[2026-05-27 19:57:05] [INFO] [FQL] Steps in FQL phase: 300 / 1000 | DQN unlocks in 700 more real steps
+[2026-05-27 19:57:05] [INFO] -----------------------------------------------------------------
+[2026-05-27 19:57:25] [INFO] [FQL][Step: 2310] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:2310
+[2026-05-27 19:57:45] [INFO] [FQL][Step: 2320] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:2320
+[2026-05-27 19:58:05] [INFO] [FQL][Step: 2330] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:2330
+[2026-05-27 19:58:25] [INFO] [FQL][Step: 2340] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:2340
+[2026-05-27 19:58:45] [INFO] [FQL][Step: 2350] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:2350
+[2026-05-27 19:59:05] [INFO] [FQL][Step: 2360] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:2360
+[2026-05-27 19:59:25] [INFO] [FQL][Step: 2370] pH:7.552 T:25.0°C NH₃:1.98% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:2370
+[2026-05-27 19:59:45] [INFO] [FQL][Step: 2380] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:91.00% Buffer:2380
+[2026-05-27 20:00:05] [INFO] [FQL][Step: 2390] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:91.00% Buffer:2390
+[2026-05-27 20:00:25] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:00:25] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:00:25] [INFO] [FQL][Step: 2400] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:2400
+[2026-05-27 20:00:25] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:00:25] [INFO] [FQL] Real steps: 2400 | FQL steps: 2400 | Avg Accuracy: 95.00% | Converged: True | DQN Buffer: 2400
+[2026-05-27 20:00:25] [INFO] [FQL] Steps in FQL phase: 400 / 1000 | DQN unlocks in 600 more real steps
+[2026-05-27 20:00:25] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:00:45] [INFO] [FQL][Step: 2410] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:2410
+[2026-05-27 20:01:05] [INFO] [FQL][Step: 2420] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:2420
+[2026-05-27 20:01:25] [INFO] [FQL][Step: 2430] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:2430
+[2026-05-27 20:01:46] [INFO] [FQL][Step: 2440] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:2440
+[2026-05-27 20:02:06] [INFO] [FQL][Step: 2450] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:2450
+[2026-05-27 20:02:26] [INFO] [FQL][Step: 2460] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:95.00% Buffer:2460
+[2026-05-27 20:02:46] [INFO] [FQL][Step: 2470] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:2470
+[2026-05-27 20:03:06] [INFO] [FQL][Step: 2480] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:2480
+[2026-05-27 20:03:26] [INFO] [FQL][Step: 2490] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:2490
+[2026-05-27 20:03:46] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:03:46] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:03:46] [INFO] [FQL][Step: 2500] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:2500
+[2026-05-27 20:03:46] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:03:46] [INFO] [FQL] Real steps: 2500 | FQL steps: 2500 | Avg Accuracy: 97.00% | Converged: True | DQN Buffer: 2500
+[2026-05-27 20:03:46] [INFO] [FQL] Steps in FQL phase: 500 / 1000 | DQN unlocks in 500 more real steps
+[2026-05-27 20:03:46] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:03:48] [INFO] Sending updated Q-table to Pico (step=2501, AvgR=+1.0000)...
+[2026-05-27 20:03:48] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:03:48] [INFO] Updated Q-table sent and saved.
+[2026-05-27 20:04:06] [INFO] [FQL][Step: 2510] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:2510
+[2026-05-27 20:04:26] [INFO] [FQL][Step: 2520] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:2520
+[2026-05-27 20:04:46] [INFO] [FQL][Step: 2530] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:2530
+[2026-05-27 20:05:06] [INFO] [FQL][Step: 2540] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:2540
+[2026-05-27 20:05:26] [INFO] [FQL][Step: 2550] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:2550
+[2026-05-27 20:05:46] [INFO] [FQL][Step: 2560] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:2560
+[2026-05-27 20:06:06] [INFO] [FQL][Step: 2570] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:2570
+[2026-05-27 20:06:26] [INFO] [FQL][Step: 2580] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:2580
+[2026-05-27 20:06:46] [INFO] [FQL][Step: 2590] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:2590
+[2026-05-27 20:07:07] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:07:07] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:07:07] [INFO] [FQL][Step: 2600] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:2600
+[2026-05-27 20:07:07] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:07:07] [INFO] [FQL] Real steps: 2600 | FQL steps: 2600 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 2600
+[2026-05-27 20:07:07] [INFO] [FQL] Steps in FQL phase: 600 / 1000 | DQN unlocks in 400 more real steps
+[2026-05-27 20:07:07] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:07:27] [INFO] [FQL][Step: 2610] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:2610
+[2026-05-27 20:07:47] [INFO] [FQL][Step: 2620] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:2620
+[2026-05-27 20:08:07] [INFO] [FQL][Step: 2630] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:96.00% Buffer:2630
+[2026-05-27 20:08:27] [INFO] [FQL][Step: 2640] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:2640
+[2026-05-27 20:08:47] [INFO] [FQL][Step: 2650] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:2650
+[2026-05-27 20:09:07] [INFO] [FQL][Step: 2660] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:2660
+[2026-05-27 20:09:27] [INFO] [FQL][Step: 2670] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:2670
+[2026-05-27 20:09:47] [INFO] [FQL][Step: 2680] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:2680
+[2026-05-27 20:10:07] [INFO] [FQL][Step: 2690] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:2690
+[2026-05-27 20:10:27] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:10:27] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:10:27] [INFO] [FQL][Step: 2700] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2700
+[2026-05-27 20:10:27] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:10:27] [INFO] [FQL] Real steps: 2700 | FQL steps: 2700 | Avg Accuracy: 90.00% | Converged: True | DQN Buffer: 2700
+[2026-05-27 20:10:27] [INFO] [FQL] Steps in FQL phase: 700 / 1000 | DQN unlocks in 300 more real steps
+[2026-05-27 20:10:27] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:10:47] [INFO] [FQL][Step: 2710] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2710
+[2026-05-27 20:11:07] [INFO] [FQL][Step: 2720] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2720
+[2026-05-27 20:11:27] [INFO] [FQL][Step: 2730] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2730
+[2026-05-27 20:11:47] [INFO] [FQL][Step: 2740] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2740
+[2026-05-27 20:12:07] [INFO] [FQL][Step: 2750] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:90.00% Buffer:2750
+[2026-05-27 20:12:28] [INFO] [FQL][Step: 2760] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2760
+[2026-05-27 20:12:48] [INFO] [FQL][Step: 2770] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2770
+[2026-05-27 20:13:08] [INFO] [FQL][Step: 2780] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2780
+[2026-05-27 20:13:28] [INFO] [FQL][Step: 2790] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2790
+[2026-05-27 20:13:48] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:13:48] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:13:48] [INFO] [FQL][Step: 2800] pH:7.547 T:25.0°C NH₃:1.96% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:89.00% Buffer:2800
+[2026-05-27 20:13:48] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:13:48] [INFO] [FQL] Real steps: 2800 | FQL steps: 2800 | Avg Accuracy: 89.00% | Converged: True | DQN Buffer: 2800
+[2026-05-27 20:13:48] [INFO] [FQL] Steps in FQL phase: 800 / 1000 | DQN unlocks in 200 more real steps
+[2026-05-27 20:13:48] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:14:08] [INFO] [FQL][Step: 2810] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:2810
+[2026-05-27 20:14:28] [INFO] [FQL][Step: 2820] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:2820
+[2026-05-27 20:14:48] [INFO] [FQL][Step: 2830] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:2830
+[2026-05-27 20:15:08] [INFO] [FQL][Step: 2840] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:2840
+[2026-05-27 20:15:28] [INFO] [FQL][Step: 2850] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:2850
+[2026-05-27 20:15:48] [INFO] [FQL][Step: 2860] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:2860
+[2026-05-27 20:16:08] [INFO] [FQL][Step: 2870] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:2870
+[2026-05-27 20:16:28] [INFO] [FQL][Step: 2880] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:2880
+[2026-05-27 20:16:48] [INFO] [FQL][Step: 2890] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:89.00% Buffer:2890
+[2026-05-27 20:17:08] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:17:08] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:17:08] [INFO] [FQL][Step: 2900] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:90.00% Buffer:2900
+[2026-05-27 20:17:08] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:17:08] [INFO] [FQL] Real steps: 2900 | FQL steps: 2900 | Avg Accuracy: 90.00% | Converged: True | DQN Buffer: 2900
+[2026-05-27 20:17:08] [INFO] [FQL] Steps in FQL phase: 900 / 1000 | DQN unlocks in 100 more real steps
+[2026-05-27 20:17:08] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:17:28] [INFO] [FQL][Step: 2910] pH:7.552 T:25.0°C NH₃:1.98% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:90.00% Buffer:2910
+[2026-05-27 20:17:48] [INFO] [FQL][Step: 2920] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2920
+[2026-05-27 20:18:09] [INFO] [FQL][Step: 2930] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2930
+[2026-05-27 20:18:29] [INFO] [FQL][Step: 2940] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2940
+[2026-05-27 20:18:49] [INFO] [FQL][Step: 2950] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2950
+[2026-05-27 20:19:09] [INFO] [FQL][Step: 2960] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2960
+[2026-05-27 20:19:29] [INFO] [FQL][Step: 2970] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2970
+[2026-05-27 20:19:49] [INFO] [FQL][Step: 2980] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2980
+[2026-05-27 20:20:09] [INFO] [FQL][Step: 2990] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:2990
+[2026-05-27 20:20:29] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:20:29] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:20:29] [INFO] [FQL][Step: 3000] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:3000
+[2026-05-27 20:20:29] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:20:29] [INFO] [FQL] Real steps: 3000 | FQL steps: 3000 | Avg Accuracy: 92.00% | Converged: True | DQN Buffer: 3000
+[2026-05-27 20:20:29] [INFO] [FQL] Steps in FQL phase: 1000 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:20:29] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:20:31] [INFO] Sending updated Q-table to Pico (step=3001, AvgR=+1.0000)...
+[2026-05-27 20:20:31] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:20:31] [INFO] Updated Q-table sent and saved.
+[2026-05-27 20:20:49] [INFO] [FQL][Step: 3010] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:3010
+[2026-05-27 20:21:09] [INFO] [FQL][Step: 3020] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:3020
+[2026-05-27 20:21:29] [INFO] [FQL][Step: 3030] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:3030
+[2026-05-27 20:21:49] [INFO] [FQL][Step: 3040] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:3040
+[2026-05-27 20:22:09] [INFO] [FQL][Step: 3050] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:3050
+[2026-05-27 20:22:29] [INFO] [FQL][Step: 3060] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:3060
+[2026-05-27 20:22:49] [INFO] [FQL][Step: 3070] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:3070
+[2026-05-27 20:23:09] [INFO] [FQL][Step: 3080] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:3080
+[2026-05-27 20:23:30] [INFO] [FQL][Step: 3090] pH:7.547 T:25.0°C NH₃:1.96% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:92.00% Buffer:3090
+[2026-05-27 20:23:50] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:23:50] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:23:50] [INFO] [FQL][Step: 3100] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:3100
+[2026-05-27 20:23:50] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:23:50] [INFO] [FQL] Real steps: 3100 | FQL steps: 3100 | Avg Accuracy: 90.00% | Converged: True | DQN Buffer: 3100
+[2026-05-27 20:23:50] [INFO] [FQL] Steps in FQL phase: 1100 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:23:50] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:24:10] [INFO] [FQL][Step: 3110] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:3110
+[2026-05-27 20:24:30] [INFO] [FQL][Step: 3120] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:3120
+[2026-05-27 20:24:50] [INFO] [FQL][Step: 3130] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:3130
+[2026-05-27 20:25:10] [INFO] [FQL][Step: 3140] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:3140
+[2026-05-27 20:25:30] [INFO] [FQL][Step: 3150] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:3150
+[2026-05-27 20:25:50] [INFO] [FQL][Step: 3160] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:3160
+[2026-05-27 20:26:10] [INFO] [FQL][Step: 3170] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:3170
+[2026-05-27 20:26:30] [INFO] [FQL][Step: 3180] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:3180
+[2026-05-27 20:26:50] [INFO] [FQL][Step: 3190] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:90.00% Buffer:3190
+[2026-05-27 20:27:10] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:27:10] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:27:10] [INFO] [FQL][Step: 3200] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3200
+[2026-05-27 20:27:10] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:27:10] [INFO] [FQL] Real steps: 3200 | FQL steps: 3200 | Avg Accuracy: 95.00% | Converged: True | DQN Buffer: 3200
+[2026-05-27 20:27:10] [INFO] [FQL] Steps in FQL phase: 1200 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:27:10] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:27:30] [INFO] [FQL][Step: 3210] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3210
+[2026-05-27 20:27:50] [INFO] [FQL][Step: 3220] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3220
+[2026-05-27 20:28:10] [INFO] [FQL][Step: 3230] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3230
+[2026-05-27 20:28:30] [INFO] [FQL][Step: 3240] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3240
+[2026-05-27 20:28:50] [INFO] [FQL][Step: 3250] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3250
+[2026-05-27 20:29:11] [INFO] [FQL][Step: 3260] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:95.00% Buffer:3260
+[2026-05-27 20:29:31] [INFO] [FQL][Step: 3270] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3270
+[2026-05-27 20:29:51] [INFO] [FQL][Step: 3280] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3280
+[2026-05-27 20:30:11] [INFO] [FQL][Step: 3290] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3290
+[2026-05-27 20:30:31] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:30:31] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:30:31] [INFO] [FQL][Step: 3300] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3300
+[2026-05-27 20:30:31] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:30:31] [INFO] [FQL] Real steps: 3300 | FQL steps: 3300 | Avg Accuracy: 95.00% | Converged: True | DQN Buffer: 3300
+[2026-05-27 20:30:31] [INFO] [FQL] Steps in FQL phase: 1300 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:30:31] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:30:51] [INFO] [FQL][Step: 3310] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3310
+[2026-05-27 20:31:11] [INFO] [FQL][Step: 3320] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:95.00% Buffer:3320
+[2026-05-27 20:31:31] [INFO] [FQL][Step: 3330] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3330
+[2026-05-27 20:31:51] [INFO] [FQL][Step: 3340] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3340
+[2026-05-27 20:32:11] [INFO] [FQL][Step: 3350] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3350
+[2026-05-27 20:32:31] [INFO] [FQL][Step: 3360] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3360
+[2026-05-27 20:32:51] [INFO] [FQL][Step: 3370] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CRITICAL  | Acc:95.00% Buffer:3370
+[2026-05-27 20:33:11] [INFO] [FQL][Step: 3380] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3380
+[2026-05-27 20:33:31] [INFO] [FQL][Step: 3390] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3390
+[2026-05-27 20:33:51] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:33:51] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:33:51] [INFO] [FQL][Step: 3400] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3400
+[2026-05-27 20:33:51] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:33:51] [INFO] [FQL] Real steps: 3400 | FQL steps: 3400 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 3400
+[2026-05-27 20:33:51] [INFO] [FQL] Steps in FQL phase: 1400 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:33:51] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:34:11] [INFO] [FQL][Step: 3410] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3410
+[2026-05-27 20:34:32] [INFO] [FQL][Step: 3420] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3420
+[2026-05-27 20:34:52] [INFO] [FQL][Step: 3430] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:96.00% Buffer:3430
+[2026-05-27 20:35:12] [INFO] [FQL][Step: 3440] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3440
+[2026-05-27 20:35:32] [INFO] [FQL][Step: 3450] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3450
+[2026-05-27 20:35:52] [INFO] [FQL][Step: 3460] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3460
+[2026-05-27 20:36:12] [INFO] [FQL][Step: 3470] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3470
+[2026-05-27 20:36:32] [INFO] [FQL][Step: 3480] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3480
+[2026-05-27 20:36:52] [INFO] [FQL][Step: 3490] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3490
+[2026-05-27 20:37:12] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:37:12] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:37:12] [INFO] [FQL][Step: 3500] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3500
+[2026-05-27 20:37:12] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:37:12] [INFO] [FQL] Real steps: 3500 | FQL steps: 3500 | Avg Accuracy: 95.00% | Converged: True | DQN Buffer: 3500
+[2026-05-27 20:37:12] [INFO] [FQL] Steps in FQL phase: 1500 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:37:12] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:37:14] [INFO] Sending updated Q-table to Pico (step=3501, AvgR=+1.0000)...
+[2026-05-27 20:37:14] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:37:14] [INFO] Updated Q-table sent and saved.
+[2026-05-27 20:37:32] [INFO] [FQL][Step: 3510] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3510
+[2026-05-27 20:37:52] [INFO] [FQL][Step: 3520] pH:7.558 T:25.0°C NH₃:2.01% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3520
+[2026-05-27 20:38:12] [INFO] [FQL][Step: 3530] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3530
+[2026-05-27 20:38:32] [INFO] [FQL][Step: 3540] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3540
+[2026-05-27 20:38:52] [INFO] [FQL][Step: 3550] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3550
+[2026-05-27 20:39:12] [INFO] [FQL][Step: 3560] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3560
+[2026-05-27 20:39:32] [INFO] [FQL][Step: 3570] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3570
+[2026-05-27 20:39:53] [INFO] [FQL][Step: 3580] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3580
+[2026-05-27 20:40:13] [INFO] [FQL][Step: 3590] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:3590
+[2026-05-27 20:40:33] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:40:33] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:40:33] [INFO] [FQL][Step: 3600] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:3600
+[2026-05-27 20:40:33] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:40:33] [INFO] [FQL] Real steps: 3600 | FQL steps: 3600 | Avg Accuracy: 97.00% | Converged: True | DQN Buffer: 3600
+[2026-05-27 20:40:33] [INFO] [FQL] Steps in FQL phase: 1600 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:40:33] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:40:53] [INFO] [FQL][Step: 3610] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:3610
+[2026-05-27 20:41:13] [INFO] [FQL][Step: 3620] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:3620
+[2026-05-27 20:41:33] [INFO] [FQL][Step: 3630] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:3630
+[2026-05-27 20:41:53] [INFO] [FQL][Step: 3640] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:3640
+[2026-05-27 20:42:13] [INFO] [FQL][Step: 3650] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:3650
+[2026-05-27 20:42:33] [INFO] [FQL][Step: 3660] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:3660
+[2026-05-27 20:42:53] [INFO] [FQL][Step: 3670] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:3670
+[2026-05-27 20:43:13] [INFO] [FQL][Step: 3680] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:3680
+[2026-05-27 20:43:33] [INFO] [FQL][Step: 3690] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:3690
+[2026-05-27 20:43:53] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:43:53] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:43:53] [INFO] [FQL][Step: 3700] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3700
+[2026-05-27 20:43:53] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:43:53] [INFO] [FQL] Real steps: 3700 | FQL steps: 3700 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 3700
+[2026-05-27 20:43:53] [INFO] [FQL] Steps in FQL phase: 1700 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:43:53] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:44:13] [INFO] [FQL][Step: 3710] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3710
+[2026-05-27 20:44:33] [INFO] [FQL][Step: 3720] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:96.00% Buffer:3720
+[2026-05-27 20:44:53] [INFO] [FQL][Step: 3730] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3730
+[2026-05-27 20:45:14] [INFO] [FQL][Step: 3740] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3740
+[2026-05-27 20:45:34] [INFO] [FQL][Step: 3750] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3750
+[2026-05-27 20:45:54] [INFO] [FQL][Step: 3760] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3760
+[2026-05-27 20:46:14] [INFO] [FQL][Step: 3770] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3770
+[2026-05-27 20:46:34] [INFO] [FQL][Step: 3780] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3780
+[2026-05-27 20:46:54] [INFO] [FQL][Step: 3790] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3790
+[2026-05-27 20:47:14] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:47:14] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:47:14] [INFO] [FQL][Step: 3800] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3800
+[2026-05-27 20:47:14] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:47:14] [INFO] [FQL] Real steps: 3800 | FQL steps: 3800 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 3800
+[2026-05-27 20:47:14] [INFO] [FQL] Steps in FQL phase: 1800 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:47:14] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:47:34] [INFO] [FQL][Step: 3810] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3810
+[2026-05-27 20:47:54] [INFO] [FQL][Step: 3820] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3820
+[2026-05-27 20:48:14] [INFO] [FQL][Step: 3830] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3830
+[2026-05-27 20:48:34] [INFO] [FQL][Step: 3840] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3840
+[2026-05-27 20:48:54] [INFO] [FQL][Step: 3850] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3850
+[2026-05-27 20:49:14] [INFO] [FQL][Step: 3860] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3860
+[2026-05-27 20:49:34] [INFO] [FQL][Step: 3870] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3870
+[2026-05-27 20:49:54] [INFO] [FQL][Step: 3880] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3880
+[2026-05-27 20:50:14] [INFO] [FQL][Step: 3890] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:3890
+[2026-05-27 20:50:35] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:50:35] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:50:35] [INFO] [FQL][Step: 3900] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:3900
+[2026-05-27 20:50:35] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:50:35] [INFO] [FQL] Real steps: 3900 | FQL steps: 3900 | Avg Accuracy: 98.00% | Converged: True | DQN Buffer: 3900
+[2026-05-27 20:50:35] [INFO] [FQL] Steps in FQL phase: 1900 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:50:35] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:50:55] [INFO] [FQL][Step: 3910] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:3910
+[2026-05-27 20:51:15] [INFO] [FQL][Step: 3920] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:3920
+[2026-05-27 20:51:35] [INFO] [FQL][Step: 3930] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:3930
+[2026-05-27 20:51:55] [INFO] [FQL][Step: 3940] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:3940
+[2026-05-27 20:52:15] [INFO] [FQL][Step: 3950] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:3950
+[2026-05-27 20:52:35] [INFO] [FQL][Step: 3960] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:3960
+[2026-05-27 20:52:55] [INFO] [FQL][Step: 3970] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:3970
+[2026-05-27 20:53:15] [INFO] [FQL][Step: 3980] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:3980
+[2026-05-27 20:53:35] [INFO] [FQL][Step: 3990] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:3990
+[2026-05-27 20:53:55] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:53:55] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:53:55] [INFO] [FQL][Step: 4000] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4000
+[2026-05-27 20:53:55] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:53:55] [INFO] [FQL] Real steps: 4000 | FQL steps: 4000 | Avg Accuracy: 98.00% | Converged: True | DQN Buffer: 4000
+[2026-05-27 20:53:55] [INFO] [FQL] Steps in FQL phase: 2000 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:53:55] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:53:57] [INFO] Sending updated Q-table to Pico (step=4001, AvgR=+1.0000)...
+[2026-05-27 20:53:57] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:53:57] [INFO] Updated Q-table sent and saved.
+[2026-05-27 20:54:15] [INFO] [FQL][Step: 4010] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4010
+[2026-05-27 20:54:35] [INFO] [FQL][Step: 4020] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4020
+[2026-05-27 20:54:55] [INFO] [FQL][Step: 4030] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4030
+[2026-05-27 20:55:15] [INFO] [FQL][Step: 4040] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4040
+[2026-05-27 20:55:35] [INFO] [FQL][Step: 4050] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4050
+[2026-05-27 20:55:55] [INFO] [FQL][Step: 4060] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4060
+[2026-05-27 20:56:16] [INFO] [FQL][Step: 4070] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4070
+[2026-05-27 20:56:36] [INFO] [FQL][Step: 4080] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4080
+[2026-05-27 20:56:56] [INFO] [FQL][Step: 4090] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4090
+[2026-05-27 20:57:16] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 20:57:16] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 20:57:16] [INFO] [FQL][Step: 4100] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4100
+[2026-05-27 20:57:16] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:57:16] [INFO] [FQL] Real steps: 4100 | FQL steps: 4100 | Avg Accuracy: 93.00% | Converged: True | DQN Buffer: 4100
+[2026-05-27 20:57:16] [INFO] [FQL] Steps in FQL phase: 2100 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 20:57:16] [INFO] -----------------------------------------------------------------
+[2026-05-27 20:57:36] [INFO] [FQL][Step: 4110] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:93.00% Buffer:4110
+[2026-05-27 20:57:56] [INFO] [FQL][Step: 4120] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4120
+[2026-05-27 20:58:16] [INFO] [FQL][Step: 4130] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4130
+[2026-05-27 20:58:36] [INFO] [FQL][Step: 4140] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4140
+[2026-05-27 20:58:56] [INFO] [FQL][Step: 4150] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4150
+[2026-05-27 20:59:16] [INFO] [FQL][Step: 4160] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4160
+[2026-05-27 20:59:36] [INFO] [FQL][Step: 4170] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4170
+[2026-05-27 20:59:56] [INFO] [FQL][Step: 4180] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4180
+[2026-05-27 21:00:16] [INFO] [FQL][Step: 4190] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4190
+[2026-05-27 21:00:36] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:00:36] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:00:36] [INFO] [FQL][Step: 4200] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4200
+[2026-05-27 21:00:36] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:00:36] [INFO] [FQL] Real steps: 4200 | FQL steps: 4200 | Avg Accuracy: 95.00% | Converged: True | DQN Buffer: 4200
+[2026-05-27 21:00:36] [INFO] [FQL] Steps in FQL phase: 2200 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:00:36] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:00:56] [INFO] [FQL][Step: 4210] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4210
+[2026-05-27 21:01:17] [INFO] [FQL][Step: 4220] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4220
+[2026-05-27 21:01:37] [INFO] [FQL][Step: 4230] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4230
+[2026-05-27 21:01:57] [INFO] [FQL][Step: 4240] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4240
+[2026-05-27 21:02:17] [INFO] [FQL][Step: 4250] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4250
+[2026-05-27 21:02:37] [INFO] [FQL][Step: 4260] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4260
+[2026-05-27 21:02:57] [INFO] [FQL][Step: 4270] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4270
+[2026-05-27 21:03:17] [INFO] [FQL][Step: 4280] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4280
+[2026-05-27 21:03:37] [INFO] [FQL][Step: 4290] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4290
+[2026-05-27 21:03:57] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:03:57] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:03:57] [INFO] [FQL][Step: 4300] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:4300
+[2026-05-27 21:03:57] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:03:57] [INFO] [FQL] Real steps: 4300 | FQL steps: 4300 | Avg Accuracy: 94.00% | Converged: True | DQN Buffer: 4300
+[2026-05-27 21:03:57] [INFO] [FQL] Steps in FQL phase: 2300 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:03:57] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:04:17] [INFO] [FQL][Step: 4310] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:4310
+[2026-05-27 21:04:37] [INFO] [FQL][Step: 4320] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:4320
+[2026-05-27 21:04:57] [INFO] [FQL][Step: 4330] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:4330
+[2026-05-27 21:05:17] [INFO] [FQL][Step: 4340] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:4340
+[2026-05-27 21:05:37] [INFO] [FQL][Step: 4350] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:4350
+[2026-05-27 21:05:57] [INFO] [FQL][Step: 4360] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:4360
+[2026-05-27 21:06:17] [INFO] [FQL][Step: 4370] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:4370
+[2026-05-27 21:06:37] [INFO] [FQL][Step: 4380] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:4380
+[2026-05-27 21:06:57] [INFO] [FQL][Step: 4390] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:4390
+[2026-05-27 21:07:18] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:07:18] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:07:18] [INFO] [FQL][Step: 4400] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4400
+[2026-05-27 21:07:18] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:07:18] [INFO] [FQL] Real steps: 4400 | FQL steps: 4400 | Avg Accuracy: 95.00% | Converged: True | DQN Buffer: 4400
+[2026-05-27 21:07:18] [INFO] [FQL] Steps in FQL phase: 2400 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:07:18] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:07:38] [INFO] [FQL][Step: 4410] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4410
+[2026-05-27 21:07:58] [INFO] [FQL][Step: 4420] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4420
+[2026-05-27 21:08:18] [INFO] [FQL][Step: 4430] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4430
+[2026-05-27 21:08:38] [INFO] [FQL][Step: 4440] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4440
+[2026-05-27 21:08:58] [INFO] [FQL][Step: 4450] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4450
+[2026-05-27 21:09:18] [INFO] [FQL][Step: 4460] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4460
+[2026-05-27 21:09:38] [INFO] [FQL][Step: 4470] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4470
+[2026-05-27 21:09:58] [INFO] [FQL][Step: 4480] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:4480
+[2026-05-27 21:10:18] [INFO] [FQL][Step: 4490] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CRITICAL  | Acc:95.00% Buffer:4490
+[2026-05-27 21:10:38] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:10:38] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:10:38] [INFO] [FQL][Step: 4500] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4500
+[2026-05-27 21:10:38] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:10:38] [INFO] [FQL] Real steps: 4500 | FQL steps: 4500 | Avg Accuracy: 98.00% | Converged: True | DQN Buffer: 4500
+[2026-05-27 21:10:38] [INFO] [FQL] Steps in FQL phase: 2500 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:10:38] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:10:40] [INFO] Sending updated Q-table to Pico (step=4501, AvgR=+1.0000)...
+[2026-05-27 21:10:40] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:10:40] [INFO] Updated Q-table sent and saved.
+[2026-05-27 21:10:58] [INFO] [FQL][Step: 4510] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4510
+[2026-05-27 21:11:18] [INFO] [FQL][Step: 4520] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4520
+[2026-05-27 21:11:38] [INFO] [FQL][Step: 4530] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4530
+[2026-05-27 21:11:58] [INFO] [FQL][Step: 4540] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4540
+[2026-05-27 21:12:18] [INFO] [FQL][Step: 4550] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4550
+[2026-05-27 21:12:39] [INFO] [FQL][Step: 4560] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4560
+[2026-05-27 21:12:59] [INFO] [FQL][Step: 4570] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4570
+[2026-05-27 21:13:19] [INFO] [FQL][Step: 4580] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4580
+[2026-05-27 21:13:39] [INFO] [FQL][Step: 4590] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4590
+[2026-05-27 21:13:59] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:13:59] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:13:59] [INFO] [FQL][Step: 4600] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4600
+[2026-05-27 21:13:59] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:13:59] [INFO] [FQL] Real steps: 4600 | FQL steps: 4600 | Avg Accuracy: 97.00% | Converged: True | DQN Buffer: 4600
+[2026-05-27 21:13:59] [INFO] [FQL] Steps in FQL phase: 2600 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:13:59] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:14:19] [INFO] [FQL][Step: 4610] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4610
+[2026-05-27 21:14:39] [INFO] [FQL][Step: 4620] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4620
+[2026-05-27 21:14:59] [INFO] [FQL][Step: 4630] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4630
+[2026-05-27 21:15:19] [INFO] [FQL][Step: 4640] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4640
+[2026-05-27 21:15:39] [INFO] [FQL][Step: 4650] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4650
+[2026-05-27 21:15:59] [INFO] [FQL][Step: 4660] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4660
+[2026-05-27 21:16:19] [INFO] [FQL][Step: 4670] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4670
+[2026-05-27 21:16:39] [INFO] [FQL][Step: 4680] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4680
+[2026-05-27 21:16:59] [INFO] [FQL][Step: 4690] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4690
+[2026-05-27 21:17:19] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:17:19] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:17:19] [INFO] [FQL][Step: 4700] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4700
+[2026-05-27 21:17:19] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:17:19] [INFO] [FQL] Real steps: 4700 | FQL steps: 4700 | Avg Accuracy: 97.00% | Converged: True | DQN Buffer: 4700
+[2026-05-27 21:17:19] [INFO] [FQL] Steps in FQL phase: 2700 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:17:19] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:17:39] [INFO] [FQL][Step: 4710] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4710
+[2026-05-27 21:18:00] [INFO] [FQL][Step: 4720] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4720
+[2026-05-27 21:18:20] [INFO] [FQL][Step: 4730] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4730
+[2026-05-27 21:18:40] [INFO] [FQL][Step: 4740] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4740
+[2026-05-27 21:19:00] [INFO] [FQL][Step: 4750] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4750
+[2026-05-27 21:19:20] [INFO] [FQL][Step: 4760] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4760
+[2026-05-27 21:19:40] [INFO] [FQL][Step: 4770] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4770
+[2026-05-27 21:20:00] [INFO] [FQL][Step: 4780] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4780
+[2026-05-27 21:20:20] [INFO] [FQL][Step: 4790] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:4790
+[2026-05-27 21:20:40] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:20:40] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:20:40] [INFO] [FQL][Step: 4800] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4800
+[2026-05-27 21:20:40] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:20:40] [INFO] [FQL] Real steps: 4800 | FQL steps: 4800 | Avg Accuracy: 98.00% | Converged: True | DQN Buffer: 4800
+[2026-05-27 21:20:40] [INFO] [FQL] Steps in FQL phase: 2800 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:20:40] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:21:00] [INFO] [FQL][Step: 4810] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4810
+[2026-05-27 21:21:20] [INFO] [FQL][Step: 4820] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4820
+[2026-05-27 21:21:40] [INFO] [FQL][Step: 4830] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4830
+[2026-05-27 21:22:00] [INFO] [FQL][Step: 4840] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4840
+[2026-05-27 21:22:20] [INFO] [FQL][Step: 4850] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4850
+[2026-05-27 21:22:40] [INFO] [FQL][Step: 4860] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4860
+[2026-05-27 21:23:00] [INFO] [FQL][Step: 4870] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4870
+[2026-05-27 21:23:20] [INFO] [FQL][Step: 4880] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4880
+[2026-05-27 21:23:41] [INFO] [FQL][Step: 4890] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:4890
+[2026-05-27 21:24:01] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:24:01] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:24:01] [INFO] [FQL][Step: 4900] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4900
+[2026-05-27 21:24:01] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:24:01] [INFO] [FQL] Real steps: 4900 | FQL steps: 4900 | Avg Accuracy: 93.00% | Converged: True | DQN Buffer: 4900
+[2026-05-27 21:24:01] [INFO] [FQL] Steps in FQL phase: 2900 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:24:01] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:24:21] [INFO] [FQL][Step: 4910] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4910
+[2026-05-27 21:24:41] [INFO] [FQL][Step: 4920] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4920
+[2026-05-27 21:25:01] [INFO] [FQL][Step: 4930] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4930
+[2026-05-27 21:25:21] [INFO] [FQL][Step: 4940] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4940
+[2026-05-27 21:25:41] [INFO] [FQL][Step: 4950] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4950
+[2026-05-27 21:26:01] [INFO] [FQL][Step: 4960] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4960
+[2026-05-27 21:26:21] [INFO] [FQL][Step: 4970] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4970
+[2026-05-27 21:26:41] [INFO] [FQL][Step: 4980] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4980
+[2026-05-27 21:27:01] [INFO] [FQL][Step: 4990] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:93.00% Buffer:4990
+[2026-05-27 21:27:21] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:27:21] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:27:21] [INFO] [FQL][Step: 5000] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5000
+[2026-05-27 21:27:21] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:27:21] [INFO] [FQL] Real steps: 5000 | FQL steps: 5000 | Avg Accuracy: 98.00% | Converged: True | DQN Buffer: 5000
+[2026-05-27 21:27:21] [INFO] [FQL] Steps in FQL phase: 3000 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:27:21] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:27:23] [INFO] Sending updated Q-table to Pico (step=5001, AvgR=+1.0000)...
+[2026-05-27 21:27:23] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:27:23] [INFO] Updated Q-table sent and saved.
+[2026-05-27 21:27:41] [INFO] [FQL][Step: 5010] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5010
+[2026-05-27 21:28:01] [INFO] [FQL][Step: 5020] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5020
+[2026-05-27 21:28:21] [INFO] [FQL][Step: 5030] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5030
+[2026-05-27 21:28:41] [INFO] [FQL][Step: 5040] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5040
+[2026-05-27 21:29:02] [INFO] [FQL][Step: 5050] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5050
+[2026-05-27 21:29:22] [INFO] [FQL][Step: 5060] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5060
+[2026-05-27 21:29:42] [INFO] [FQL][Step: 5070] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5070
+[2026-05-27 21:30:02] [INFO] [FQL][Step: 5080] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5080
+[2026-05-27 21:30:22] [INFO] [FQL][Step: 5090] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5090
+[2026-05-27 21:30:42] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:30:42] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:30:42] [INFO] [FQL][Step: 5100] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5100
+[2026-05-27 21:30:42] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:30:42] [INFO] [FQL] Real steps: 5100 | FQL steps: 5100 | Avg Accuracy: 97.00% | Converged: True | DQN Buffer: 5100
+[2026-05-27 21:30:42] [INFO] [FQL] Steps in FQL phase: 3100 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:30:42] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:31:02] [INFO] [FQL][Step: 5110] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5110
+[2026-05-27 21:31:22] [INFO] [FQL][Step: 5120] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5120
+[2026-05-27 21:31:42] [INFO] [FQL][Step: 5130] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5130
+[2026-05-27 21:32:02] [INFO] [FQL][Step: 5140] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5140
+[2026-05-27 21:32:22] [INFO] [FQL][Step: 5150] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5150
+[2026-05-27 21:32:42] [INFO] [FQL][Step: 5160] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5160
+[2026-05-27 21:33:02] [INFO] [FQL][Step: 5170] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CRITICAL  | Acc:97.00% Buffer:5170
+[2026-05-27 21:33:22] [INFO] [FQL][Step: 5180] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5180
+[2026-05-27 21:33:42] [INFO] [FQL][Step: 5190] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5190
+[2026-05-27 21:34:03] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:34:03] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:34:03] [INFO] [FQL][Step: 5200] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:5200
+[2026-05-27 21:34:03] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:34:03] [INFO] [FQL] Real steps: 5200 | FQL steps: 5200 | Avg Accuracy: 94.00% | Converged: True | DQN Buffer: 5200
+[2026-05-27 21:34:03] [INFO] [FQL] Steps in FQL phase: 3200 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:34:03] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:34:23] [INFO] [FQL][Step: 5210] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:5210
+[2026-05-27 21:34:43] [INFO] [FQL][Step: 5220] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:5220
+[2026-05-27 21:35:03] [INFO] [FQL][Step: 5230] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:5230
+[2026-05-27 21:35:23] [INFO] [FQL][Step: 5240] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:5240
+[2026-05-27 21:35:43] [INFO] [FQL][Step: 5250] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:5250
+[2026-05-27 21:36:03] [INFO] [FQL][Step: 5260] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:5260
+[2026-05-27 21:36:23] [INFO] [FQL][Step: 5270] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:5270
+[2026-05-27 21:36:43] [INFO] [FQL][Step: 5280] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:5280
+[2026-05-27 21:37:03] [INFO] [FQL][Step: 5290] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:5290
+[2026-05-27 21:37:23] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:37:23] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:37:23] [INFO] [FQL][Step: 5300] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5300
+[2026-05-27 21:37:23] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:37:23] [INFO] [FQL] Real steps: 5300 | FQL steps: 5300 | Avg Accuracy: 98.00% | Converged: True | DQN Buffer: 5300
+[2026-05-27 21:37:23] [INFO] [FQL] Steps in FQL phase: 3300 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:37:23] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:37:43] [INFO] [FQL][Step: 5310] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5310
+[2026-05-27 21:38:03] [INFO] [FQL][Step: 5320] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5320
+[2026-05-27 21:38:23] [INFO] [FQL][Step: 5330] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5330
+[2026-05-27 21:38:43] [INFO] [FQL][Step: 5340] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5340
+[2026-05-27 21:39:03] [INFO] [FQL][Step: 5350] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5350
+[2026-05-27 21:39:24] [INFO] [FQL][Step: 5360] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5360
+[2026-05-27 21:39:44] [INFO] [FQL][Step: 5370] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5370
+[2026-05-27 21:40:04] [INFO] [FQL][Step: 5380] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5380
+[2026-05-27 21:40:24] [INFO] [FQL][Step: 5390] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5390
+[2026-05-27 21:40:44] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:40:44] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:40:44] [INFO] [FQL][Step: 5400] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5400
+[2026-05-27 21:40:44] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:40:44] [INFO] [FQL] Real steps: 5400 | FQL steps: 5400 | Avg Accuracy: 97.00% | Converged: True | DQN Buffer: 5400
+[2026-05-27 21:40:44] [INFO] [FQL] Steps in FQL phase: 3400 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:40:44] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:41:04] [INFO] [FQL][Step: 5410] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5410
+[2026-05-27 21:41:24] [INFO] [FQL][Step: 5420] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5420
+[2026-05-27 21:41:44] [INFO] [FQL][Step: 5430] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5430
+[2026-05-27 21:42:04] [INFO] [FQL][Step: 5440] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:97.00% Buffer:5440
+[2026-05-27 21:42:24] [INFO] [FQL][Step: 5450] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5450
+[2026-05-27 21:42:44] [INFO] [FQL][Step: 5460] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5460
+[2026-05-27 21:43:04] [INFO] [FQL][Step: 5470] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5470
+[2026-05-27 21:43:24] [INFO] [FQL][Step: 5480] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5480
+[2026-05-27 21:43:44] [INFO] [FQL][Step: 5490] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:5490
+[2026-05-27 21:44:04] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:44:04] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:44:04] [INFO] [FQL][Step: 5500] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5500
+[2026-05-27 21:44:04] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:44:04] [INFO] [FQL] Real steps: 5500 | FQL steps: 5500 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 5500
+[2026-05-27 21:44:04] [INFO] [FQL] Steps in FQL phase: 3500 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:44:04] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:44:06] [INFO] Sending updated Q-table to Pico (step=5501, AvgR=+1.0000)...
+[2026-05-27 21:44:06] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:44:06] [INFO] Updated Q-table sent and saved.
+[2026-05-27 21:44:24] [INFO] [FQL][Step: 5510] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5510
+[2026-05-27 21:44:44] [INFO] [FQL][Step: 5520] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5520
+[2026-05-27 21:45:05] [INFO] [FQL][Step: 5530] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5530
+[2026-05-27 21:45:25] [INFO] [FQL][Step: 5540] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5540
+[2026-05-27 21:45:45] [INFO] [FQL][Step: 5550] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5550
+[2026-05-27 21:46:05] [INFO] [FQL][Step: 5560] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5560
+[2026-05-27 21:46:25] [INFO] [FQL][Step: 5570] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5570
+[2026-05-27 21:46:45] [INFO] [FQL][Step: 5580] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5580
+[2026-05-27 21:47:05] [INFO] [FQL][Step: 5590] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5590
+[2026-05-27 21:47:25] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:47:25] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:47:25] [INFO] [FQL][Step: 5600] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:5600
+[2026-05-27 21:47:25] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:47:25] [INFO] [FQL] Real steps: 5600 | FQL steps: 5600 | Avg Accuracy: 99.00% | Converged: True | DQN Buffer: 5600
+[2026-05-27 21:47:25] [INFO] [FQL] Steps in FQL phase: 3600 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:47:25] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:47:45] [INFO] [FQL][Step: 5610] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:5610
+[2026-05-27 21:48:05] [INFO] [FQL][Step: 5620] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:5620
+[2026-05-27 21:48:25] [INFO] [FQL][Step: 5630] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:5630
+[2026-05-27 21:48:45] [INFO] [FQL][Step: 5640] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:5640
+[2026-05-27 21:49:05] [INFO] [FQL][Step: 5650] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:5650
+[2026-05-27 21:49:25] [INFO] [FQL][Step: 5660] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:5660
+[2026-05-27 21:49:45] [INFO] [FQL][Step: 5670] pH:7.642 T:25.0°C NH₃:2.43% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:5670
+[2026-05-27 21:50:05] [INFO] [FQL][Step: 5680] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:5680
+[2026-05-27 21:50:26] [INFO] [FQL][Step: 5690] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:5690
+[2026-05-27 21:50:46] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:50:46] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:50:46] [INFO] [FQL][Step: 5700] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5700
+[2026-05-27 21:50:46] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:50:46] [INFO] [FQL] Real steps: 5700 | FQL steps: 5700 | Avg Accuracy: 98.00% | Converged: True | DQN Buffer: 5700
+[2026-05-27 21:50:46] [INFO] [FQL] Steps in FQL phase: 3700 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:50:46] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:51:06] [INFO] [FQL][Step: 5710] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5710
+[2026-05-27 21:51:26] [INFO] [FQL][Step: 5720] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5720
+[2026-05-27 21:51:46] [INFO] [FQL][Step: 5730] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5730
+[2026-05-27 21:52:06] [INFO] [FQL][Step: 5740] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5740
+[2026-05-27 21:52:26] [INFO] [FQL][Step: 5750] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5750
+[2026-05-27 21:52:46] [INFO] [FQL][Step: 5760] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5760
+[2026-05-27 21:53:06] [INFO] [FQL][Step: 5770] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5770
+[2026-05-27 21:53:26] [INFO] [FQL][Step: 5780] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5780
+[2026-05-27 21:53:46] [INFO] [FQL][Step: 5790] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:5790
+[2026-05-27 21:54:06] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:54:06] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:54:06] [INFO] [FQL][Step: 5800] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5800
+[2026-05-27 21:54:06] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:54:06] [INFO] [FQL] Real steps: 5800 | FQL steps: 5800 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 5800
+[2026-05-27 21:54:06] [INFO] [FQL] Steps in FQL phase: 3800 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:54:06] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:54:26] [INFO] [FQL][Step: 5810] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5810
+[2026-05-27 21:54:46] [INFO] [FQL][Step: 5820] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5820
+[2026-05-27 21:55:06] [INFO] [FQL][Step: 5830] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5830
+[2026-05-27 21:55:26] [INFO] [FQL][Step: 5840] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5840
+[2026-05-27 21:55:47] [INFO] [FQL][Step: 5850] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5850
+[2026-05-27 21:56:07] [INFO] [FQL][Step: 5860] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5860
+[2026-05-27 21:56:27] [INFO] [FQL][Step: 5870] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5870
+[2026-05-27 21:56:47] [INFO] [FQL][Step: 5880] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5880
+[2026-05-27 21:57:07] [INFO] [FQL][Step: 5890] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5890
+[2026-05-27 21:57:27] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 21:57:27] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 21:57:27] [INFO] [FQL][Step: 5900] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5900
+[2026-05-27 21:57:27] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:57:27] [INFO] [FQL] Real steps: 5900 | FQL steps: 5900 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 5900
+[2026-05-27 21:57:27] [INFO] [FQL] Steps in FQL phase: 3900 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 21:57:27] [INFO] -----------------------------------------------------------------
+[2026-05-27 21:57:47] [INFO] [FQL][Step: 5910] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5910
+[2026-05-27 21:58:07] [INFO] [FQL][Step: 5920] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5920
+[2026-05-27 21:58:27] [INFO] [FQL][Step: 5930] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5930
+[2026-05-27 21:58:47] [INFO] [FQL][Step: 5940] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5940
+[2026-05-27 21:59:07] [INFO] [FQL][Step: 5950] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5950
+[2026-05-27 21:59:27] [INFO] [FQL][Step: 5960] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5960
+[2026-05-27 21:59:47] [INFO] [FQL][Step: 5970] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5970
+[2026-05-27 22:00:07] [INFO] [FQL][Step: 5980] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5980
+[2026-05-27 22:00:27] [INFO] [FQL][Step: 5990] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:5990
+[2026-05-27 22:00:48] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:00:48] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:00:48] [INFO] [FQL][Step: 6000] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6000
+[2026-05-27 22:00:48] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:00:48] [INFO] [FQL] Real steps: 6000 | FQL steps: 6000 | Avg Accuracy: 95.00% | Converged: True | DQN Buffer: 6000
+[2026-05-27 22:00:48] [INFO] [FQL] Steps in FQL phase: 4000 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:00:48] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:00:49] [INFO] Sending updated Q-table to Pico (step=6001, AvgR=+1.0000)...
+[2026-05-27 22:00:49] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:00:49] [INFO] Updated Q-table sent and saved.
+[2026-05-27 22:01:08] [INFO] [FQL][Step: 6010] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6010
+[2026-05-27 22:01:28] [INFO] [FQL][Step: 6020] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6020
+[2026-05-27 22:01:48] [INFO] [FQL][Step: 6030] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6030
+[2026-05-27 22:02:08] [INFO] [FQL][Step: 6040] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6040
+[2026-05-27 22:02:28] [INFO] [FQL][Step: 6050] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6050
+[2026-05-27 22:02:48] [INFO] [FQL][Step: 6060] pH:7.563 T:25.0°C NH₃:2.03% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6060
+[2026-05-27 22:03:08] [INFO] [FQL][Step: 6070] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6070
+[2026-05-27 22:03:28] [INFO] [FQL][Step: 6080] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6080
+[2026-05-27 22:03:48] [INFO] [FQL][Step: 6090] pH:7.642 T:25.0°C NH₃:2.43% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6090
+[2026-05-27 22:04:08] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:04:08] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:04:08] [INFO] [FQL][Step: 6100] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6100
+[2026-05-27 22:04:08] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:04:08] [INFO] [FQL] Real steps: 6100 | FQL steps: 6100 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 6100
+[2026-05-27 22:04:08] [INFO] [FQL] Steps in FQL phase: 4100 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:04:08] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:04:28] [INFO] [FQL][Step: 6110] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6110
+[2026-05-27 22:04:48] [INFO] [FQL][Step: 6120] pH:7.642 T:25.0°C NH₃:2.43% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6120
+[2026-05-27 22:05:08] [INFO] [FQL][Step: 6130] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6130
+[2026-05-27 22:05:28] [INFO] [FQL][Step: 6140] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6140
+[2026-05-27 22:05:48] [INFO] [FQL][Step: 6150] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6150
+[2026-05-27 22:06:08] [INFO] [FQL][Step: 6160] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6160
+[2026-05-27 22:06:28] [INFO] [FQL][Step: 6170] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6170
+[2026-05-27 22:06:49] [INFO] [FQL][Step: 6180] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6180
+[2026-05-27 22:07:09] [INFO] [FQL][Step: 6190] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6190
+[2026-05-27 22:07:29] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:07:29] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:07:29] [INFO] [FQL][Step: 6200] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6200
+[2026-05-27 22:07:29] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:07:29] [INFO] [FQL] Real steps: 6200 | FQL steps: 6200 | Avg Accuracy: 98.00% | Converged: True | DQN Buffer: 6200
+[2026-05-27 22:07:29] [INFO] [FQL] Steps in FQL phase: 4200 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:07:29] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:07:49] [INFO] [FQL][Step: 6210] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6210
+[2026-05-27 22:08:09] [INFO] [FQL][Step: 6220] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6220
+[2026-05-27 22:08:29] [INFO] [FQL][Step: 6230] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6230
+[2026-05-27 22:08:49] [INFO] [FQL][Step: 6240] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6240
+[2026-05-27 22:09:09] [INFO] [FQL][Step: 6250] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6250
+[2026-05-27 22:09:29] [INFO] [FQL][Step: 6260] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6260
+[2026-05-27 22:09:49] [INFO] [FQL][Step: 6270] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6270
+[2026-05-27 22:10:09] [INFO] [FQL][Step: 6280] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6280
+[2026-05-27 22:10:29] [INFO] [FQL][Step: 6290] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6290
+[2026-05-27 22:10:49] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:10:49] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:10:49] [INFO] [FQL][Step: 6300] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6300
+[2026-05-27 22:10:49] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:10:49] [INFO] [FQL] Real steps: 6300 | FQL steps: 6300 | Avg Accuracy: 95.00% | Converged: True | DQN Buffer: 6300
+[2026-05-27 22:10:49] [INFO] [FQL] Steps in FQL phase: 4300 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:10:49] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:11:09] [INFO] [FQL][Step: 6310] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6310
+[2026-05-27 22:11:29] [INFO] [FQL][Step: 6320] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6320
+[2026-05-27 22:11:50] [INFO] [FQL][Step: 6330] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6330
+[2026-05-27 22:12:10] [INFO] [FQL][Step: 6340] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6340
+[2026-05-27 22:12:30] [INFO] [FQL][Step: 6350] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6350
+[2026-05-27 22:12:50] [INFO] [FQL][Step: 6360] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6360
+[2026-05-27 22:13:10] [INFO] [FQL][Step: 6370] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6370
+[2026-05-27 22:13:30] [INFO] [FQL][Step: 6380] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6380
+[2026-05-27 22:13:50] [INFO] [FQL][Step: 6390] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6390
+[2026-05-27 22:14:10] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:14:10] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:14:10] [INFO] [FQL][Step: 6400] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:6400
+[2026-05-27 22:14:10] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:14:10] [INFO] [FQL] Real steps: 6400 | FQL steps: 6400 | Avg Accuracy: 94.00% | Converged: True | DQN Buffer: 6400
+[2026-05-27 22:14:10] [INFO] [FQL] Steps in FQL phase: 4400 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:14:10] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:14:30] [INFO] [FQL][Step: 6410] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:6410
+[2026-05-27 22:14:50] [INFO] [FQL][Step: 6420] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:6420
+[2026-05-27 22:15:10] [INFO] [FQL][Step: 6430] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:6430
+[2026-05-27 22:15:30] [INFO] [FQL][Step: 6440] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:6440
+[2026-05-27 22:15:50] [INFO] [FQL][Step: 6450] pH:7.642 T:25.0°C NH₃:2.43% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:6450
+[2026-05-27 22:16:10] [INFO] [FQL][Step: 6460] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:6460
+[2026-05-27 22:16:30] [INFO] [FQL][Step: 6470] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:6470
+[2026-05-27 22:16:50] [INFO] [FQL][Step: 6480] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:6480
+[2026-05-27 22:17:10] [INFO] [FQL][Step: 6490] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:94.00% Buffer:6490
+[2026-05-27 22:17:31] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:17:31] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:17:31] [INFO] [FQL][Step: 6500] pH:7.653 T:25.0°C NH₃:2.49% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6500
+[2026-05-27 22:17:31] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:17:31] [INFO] [FQL] Real steps: 6500 | FQL steps: 6500 | Avg Accuracy: 98.00% | Converged: True | DQN Buffer: 6500
+[2026-05-27 22:17:31] [INFO] [FQL] Steps in FQL phase: 4500 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:17:31] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:17:33] [INFO] Sending updated Q-table to Pico (step=6501, AvgR=+1.0000)...
+[2026-05-27 22:17:33] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:17:33] [INFO] Updated Q-table sent and saved.
+[2026-05-27 22:17:51] [INFO] [FQL][Step: 6510] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6510
+[2026-05-27 22:18:11] [INFO] [FQL][Step: 6520] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6520
+[2026-05-27 22:18:31] [INFO] [FQL][Step: 6530] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6530
+[2026-05-27 22:18:51] [INFO] [FQL][Step: 6540] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6540
+[2026-05-27 22:19:11] [INFO] [FQL][Step: 6550] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6550
+[2026-05-27 22:19:31] [INFO] [FQL][Step: 6560] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6560
+[2026-05-27 22:19:51] [INFO] [FQL][Step: 6570] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6570
+[2026-05-27 22:20:11] [INFO] [FQL][Step: 6580] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6580
+[2026-05-27 22:20:31] [INFO] [FQL][Step: 6590] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:6590
+[2026-05-27 22:20:51] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:20:51] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:20:51] [INFO] [FQL][Step: 6600] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6600
+[2026-05-27 22:20:51] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:20:51] [INFO] [FQL] Real steps: 6600 | FQL steps: 6600 | Avg Accuracy: 95.00% | Converged: True | DQN Buffer: 6600
+[2026-05-27 22:20:51] [INFO] [FQL] Steps in FQL phase: 4600 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:20:51] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:21:11] [INFO] [FQL][Step: 6610] pH:7.642 T:25.0°C NH₃:2.43% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6610
+[2026-05-27 22:21:31] [INFO] [FQL][Step: 6620] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6620
+[2026-05-27 22:21:51] [INFO] [FQL][Step: 6630] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6630
+[2026-05-27 22:22:11] [INFO] [FQL][Step: 6640] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6640
+[2026-05-27 22:22:31] [INFO] [FQL][Step: 6650] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6650
+[2026-05-27 22:22:51] [INFO] [FQL][Step: 6660] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6660
+[2026-05-27 22:23:12] [INFO] [FQL][Step: 6670] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6670
+[2026-05-27 22:23:32] [INFO] [FQL][Step: 6680] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6680
+[2026-05-27 22:23:52] [INFO] [FQL][Step: 6690] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:6690
+[2026-05-27 22:24:12] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:24:12] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:24:12] [INFO] [FQL][Step: 6700] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6700
+[2026-05-27 22:24:12] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:24:12] [INFO] [FQL] Real steps: 6700 | FQL steps: 6700 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 6700
+[2026-05-27 22:24:12] [INFO] [FQL] Steps in FQL phase: 4700 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:24:12] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:24:32] [INFO] [FQL][Step: 6710] pH:7.642 T:25.0°C NH₃:2.43% | Risk: Actual=CAUTION RB=CAUTION FQL=CRITICAL  | Acc:96.00% Buffer:6710
+[2026-05-27 22:24:52] [INFO] [FQL][Step: 6720] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6720
+[2026-05-27 22:25:12] [INFO] [FQL][Step: 6730] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6730
+[2026-05-27 22:25:32] [INFO] [FQL][Step: 6740] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6740
+[2026-05-27 22:25:52] [INFO] [FQL][Step: 6750] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6750
+[2026-05-27 22:26:12] [INFO] [FQL][Step: 6760] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6760
+[2026-05-27 22:26:32] [INFO] [FQL][Step: 6770] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6770
+[2026-05-27 22:26:52] [INFO] [FQL][Step: 6780] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6780
+[2026-05-27 22:27:12] [INFO] [FQL][Step: 6790] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6790
+[2026-05-27 22:27:32] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:27:32] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:27:32] [INFO] [FQL][Step: 6800] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6800
+[2026-05-27 22:27:32] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:27:32] [INFO] [FQL] Real steps: 6800 | FQL steps: 6800 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 6800
+[2026-05-27 22:27:32] [INFO] [FQL] Steps in FQL phase: 4800 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:27:32] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:27:52] [INFO] [FQL][Step: 6810] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6810
+[2026-05-27 22:28:13] [INFO] [FQL][Step: 6820] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:96.00% Buffer:6820
+[2026-05-27 22:28:33] [INFO] [FQL][Step: 6830] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6830
+[2026-05-27 22:28:53] [INFO] [FQL][Step: 6840] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6840
+[2026-05-27 22:29:13] [INFO] [FQL][Step: 6850] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6850
+[2026-05-27 22:29:33] [INFO] [FQL][Step: 6860] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6860
+[2026-05-27 22:29:53] [INFO] [FQL][Step: 6870] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6870
+[2026-05-27 22:30:13] [INFO] [FQL][Step: 6880] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6880
+[2026-05-27 22:30:33] [INFO] [FQL][Step: 6890] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:6890
+[2026-05-27 22:30:53] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:30:53] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:30:53] [INFO] [FQL][Step: 6900] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:6900
+[2026-05-27 22:30:53] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:30:53] [INFO] [FQL] Real steps: 6900 | FQL steps: 6900 | Avg Accuracy: 97.00% | Converged: True | DQN Buffer: 6900
+[2026-05-27 22:30:53] [INFO] [FQL] Steps in FQL phase: 4900 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:30:53] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:31:13] [INFO] [FQL][Step: 6910] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:6910
+[2026-05-27 22:31:33] [INFO] [FQL][Step: 6920] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:6920
+[2026-05-27 22:31:53] [INFO] [FQL][Step: 6930] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:6930
+[2026-05-27 22:32:13] [INFO] [FQL][Step: 6940] pH:7.647 T:25.0°C NH₃:2.45% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:6940
+[2026-05-27 22:32:33] [INFO] [FQL][Step: 6950] pH:7.642 T:25.0°C NH₃:2.43% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:6950
+[2026-05-27 22:32:53] [INFO] [FQL][Step: 6960] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:6960
+[2026-05-27 22:33:13] [INFO] [FQL][Step: 6970] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:6970
+[2026-05-27 22:33:33] [INFO] [FQL][Step: 6980] pH:7.653 T:25.0°C NH₃:2.49% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:6980
+[2026-05-27 22:33:54] [INFO] [FQL][Step: 6990] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:6990
+[2026-05-27 22:34:14] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:34:14] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:34:14] [INFO] [FQL][Step: 7000] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:7000
+[2026-05-27 22:34:14] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:34:14] [INFO] [FQL] Real steps: 7000 | FQL steps: 7000 | Avg Accuracy: 98.00% | Converged: True | DQN Buffer: 7000
+[2026-05-27 22:34:14] [INFO] [FQL] Steps in FQL phase: 5000 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:34:14] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:34:16] [INFO] Sending updated Q-table to Pico (step=7001, AvgR=+1.0000)...
+[2026-05-27 22:34:16] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:34:16] [INFO] Updated Q-table sent and saved.
+[2026-05-27 22:34:34] [INFO] [FQL][Step: 7010] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:7010
+[2026-05-27 22:34:54] [INFO] [FQL][Step: 7020] pH:7.642 T:25.0°C NH₃:2.43% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:7020
+[2026-05-27 22:35:14] [INFO] [FQL][Step: 7030] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:7030
+[2026-05-27 22:35:34] [INFO] [FQL][Step: 7040] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:7040
+[2026-05-27 22:35:54] [INFO] [FQL][Step: 7050] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:7050
+[2026-05-27 22:36:14] [INFO] [FQL][Step: 7060] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:7060
+[2026-05-27 22:36:34] [INFO] [FQL][Step: 7070] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:7070
+[2026-05-27 22:36:54] [INFO] [FQL][Step: 7080] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:7080
+[2026-05-27 22:37:14] [INFO] [FQL][Step: 7090] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:98.00% Buffer:7090
+[2026-05-27 22:37:34] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:37:34] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:37:34] [INFO] [FQL][Step: 7100] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:7100
+[2026-05-27 22:37:34] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:37:34] [INFO] [FQL] Real steps: 7100 | FQL steps: 7100 | Avg Accuracy: 95.00% | Converged: True | DQN Buffer: 7100
+[2026-05-27 22:37:34] [INFO] [FQL] Steps in FQL phase: 5100 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:37:34] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:37:54] [INFO] [FQL][Step: 7110] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:7110
+[2026-05-27 22:38:14] [INFO] [FQL][Step: 7120] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:7120
+[2026-05-27 22:38:34] [INFO] [FQL][Step: 7130] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:7130
+[2026-05-27 22:38:54] [INFO] [FQL][Step: 7140] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:7140
+[2026-05-27 22:39:15] [INFO] [FQL][Step: 7150] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:7150
+[2026-05-27 22:39:35] [INFO] [FQL][Step: 7160] pH:7.591 T:25.0°C NH₃:2.16% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:7160
+[2026-05-27 22:39:55] [INFO] [FQL][Step: 7170] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:7170
+[2026-05-27 22:40:15] [INFO] [FQL][Step: 7180] pH:7.653 T:25.0°C NH₃:2.49% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:7180
+[2026-05-27 22:40:35] [INFO] [FQL][Step: 7190] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:95.00% Buffer:7190
+[2026-05-27 22:40:55] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:40:55] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:40:55] [INFO] [FQL][Step: 7200] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7200
+[2026-05-27 22:40:55] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:40:55] [INFO] [FQL] Real steps: 7200 | FQL steps: 7200 | Avg Accuracy: 97.00% | Converged: True | DQN Buffer: 7200
+[2026-05-27 22:40:55] [INFO] [FQL] Steps in FQL phase: 5200 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:40:55] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:41:15] [INFO] [FQL][Step: 7210] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7210
+[2026-05-27 22:41:35] [INFO] [FQL][Step: 7220] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7220
+[2026-05-27 22:41:55] [INFO] [FQL][Step: 7230] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7230
+[2026-05-27 22:42:15] [INFO] [FQL][Step: 7240] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7240
+[2026-05-27 22:42:35] [INFO] [FQL][Step: 7250] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7250
+[2026-05-27 22:42:55] [INFO] [FQL][Step: 7260] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7260
+[2026-05-27 22:43:15] [INFO] [FQL][Step: 7270] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=SAFE  | Acc:97.00% Buffer:7270
+[2026-05-27 22:43:35] [INFO] [FQL][Step: 7280] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7280
+[2026-05-27 22:43:55] [INFO] [FQL][Step: 7290] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7290
+[2026-05-27 22:44:15] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:44:15] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:44:15] [INFO] [FQL][Step: 7300] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7300
+[2026-05-27 22:44:15] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:44:15] [INFO] [FQL] Real steps: 7300 | FQL steps: 7300 | Avg Accuracy: 97.00% | Converged: True | DQN Buffer: 7300
+[2026-05-27 22:44:15] [INFO] [FQL] Steps in FQL phase: 5300 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:44:15] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:44:35] [INFO] [FQL][Step: 7310] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7310
+[2026-05-27 22:44:55] [INFO] [FQL][Step: 7320] pH:7.619 T:25.0°C NH₃:2.30% | Risk: Actual=CAUTION RB=CAUTION FQL=WARNING  | Acc:97.00% Buffer:7320
+[2026-05-27 22:45:16] [INFO] [FQL][Step: 7330] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7330
+[2026-05-27 22:45:36] [INFO] [FQL][Step: 7340] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7340
+[2026-05-27 22:45:56] [INFO] [FQL][Step: 7350] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7350
+[2026-05-27 22:46:16] [INFO] [FQL][Step: 7360] pH:7.608 T:25.0°C NH₃:2.25% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7360
+[2026-05-27 22:46:36] [INFO] [FQL][Step: 7370] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7370
+[2026-05-27 22:46:56] [INFO] [FQL][Step: 7380] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7380
+[2026-05-27 22:47:16] [INFO] [FQL][Step: 7390] pH:7.642 T:25.0°C NH₃:2.43% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7390
+[2026-05-27 22:47:36] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:47:36] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:47:36] [INFO] [FQL][Step: 7400] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7400
+[2026-05-27 22:47:36] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:47:36] [INFO] [FQL] Real steps: 7400 | FQL steps: 7400 | Avg Accuracy: 97.00% | Converged: True | DQN Buffer: 7400
+[2026-05-27 22:47:36] [INFO] [FQL] Steps in FQL phase: 5400 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:47:36] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:47:56] [INFO] [FQL][Step: 7410] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7410
+[2026-05-27 22:48:16] [INFO] [FQL][Step: 7420] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7420
+[2026-05-27 22:48:36] [INFO] [FQL][Step: 7430] pH:7.647 T:25.0°C NH₃:2.45% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7430
+[2026-05-27 22:48:56] [INFO] [FQL][Step: 7440] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7440
+[2026-05-27 22:49:16] [INFO] [FQL][Step: 7450] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7450
+[2026-05-27 22:49:36] [INFO] [FQL][Step: 7460] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7460
+[2026-05-27 22:49:56] [INFO] [FQL][Step: 7470] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7470
+[2026-05-27 22:50:17] [INFO] [FQL][Step: 7480] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7480
+[2026-05-27 22:50:37] [INFO] [FQL][Step: 7490] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:97.00% Buffer:7490
+[2026-05-27 22:50:57] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:50:57] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:50:57] [INFO] [FQL][Step: 7500] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7500
+[2026-05-27 22:50:57] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:50:57] [INFO] [FQL] Real steps: 7500 | FQL steps: 7500 | Avg Accuracy: 99.00% | Converged: True | DQN Buffer: 7500
+[2026-05-27 22:50:57] [INFO] [FQL] Steps in FQL phase: 5500 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:50:57] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:50:59] [INFO] Sending updated Q-table to Pico (step=7501, AvgR=+1.0000)...
+[2026-05-27 22:50:59] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:50:59] [INFO] Updated Q-table sent and saved.
+[2026-05-27 22:51:17] [INFO] [FQL][Step: 7510] pH:7.653 T:25.0°C NH₃:2.49% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7510
+[2026-05-27 22:51:37] [INFO] [FQL][Step: 7520] pH:7.647 T:25.0°C NH₃:2.45% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7520
+[2026-05-27 22:51:57] [INFO] [FQL][Step: 7530] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7530
+[2026-05-27 22:52:17] [INFO] [FQL][Step: 7540] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7540
+[2026-05-27 22:52:37] [INFO] [FQL][Step: 7550] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7550
+[2026-05-27 22:52:57] [INFO] [FQL][Step: 7560] pH:7.569 T:25.0°C NH₃:2.06% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7560
+[2026-05-27 22:53:17] [INFO] [FQL][Step: 7570] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7570
+[2026-05-27 22:53:37] [INFO] [FQL][Step: 7580] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7580
+[2026-05-27 22:53:57] [INFO] [FQL][Step: 7590] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7590
+[2026-05-27 22:54:17] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:54:17] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:54:17] [INFO] [FQL][Step: 7600] pH:7.636 T:25.0°C NH₃:2.39% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7600
+[2026-05-27 22:54:17] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:54:17] [INFO] [FQL] Real steps: 7600 | FQL steps: 7600 | Avg Accuracy: 99.00% | Converged: True | DQN Buffer: 7600
+[2026-05-27 22:54:17] [INFO] [FQL] Steps in FQL phase: 5600 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:54:17] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:54:37] [INFO] [FQL][Step: 7610] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7610
+[2026-05-27 22:54:57] [INFO] [FQL][Step: 7620] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7620
+[2026-05-27 22:55:17] [INFO] [FQL][Step: 7630] pH:7.625 T:25.0°C NH₃:2.34% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7630
+[2026-05-27 22:55:37] [INFO] [FQL][Step: 7640] pH:7.597 T:25.0°C NH₃:2.19% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7640
+[2026-05-27 22:55:58] [INFO] [FQL][Step: 7650] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7650
+[2026-05-27 22:56:18] [INFO] [FQL][Step: 7660] pH:7.647 T:25.0°C NH₃:2.45% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7660
+[2026-05-27 22:56:38] [INFO] [FQL][Step: 7670] pH:7.614 T:25.0°C NH₃:2.28% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7670
+[2026-05-27 22:56:58] [INFO] [FQL][Step: 7680] pH:7.630 T:25.0°C NH₃:2.36% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7680
+[2026-05-27 22:57:18] [INFO] [FQL][Step: 7690] pH:7.602 T:25.0°C NH₃:2.22% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:99.00% Buffer:7690
+[2026-05-27 22:57:38] [INFO]   Convergence progress: steps 100% | windows 100% | accuracy 100%
+[2026-05-27 22:57:38] [INFO] ========================================================
+  FQL Risk Prediction Map (5x5)
+                VCold  Cold   Opt    Hot    VHot 
+  ------------------------------------------
+  VeryAcid:  SAFE  SAFE  SAFE  SAFE  SAFE
+  Acidic  :  SAFE  SAFE  SAFE  SAFE  SAFE
+  Normal  :  SAFE  SAFE  CAUT  CAUT  CAUT
+  Alkaline:  WARN  WARN  CAUT  CRIT  CRIT
+  VeryAlk :  CRIT  CRIT  CRIT  CRIT  CRIT
+========================================================
+[2026-05-27 22:57:38] [INFO] [FQL][Step: 7700] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:7700
+[2026-05-27 22:57:38] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:57:38] [INFO] [FQL] Real steps: 7700 | FQL steps: 7700 | Avg Accuracy: 96.00% | Converged: True | DQN Buffer: 7700
+[2026-05-27 22:57:38] [INFO] [FQL] Steps in FQL phase: 5700 / 1000 | DQN unlocks in 0 more real steps
+[2026-05-27 22:57:38] [INFO] -----------------------------------------------------------------
+[2026-05-27 22:57:58] [INFO] [FQL][Step: 7710] pH:7.586 T:25.0°C NH₃:2.14% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:7710
+[2026-05-27 22:58:18] [INFO] [FQL][Step: 7720] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:7720
+[2026-05-27 22:58:38] [INFO] [FQL][Step: 7730] pH:7.575 T:25.0°C NH₃:2.09% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:7730
+[2026-05-27 22:58:58] [INFO] [FQL][Step: 7740] pH:7.580 T:25.0°C NH₃:2.11% | Risk: Actual=CAUTION RB=CAUTION FQL=CAUTION  | Acc:96.00% Buffer:7740
+[2026-05-27 22:59:04] [INFO] System stopping — saving data...
+[2026-05-27 22:59:04] [INFO] Q-table saved: /home/ubuntu/thesis/results/hasil_real/session_20260527_184011/qtable.json
+[2026-05-27 22:59:04] [INFO] DQN buffer saved: /home/ubuntu/thesis/results/hasil_real/session_20260527_184011/dqn_buffer.json (7742 transitions)
+[2026-05-27 22:59:04] [INFO] System stopped — data saved.
+[2026-05-27 22:59:04] [INFO] Sistem berhenti total.

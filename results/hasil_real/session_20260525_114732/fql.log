@@ -1,0 +1,9 @@
+[2026-05-25 11:47:32] [INFO] Folder sesi baru dibuat: /home/ubuntu/thesis/results/hasil_real/session_20260525_114732
+[2026-05-25 11:47:32] [INFO] PHASE B — FQL learning risk prediction from real Pico data...
+[2026-05-25 11:47:51] [INFO] [RB][Step:   10] pH:7.686 T:0.0°C NH₃:0.40% | Risk: Actual=SAFE RB=SAFE FQL=SAFE  | Acc:0.00% Buffer:10
+[2026-05-25 11:48:40] [WARNING] [DISCONNECT] No data received for 30s - Pico WH assumed disconnected. Returning to Phase A...
+[2026-05-25 11:48:40] [INFO] =================================================================
+[2026-05-25 11:48:40] [INFO] PICO DISCONNECTED - Resetting all learning states (session #2)
+[2026-05-25 11:48:40] [INFO] Reason: Pico WH might be moved to a different location/pond.
+[2026-05-25 11:48:40] [INFO] =================================================================
+[2026-05-25 11:48:40] [INFO] PHASE A - Waiting for Pico WH connection... (session #2)
