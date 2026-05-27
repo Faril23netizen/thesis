@@ -48,7 +48,11 @@ def get_latest_session_dir() -> str:
     sessions.sort(reverse=True)
     return os.path.join(RESULTS_REAL, sessions[0])
 
-LATEST_SESSION = get_latest_session_dir()
+if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]):
+    LATEST_SESSION = os.path.abspath(sys.argv[1])
+else:
+    LATEST_SESSION = get_latest_session_dir()
+
 COMPARISON_CSV = os.path.join(LATEST_SESSION, "comparison.csv")
 CALLBOX_STATS = os.path.join(LATEST_SESSION, "callbox_stats.json")
 N3IWF_STATUS = os.path.join(LATEST_SESSION, "n3iwf_status.json")
