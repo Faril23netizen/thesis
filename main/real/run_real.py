@@ -32,6 +32,7 @@ BASE_DIR        = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspat
 RESULTS_REAL    = os.path.join(BASE_DIR, "results", "hasil_real")
 NETWORK_STATS   = os.path.join(BASE_DIR, "results", "network", "callbox_stats.json")
 NODE_QOS_FILE   = os.path.join(BASE_DIR, "results", "network", "node_qos.json")
+NODE_QOS_DIR    = os.path.join(BASE_DIR, "results", "network")
 STATE_JSON_FILE = os.path.join(RESULTS_REAL, "state.json")
 
 # Hyperparameters
@@ -220,6 +221,16 @@ def main():
         last_qos_write = 0.0
         QOS_WRITE_INTERVAL = 3.0  # write node_qos.json every 3 seconds
 
+        # QoS time-series CSV — one file per session for Python/Excel analysis
+        session_ts = time.strftime("%Y%m%d_%H%M%S")
+        os.makedirs(NODE_QOS_DIR, exist_ok=True)
+        qos_csv_path = os.path.join(NODE_QOS_DIR, f"qos_log_{session_ts}.csv")
+        qos_csv_file = open(qos_csv_path, "w", newline="")
+        qos_csv_writer = csv.writer(qos_csv_file)
+        qos_csv_writer.writerow(["timestamp", "node_id", "latency_ms", "jitter_ms", "bandwidth_mbps"])
+        qos_csv_file.flush()
+        logger.info(f"QoS CSV log: {qos_csv_path}")
+
         logger.info("PHASE B — FQL learning risk prediction from real Pico data...")
 
         while not _shutdown:
@@ -389,11 +400,21 @@ def main():
             now_t = time.time()
             if now_t - last_qos_write >= QOS_WRITE_INTERVAL:
                 bridge.write_qos_stats(NODE_QOS_FILE)
+                # Append snapshot to time-series CSV
+                ts = time.strftime("%Y-%m-%d %H:%M:%S")
+                for nid in list(bridge._qos.keys()):
+                    q = bridge.get_node_qos(nid)
+                    qos_csv_writer.writerow([ts, nid,
+                        round(q["latency_ms"], 3),
+                        round(q["jitter_ms"], 3),
+                        round(q["bandwidth_mbps"], 6)])
+                qos_csv_file.flush()
                 last_qos_write = now_t
 
             time.sleep(0.01)
 
         # Cleanup inner loop
+        qos_csv_file.close()
         for node in nodes.values():
             node.close()
 
