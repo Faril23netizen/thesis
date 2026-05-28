@@ -175,15 +175,32 @@ conn callbox-n3iwf
 
 
 def check_ipsec_status():
-    """Simulate IPsec tunnel status check"""
+    """
+    Cek status IPsec tunnel real dari kernel (ip xfrm state).
+    Setup tunnel via: sudo ./setup_n3iwf_tunnel.sh
+    """
     try:
-        # Rely on the dynamic connected_picos state in _update_stats instead
-        return True
-            
+        result = subprocess.run(
+            ["ip", "xfrm", "state", "list"],
+            capture_output=True, text=True, timeout=3
+        )
+        lines = result.stdout.strip()
+        # Hitung berapa SA yang aktif (minimal 2 = outbound + inbound)
+        sa_count = lines.count("src 172.16.10.")
+        if sa_count >= 2:
+            with stats_lock:
+                stats["ipsec_status"] = "ESTABLISHED"
+                stats["active_tunnels"] = sa_count // 2
+            return True
+        else:
+            with stats_lock:
+                stats["ipsec_status"] = "DOWN"
+                stats["active_tunnels"] = 0
+            return False
     except Exception as e:
-        log(f"Error checking IPsec status: {e}", "ERROR")
+        log(f"Error checking xfrm state: {e}", "WARN")
         with stats_lock:
-            stats["ipsec_status"] = "ERROR"
+            stats["ipsec_status"] = "UNKNOWN"
         return False
 
 

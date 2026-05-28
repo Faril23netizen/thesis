@@ -1,9 +1,15 @@
 import os
 import re
 import time
+import json
 import socket
 import select
 import logging
+import statistics
+import subprocess
+import threading
+import tempfile
+import collections
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +38,72 @@ RECONNECT_DELAY = 2    # seconds between reconnect attempts
 _DATA_RE = re.compile(r"^DATA:(-?\d+),(-?\d+),([0-3])$")
 _DUMMY_RE = re.compile(r"^DUMMY:(-?\d+),(-?\d+),([0-3])$")
 
+QOS_WINDOW_SEC = 5.0   # rolling window for bandwidth calculation
+
+
+class _NodeQoS:
+    """Measures real per-node QoS from TCP packet timing."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._recv_times: collections.deque = collections.deque(maxlen=200)
+        self._inter_arrivals: collections.deque = collections.deque(maxlen=100)
+        self._bytes_window: list = []   # [(timestamp, byte_count)]
+        self.latency_ms: float = 0.0
+        self.jitter_ms: float = 0.0
+        self.bandwidth_mbps: float = 0.0
+
+    def on_packet(self, byte_count: int) -> None:
+        now = time.time()
+        with self._lock:
+            if self._recv_times:
+                interval = now - self._recv_times[-1]
+                if 0 < interval < 30.0:   # ignore absurdly long gaps (reconnects)
+                    self._inter_arrivals.append(interval)
+            self._recv_times.append(now)
+            self._bytes_window.append((now, byte_count))
+
+            # Evict entries outside the rolling window
+            cutoff = now - QOS_WINDOW_SEC
+            while self._bytes_window and self._bytes_window[0][0] < cutoff:
+                self._bytes_window.pop(0)
+
+            # Bandwidth (Mbps)
+            if len(self._bytes_window) > 1:
+                total = sum(b for _, b in self._bytes_window)
+                elapsed = self._bytes_window[-1][0] - self._bytes_window[0][0]
+                self.bandwidth_mbps = (total * 8 / 1e6) / elapsed if elapsed > 0 else 0.0
+
+            # Jitter = stddev of inter-arrival times in ms
+            if len(self._inter_arrivals) >= 3:
+                self.jitter_ms = statistics.stdev(self._inter_arrivals) * 1000.0
+
+    def update_latency(self, ip: str) -> None:
+        """Ping the Pico IP to measure round-trip latency (blocking — run in thread)."""
+        try:
+            result = subprocess.run(
+                ["ping", "-c", "4", "-W", "1", "-i", "0.3", ip],
+                capture_output=True, text=True, timeout=8
+            )
+            for line in result.stdout.splitlines():
+                if "rtt" in line or "round-trip" in line:
+                    # "rtt min/avg/max/mdev = 1.2/2.3/3.4/0.5 ms"
+                    parts = line.split("/")
+                    if len(parts) >= 5:
+                        with self._lock:
+                            self.latency_ms = float(parts[4])
+                        return
+        except Exception:
+            pass
+
+    def to_dict(self) -> dict:
+        with self._lock:
+            return {
+                "latency_ms": round(self.latency_ms, 2),
+                "jitter_ms": round(self.jitter_ms, 3),
+                "bandwidth_mbps": round(self.bandwidth_mbps, 4),
+            }
+
 class WiFiBridge:
     """WiFi communication bridge (TCP Server) supporting multiple Pico WH nodes."""
 
@@ -43,6 +115,11 @@ class WiFiBridge:
         self.node_ids = {} # socket -> node_name
         self.ip_to_name = {} # IP -> node_name for reconnect stability
         self.dummy_counter = 2 # Starts at 2
+        self._qos: dict[str, _NodeQoS] = {}      # node_name -> _NodeQoS
+        self._sock_ip: dict = {}                  # socket -> IP (cached)
+        self._ping_threads: dict[str, threading.Thread] = {}
+        self._ping_interval = 10.0  # re-ping every 10 s
+        self._last_ping: dict[str, float] = {}
 
     # ── Connection ───────────────────────────────────────────────────────── #
 
@@ -146,7 +223,8 @@ class WiFiBridge:
             else:
                 # Existing client sending data
                 try:
-                    data = sock.recv(1024).decode("utf-8", errors="ignore")
+                    raw = sock.recv(1024)
+                    data = raw.decode("utf-8", errors="ignore")
                     if not data:
                         # Client disconnected
                         addr = sock.getpeername()
@@ -154,8 +232,13 @@ class WiFiBridge:
                         logger.warning(f"Client {node_name} ({addr[0]}) disconnected.")
                         del self.clients[sock]
                         del self.node_ids[sock]
+                        self._sock_ip.pop(sock, None)
                         sock.close()
                         continue
+                    # Track QoS: record packet arrival for identified nodes
+                    node_name = self.node_ids.get(sock, "Pending")
+                    if node_name != "Pending" and node_name in self._qos:
+                        self._qos[node_name].on_packet(len(raw))
                     self.clients[sock] += data
                 except (socket.timeout, BlockingIOError):
                     continue
@@ -186,6 +269,7 @@ class WiFiBridge:
                         node_name = "Pico_1_Main"
                         self.ip_to_name[ip] = node_name
                         self.node_ids[sock] = node_name
+                        self._sock_ip[sock] = ip
                         logger.info(f"Identified {ip} as {node_name}")
                     elif line.startswith("DUMMY:"):
                         if ip in self.ip_to_name:
@@ -195,7 +279,23 @@ class WiFiBridge:
                             self.dummy_counter += 1
                             self.ip_to_name[ip] = node_name
                         self.node_ids[sock] = node_name
+                        self._sock_ip[sock] = ip
                         logger.info(f"Identified {ip} as {node_name}")
+                    # Init QoS tracker for new node
+                    if node_name != "Pending" and node_name not in self._qos:
+                        self._qos[node_name] = _NodeQoS()
+                        self._last_ping[node_name] = 0.0
+                        logger.info(f"QoS tracker created for {node_name} ({ip})")
+                    # Schedule ping for latency measurement
+                    if node_name != "Pending":
+                        now = time.time()
+                        if now - self._last_ping.get(node_name, 0) > self._ping_interval:
+                            self._last_ping[node_name] = now
+                            t = threading.Thread(
+                                target=self._qos[node_name].update_latency,
+                                args=(ip,), daemon=True
+                            )
+                            t.start()
 
                 if node_name == "Pending":
                     continue # Ignore garbled lines before identification
@@ -218,6 +318,51 @@ class WiFiBridge:
                     }
 
         return parsed_results
+
+    # ── QoS Access ───────────────────────────────────────────────────────────── #
+
+    def get_node_qos(self, node_id: str) -> dict:
+        """Return measured QoS for a node. Falls back to zeros if not yet measured."""
+        if node_id in self._qos:
+            return self._qos[node_id].to_dict()
+        return {"latency_ms": 0.0, "jitter_ms": 0.0, "bandwidth_mbps": 0.0}
+
+    def write_qos_stats(self, stats_file: str) -> None:
+        """
+        Merge per-node QoS into callbox_stats.json (creates file if missing).
+        Uses atomic rename so the JSON is never partially written.
+        """
+        try:
+            existing = {}
+            if os.path.exists(stats_file):
+                try:
+                    with open(stats_file, "r") as f:
+                        existing = json.load(f)
+                except Exception:
+                    existing = {}
+
+            nodes_data = {nid: qos.to_dict() for nid, qos in self._qos.items()}
+            existing["nodes"] = nodes_data
+            existing.setdefault("ipsec_status", "DOWN")
+            if len(self.clients) > 0:
+                existing["ipsec_status"] = "ESTABLISHED"
+            existing["connected_picos"] = len(self.clients)
+
+            dir_ = os.path.dirname(os.path.abspath(stats_file))
+            os.makedirs(dir_, exist_ok=True)
+            fd, tmp = tempfile.mkstemp(dir=dir_, suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w") as f:
+                    json.dump(existing, f, indent=2)
+                os.replace(tmp, stats_file)
+            except Exception:
+                try:
+                    os.unlink(tmp)
+                except Exception:
+                    pass
+                raise
+        except Exception as e:
+            logger.warning(f"write_qos_stats failed: {e}")
 
     # ── Send Q-table ─────────────────────────────────────────────────────── #
 
@@ -242,25 +387,31 @@ class WiFiBridge:
                 
         logger.info(f"Q-table broadcasted to {len(self.clients)} Node(s) ({len(msg)} bytes)")
 
-        if not self.main_client:
-            return True # If no main client yet, assume success for dummies
+        # Find the main Pico_1_Main socket to wait for ACK
+        main_sock = None
+        for sock, name in self.node_ids.items():
+            if name == "Pico_1_Main":
+                main_sock = sock
+                break
 
-        # Wait for ACK from main_client
+        if main_sock is None:
+            return True  # No main client yet, assume success for dummies
+
+        # Wait for ACK from Pico_1_Main
         start_time = time.time()
         while time.time() - start_time < ACK_TIMEOUT:
             try:
-                read_sockets, _, _ = select.select([self.main_client], [], [], 0.1)
+                read_sockets, _, _ = select.select([main_sock], [], [], 0.1)
                 if read_sockets:
-                    sock = read_sockets[0]
-                    data = sock.recv(1024).decode("utf-8", errors="ignore")
+                    data = main_sock.recv(1024).decode("utf-8", errors="ignore")
                     if not data:
                         return False
-                    self.clients[sock] += data
-                    
-                    while "\n" in self.clients[sock]:
-                        line, self.clients[sock] = self.clients[sock].split("\n", 1)
+                    self.clients[main_sock] += data
+
+                    while "\n" in self.clients[main_sock]:
+                        line, self.clients[main_sock] = self.clients[main_sock].split("\n", 1)
                         line = line.strip()
-                        
+
                         if line.startswith("ACK:"):
                             _pico_log.debug(line)
                             if "QTABLE_LOADED" in line:

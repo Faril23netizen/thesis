@@ -97,15 +97,9 @@ def rule_based_risk(pH, T):
     elif nh3_pct < 10.0: return RISK_WARNING
     else: return RISK_CRITICAL
 
-def get_network_qos(node_id):
-    try:
-        if os.path.exists(NETWORK_STATS):
-            with open(NETWORK_STATS, "r") as f:
-                stats = json.load(f)
-                if node_id in stats.get("nodes", {}):
-                    return stats["nodes"][node_id]
-    except Exception:
-        pass
+def get_network_qos(node_id, bridge=None):
+    if bridge is not None:
+        return bridge.get_node_qos(node_id)
     return {"latency_ms": 0.0, "jitter_ms": 0.0, "bandwidth_mbps": 0.0}
 
 class NodeState:
@@ -217,7 +211,9 @@ def main():
             break
 
         nodes = {} # node_id -> NodeState
-        
+        last_qos_write = 0.0
+        QOS_WRITE_INTERVAL = 3.0  # write callbox_stats.json every 3 seconds
+
         logger.info("PHASE B — FQL learning risk prediction from real Pico data...")
 
         while not _shutdown:
@@ -241,7 +237,7 @@ def main():
                 T  = data["T"]
                 node.real_steps += 1
             
-                qos = get_network_qos(node_id)
+                qos = get_network_qos(node_id, bridge)
                 actual_risk = calculate_actual_risk(pH, T)
                 rb_risk = rule_based_risk(pH, T)
                 fql_risk = node.fql.predict_risk(pH, T)
@@ -346,6 +342,12 @@ def main():
                 }
                 with open(STATE_JSON_FILE, "w") as f:
                     json.dump(state_dump, f)
+
+            # Periodic QoS write so dashboard can read node data
+            now_t = time.time()
+            if now_t - last_qos_write >= QOS_WRITE_INTERVAL:
+                bridge.write_qos_stats(NETWORK_STATS)
+                last_qos_write = now_t
 
             time.sleep(0.01)
 

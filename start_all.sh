@@ -99,28 +99,33 @@ echo -e "${CYAN}   RPi IP: ${WHITE}$RPI_IP${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════ #
-# [3/4] N3IWF INFRASTRUCTURE (background — hanya jika IPsec tersedia)
+# [3/4] N3IWF INFRASTRUCTURE — IPsec Tunnel + Callbox Simulator
 # ═══════════════════════════════════════════════════════════════════════════ #
-echo -e "${YELLOW}━━━ [3/4] N3IWF Infrastructure ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-if [ "$IPSEC_AVAILABLE" = true ]; then
-    PYTHONPATH="$SCRIPT_DIR" python3 "$SCRIPT_DIR/n3iwf/callbox_simulator.py" \
-        > "$LOG_DIR/callbox.log" 2>&1 &
-    echo "$!" >> "$PIDS_FILE"
-    echo -e "${GREEN}✅ Callbox Simulator${NC}  ${GRAY}→ logs/callbox.log${NC}"
-    sleep 3
+echo -e "${YELLOW}━━━ [3/4] N3IWF Infrastructure (IPsec Tunnel + Callbox) ━━━━━━━━━━━━━${NC}"
 
-    PYTHONPATH="$SCRIPT_DIR" python3 "$SCRIPT_DIR/n3iwf/n3iwf_client.py" \
-        > "$LOG_DIR/n3iwf_client.log" 2>&1 &
-    echo "$!" >> "$PIDS_FILE"
-    echo -e "${GREEN}✅ N3IWF Client${NC}  ${GRAY}→ logs/n3iwf_client.log${NC}"
-    sleep 5
-
-    ipsec statusall 2>/dev/null | grep -q "ESTABLISHED" && \
-        echo -e "${GREEN}✅ IPsec Tunnel ESTABLISHED${NC}" || \
-        echo -e "${YELLOW}⚠️  IPsec belum established (lanjut tanpa tunnel)${NC}"
+# Setup N3IWF IPsec tunnel (namespace + veth + AES-256-GCM ESP)
+echo -e "${CYAN}   Menyiapkan IPsec tunnel N3IWF...${NC}"
+if bash "$SCRIPT_DIR/setup_n3iwf_tunnel.sh" setup 2>/dev/null; then
+    # Verifikasi tunnel benar-benar established
+    SA_COUNT=$(ip xfrm state list 2>/dev/null | grep -c "src 172.16.10." || echo 0)
+    if [ "$SA_COUNT" -ge 2 ]; then
+        echo -e "${GREEN}✅ N3IWF IPsec Tunnel ESTABLISHED${NC}  ${GRAY}(AES-256-GCM ESP, $SA_COUNT SAs)${NC}"
+        IPSEC_AVAILABLE=true
+    else
+        echo -e "${YELLOW}⚠️  IPsec tunnel belum established — coba manual: sudo ./setup_n3iwf_tunnel.sh${NC}"
+        IPSEC_AVAILABLE=false
+    fi
 else
-    echo -e "${GRAY}   IPsec tidak tersedia — dilewati${NC}"
+    echo -e "${YELLOW}⚠️  setup_n3iwf_tunnel.sh gagal — lanjut tanpa real tunnel${NC}"
+    IPSEC_AVAILABLE=false
 fi
+
+# Start Callbox Simulator (selalu, karena kelola 5G Core stats + QoS)
+PYTHONPATH="$SCRIPT_DIR" python3 "$SCRIPT_DIR/n3iwf/callbox_simulator.py" \
+    > "$LOG_DIR/callbox.log" 2>&1 &
+echo "$!" >> "$PIDS_FILE"
+echo -e "${GREEN}✅ Callbox Simulator${NC}  ${GRAY}→ logs/callbox.log${NC}"
+sleep 2
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════ #

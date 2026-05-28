@@ -70,17 +70,11 @@ fi
 echo -e "${GREEN}✅ Selesai${NC}"
 echo ""
 
-# [3] Hentikan IPsec
-echo -e "${YELLOW}[3/4] Menghentikan IPsec...${NC}"
-if command -v ipsec &>/dev/null && ipsec status >/dev/null 2>&1; then
-    ipsec stop >/dev/null 2>&1 || true
-    rm -f /var/run/charon.pid /var/run/starter.charon.pid 2>/dev/null || true
-    echo -e "${GREEN}✅ IPsec stopped${NC}"
-else
-    echo -e "${YELLOW}⚠️  IPsec tidak running${NC}"
-fi
-rm -f /tmp/ipsec_callbox.conf /tmp/ipsec_callbox.secrets \
-       /tmp/ipsec_n3iwf.conf  /tmp/ipsec_n3iwf.secrets 2>/dev/null || true
+# [3] Teardown N3IWF IPsec tunnel
+echo -e "${YELLOW}[3/4] Teardown N3IWF IPsec tunnel...${NC}"
+bash "$SCRIPT_DIR/setup_n3iwf_tunnel.sh" stop 2>/dev/null && \
+    echo -e "${GREEN}✅ N3IWF tunnel dibersihkan${NC}" || \
+    echo -e "${YELLOW}⚠️  Tunnel sudah tidak aktif${NC}"
 echo ""
 
 # [4] Verifikasi
