@@ -534,6 +534,7 @@ HTML_TEMPLATE = """
                             type: 'linear',
                             display: true,
                             position: 'left',
+                            beginAtZero: false,
                             ticks: { color: color },
                             grid: { color: '#334155', drawBorder: false },
                             title: { display: true, text: yAxisTitle, color: color }
@@ -561,7 +562,7 @@ HTML_TEMPLATE = """
                     plugins: { legend: { display: false } },
                     scales: {
                         x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 }, grid: { color: '#334155', drawBorder: false } },
-                        y: { type: 'linear', display: true, position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' } }
+                        y: { type: 'linear', display: true, position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' }, beginAtZero: false }
                     }
                 }
             };
