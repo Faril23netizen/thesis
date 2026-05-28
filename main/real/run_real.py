@@ -109,11 +109,21 @@ def get_network_qos(node_id):
     return {"latency_ms": 0.0, "jitter_ms": 0.0, "bandwidth_mbps": 0.0}
 
 class NodeState:
-    def __init__(self, node_id, session_dir, logger):
+    def __init__(self, node_id, base_dir, logger):
         self.node_id = node_id
         self.logger = logger
-        self.dir = os.path.join(session_dir, node_id)
+        
+        session_ts = time.strftime("%Y%m%d_%H%M%S")
+        self.dir = os.path.join(base_dir, node_id, f"session_{session_ts}")
         os.makedirs(self.dir, exist_ok=True)
+        
+        # Attach file log specific to this node's session folder
+        fh = logging.FileHandler(os.path.join(self.dir, "run_real.log"))
+        fh.setLevel(logging.DEBUG)
+        fmt = logging.Formatter("[%(asctime)s][%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+        fh.setFormatter(fmt)
+        logger.addHandler(fh)
+        _setup_pico_monitor_log(self.dir)
         
         self.fql = FQLAgent()
         self.dqn = DQNAgent()
@@ -206,13 +216,6 @@ def main():
         if _shutdown:
             break
 
-        session_ts = time.strftime("%Y%m%d_%H%M%S")
-        session_dir = os.path.join(RESULTS_REAL, f"session_{session_ts}")
-        os.makedirs(session_dir, exist_ok=True)
-        
-        attach_file_loggers(logger, session_dir)
-        _setup_pico_monitor_log(session_dir)
-        
         nodes = {} # node_id -> NodeState
         
         logger.info("PHASE B — FQL learning risk prediction from real Pico data...")
@@ -228,7 +231,8 @@ def main():
             for node_id, data in parsed_results.items():
                 if node_id not in nodes:
                     logger.info(f"Initialize AI Agent & Folder for new node: {node_id}")
-                    nodes[node_id] = NodeState(node_id, session_dir, logger)
+                    # Each node gets its own subfolder: results/hasil_real/Pico_1_Main/session_XXX/
+                    nodes[node_id] = NodeState(node_id, RESULTS_REAL, logger)
                 
                 node = nodes[node_id]
                 node.last_data_time = time.time()
