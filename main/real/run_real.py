@@ -229,10 +229,12 @@ def main():
                 bridge.disconnect()
                 break
 
+            # Track Pico_1_Main values separately for state.json
+            main_pH = main_T = main_actual_risk = None
+
             for node_id, data in parsed_results.items():
                 if node_id not in nodes:
-                    logger.info(f"Initialize AI Agent & Folder for new node: {node_id}")
-                    # Each node gets its own subfolder: results/hasil_real/Pico_1_Main/session_XXX/
+                    logger.info(f"New node connected: {node_id}")
                     nodes[node_id] = NodeState(node_id, RESULTS_REAL, logger)
                 
                 node = nodes[node_id]
@@ -246,6 +248,11 @@ def main():
                 actual_risk = calculate_actual_risk(pH, T)
                 rb_risk = rule_based_risk(pH, T)
                 is_dummy = "Dummy" in node_id
+
+                if not is_dummy:
+                    main_pH = pH
+                    main_T = T
+                    main_actual_risk = actual_risk
 
                 if is_dummy:
                     # ── Dummy nodes: phase by step count, NO training ──────── #
@@ -334,27 +341,29 @@ def main():
                         node.fql.save_qtable(node.qtable_file)
                         node.last_qtable_update = node.real_steps
 
-                if node.real_steps % LOG_INTERVAL == 0:
-                    nh3_pct = nh3_fraction(pH, T) * 100.0
-                    stats = node.fql.get_stats()
-                    logger.info(
-                        f"[{node_id}][{'DUMMY' if is_dummy else 'MAIN'}][{mode}][Step:{node.real_steps:5d}] "
-                        f"pH:{pH:.3f} T:{T:.1f}°C NH3:{nh3_pct:.2f}% | "
-                        f"Risk:{RISK_LABELS[actual_risk]} | "
-                        f"QoS:{qos.get('bandwidth_mbps',0.0):.3f}Mbps {qos.get('latency_ms',0.0):.1f}ms"
-                    )
+                    # Log only Pico_1_Main (dummy tidak ditraining, tidak perlu dilog)
+                    if node.real_steps % LOG_INTERVAL == 0:
+                        nh3_pct = nh3_fraction(pH, T) * 100.0
+                        stats = node.fql.get_stats()
+                        logger.info(
+                            f"[Pico_1_Main][{mode}][Step:{node.real_steps:5d}] "
+                            f"pH:{pH:.3f} T:{T:.1f}°C NH3:{nh3_pct:.2f}% | "
+                            f"Risk:{RISK_LABELS[actual_risk]} | Acc:{stats['avg_accuracy_100']:.2%} | "
+                            f"QoS:{qos.get('bandwidth_mbps',0.0):.3f}Mbps {qos.get('latency_ms',0.0):.1f}ms"
+                        )
             
-            # Dashboard state dump (Using Pico_1_Main as reference for dashboard)
+            # Dashboard state dump — always write connected_picos so callbox_simulator
+            # knows picos are connected even before Pico_1_Main joins
             main_node = nodes.get("Pico_1_Main")
-            if main_node:
+            if main_node and main_pH is not None:
                 stats = main_node.fql.get_stats()
                 state_dump = {
-                    "pH": round(pH, 3), "T": round(T, 2),
-                    "nh3_pct": round(nh3_fraction(pH, T) * 100.0, 2),
-                    "actual_risk": RISK_LABELS[actual_risk],
-                    "rb_risk": RISK_LABELS[rule_based_risk(pH,T)],
-                    "fql_risk": RISK_LABELS[main_node.fql.predict_risk(pH,T)],
-                    "dqn_risk": RISK_LABELS[main_node.dqn.predict_risk(pH,T)] if main_node.dqn_active else "N/A",
+                    "pH": round(main_pH, 3), "T": round(main_T, 2),
+                    "nh3_pct": round(nh3_fraction(main_pH, main_T) * 100.0, 2),
+                    "actual_risk": RISK_LABELS[main_actual_risk],
+                    "rb_risk": RISK_LABELS[rule_based_risk(main_pH, main_T)],
+                    "fql_risk": RISK_LABELS[main_node.fql.predict_risk(main_pH, main_T)],
+                    "dqn_risk": RISK_LABELS[main_node.dqn.predict_risk(main_pH, main_T)] if main_node.dqn_active else "N/A",
                     "phase": "DQN" if main_node.dqn_active else ("FQL" if main_node.fql.converged_sent else "Rule-Based"),
                     "reward": round(stats.get('avg_reward_100', 0.0), 4),
                     "buffer_size": len(main_node.buffer_dqn),
@@ -365,8 +374,20 @@ def main():
                     "dqn_active": main_node.dqn_active,
                     "connected_picos": len(bridge.clients)
                 }
-                with open(STATE_JSON_FILE, "w") as f:
-                    json.dump(state_dump, f)
+            else:
+                # Pico_1_Main belum konek — tulis minimal agar callbox tahu ada pico
+                state_dump = {
+                    "connected_picos": len(bridge.clients),
+                    "phase": "Waiting for Pico 1",
+                    "pH": None, "T": None, "nh3_pct": None,
+                    "actual_risk": "N/A", "rb_risk": "N/A",
+                    "fql_risk": "N/A", "dqn_risk": "N/A",
+                    "reward": 0, "buffer_size": 0, "accuracy": 0,
+                    "real_steps": 0, "fql_eps": 0,
+                    "dqn_ready": False, "dqn_active": False
+                }
+            with open(STATE_JSON_FILE, "w") as f:
+                json.dump(state_dump, f)
 
             # Write real per-node QoS (separate from callbox_simulator's file)
             now_t = time.time()
