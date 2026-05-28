@@ -24,6 +24,7 @@ NETWORK_DIR = os.path.join(BASE_DIR, "results", "network")
 STATE_JSON = os.path.join(RESULTS_DIR, "state.json")
 COMPARISON_CSV = os.path.join(RESULTS_DIR, "comparison.csv")
 CALLBOX_STATS = os.path.join(NETWORK_DIR, "callbox_stats.json")
+NODE_QOS_FILE = os.path.join(NETWORK_DIR, "node_qos.json")
 N3IWF_STATUS = os.path.join(NETWORK_DIR, "n3iwf_status.json")
 
 # Ensure directories exist
@@ -728,17 +729,17 @@ HTML_TEMPLATE = """
                             // Pico 1
                             latencyChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"]?.latency_ms ?? null);
                             jitterChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"]?.jitter_ms ?? null);
-                            bandwidthChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"] ? (net.nodes["Pico_1_Main"].bandwidth_mbps * 1000) : null);
-                            
+                            bandwidthChart.data.datasets[0].data.push(net.nodes["Pico_1_Main"] ? +(net.nodes["Pico_1_Main"].bandwidth_mbps * 1000).toFixed(2) : null);
+
                             // Pico 2
                             latencyChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"]?.latency_ms ?? null);
                             jitterChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"]?.jitter_ms ?? null);
-                            bandwidthChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"] ? (net.nodes["Pico_2_Dummy"].bandwidth_mbps * 1000) : null);
-                            
+                            bandwidthChart.data.datasets[1].data.push(net.nodes["Pico_2_Dummy"] ? +(net.nodes["Pico_2_Dummy"].bandwidth_mbps * 1000).toFixed(2) : null);
+
                             // Pico 3
                             latencyChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"]?.latency_ms ?? null);
                             jitterChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"]?.jitter_ms ?? null);
-                            bandwidthChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"] ? (net.nodes["Pico_3_Dummy"].bandwidth_mbps * 1000) : null);
+                            bandwidthChart.data.datasets[2].data.push(net.nodes["Pico_3_Dummy"] ? +(net.nodes["Pico_3_Dummy"].bandwidth_mbps * 1000).toFixed(2) : null);
                         } else {
                             // Fallback
                             latencyChart.data.datasets[0].data.push(net.avg_latency_ms || 0);
@@ -921,18 +922,46 @@ def get_network():
         
         with open(CALLBOX_STATS, 'r') as f:
             stats = json.load(f)
-        
+
+        # Merge real per-node QoS from node_qos.json (written by wifi_bridge)
+        real_nodes = {}
+        if os.path.exists(NODE_QOS_FILE):
+            try:
+                nq_age = time.time() - os.path.getmtime(NODE_QOS_FILE)
+                if nq_age < 30:
+                    with open(NODE_QOS_FILE, 'r') as f:
+                        nq = json.load(f)
+                    real_nodes = nq.get('nodes', {})
+            except Exception:
+                pass
+
+        # Use real measurements if available; fallback to callbox_simulator OU data
+        nodes = real_nodes if real_nodes else stats.get('nodes', {})
+
+        # Derive summary stats from per-node real data when available
+        if real_nodes:
+            lats = [v.get('latency_ms', 0) for v in real_nodes.values() if v.get('latency_ms', 0) > 0]
+            jits = [v.get('jitter_ms', 0) for v in real_nodes.values() if v.get('jitter_ms', 0) > 0]
+            bws  = [v.get('bandwidth_mbps', 0) for v in real_nodes.values() if v.get('bandwidth_mbps', 0) > 0]
+            avg_latency_ms = round(sum(lats) / len(lats), 2) if lats else stats.get('avg_latency_ms', 0)
+            avg_jitter_ms  = round(sum(jits) / len(jits), 3) if jits else stats.get('jitter_ms', 0)
+            throughput     = round(sum(bws), 4) if bws else stats.get('current_bandwidth_mbps', 0)
+        else:
+            avg_latency_ms = stats.get('avg_latency_ms', 0)
+            avg_jitter_ms  = stats.get('jitter_ms', 0)
+            throughput     = stats.get('current_bandwidth_mbps', 0)
+
         # Calculate packet loss rate
         packets_sent = stats.get('packets_sent', 0)
         packets_dropped = stats.get('packets_dropped', 0)
         packet_loss_rate = (packets_dropped / max(packets_sent, 1)) * 100 if packets_sent > 0 else 0
-        
+
         return jsonify({
             "ipsec_status": stats.get('ipsec_status', 'UNKNOWN'),
-            "avg_latency_ms": stats.get('avg_latency_ms', 0),
-            "jitter_ms": stats.get('jitter_ms', 0),
+            "avg_latency_ms": avg_latency_ms,
+            "jitter_ms": avg_jitter_ms,
             "packet_loss_rate": packet_loss_rate,
-            "throughput": stats.get('current_bandwidth_mbps', 0),
+            "throughput": throughput,
             "packets_sent": packets_sent,
             "packets_dropped": packets_dropped,
             "uptime": stats.get('uptime', 0),
@@ -942,7 +971,7 @@ def get_network():
             "amf_ues": stats.get('amf_ues', 0),
             "smf_sessions": stats.get('smf_sessions', 0),
             "upf_packets": stats.get('upf_packets', 0),
-            "nodes": stats.get('nodes', {})
+            "nodes": nodes
         })
     
     except json.JSONDecodeError:

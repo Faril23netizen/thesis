@@ -31,6 +31,7 @@ except ImportError as e:
 BASE_DIR        = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RESULTS_REAL    = os.path.join(BASE_DIR, "results", "hasil_real")
 NETWORK_STATS   = os.path.join(BASE_DIR, "results", "network", "callbox_stats.json")
+NODE_QOS_FILE   = os.path.join(BASE_DIR, "results", "network", "node_qos.json")
 STATE_JSON_FILE = os.path.join(RESULTS_REAL, "state.json")
 
 # Hyperparameters
@@ -212,7 +213,7 @@ def main():
 
         nodes = {} # node_id -> NodeState
         last_qos_write = 0.0
-        QOS_WRITE_INTERVAL = 3.0  # write callbox_stats.json every 3 seconds
+        QOS_WRITE_INTERVAL = 3.0  # write node_qos.json every 3 seconds
 
         logger.info("PHASE B — FQL learning risk prediction from real Pico data...")
 
@@ -343,10 +344,10 @@ def main():
                 with open(STATE_JSON_FILE, "w") as f:
                     json.dump(state_dump, f)
 
-            # Periodic QoS write so dashboard can read node data
+            # Write real per-node QoS (separate from callbox_simulator's file)
             now_t = time.time()
             if now_t - last_qos_write >= QOS_WRITE_INTERVAL:
-                bridge.write_qos_stats(NETWORK_STATS)
+                bridge.write_qos_stats(NODE_QOS_FILE)
                 last_qos_write = now_t
 
             time.sleep(0.01)

@@ -68,15 +68,17 @@ class _NodeQoS:
             while self._bytes_window and self._bytes_window[0][0] < cutoff:
                 self._bytes_window.pop(0)
 
-            # Bandwidth (Mbps)
+            # Bandwidth (Mbps) with EMA to smooth spikes
             if len(self._bytes_window) > 1:
                 total = sum(b for _, b in self._bytes_window)
                 elapsed = self._bytes_window[-1][0] - self._bytes_window[0][0]
-                self.bandwidth_mbps = (total * 8 / 1e6) / elapsed if elapsed > 0 else 0.0
+                raw_bw = (total * 8 / 1e6) / elapsed if elapsed > 0 else 0.0
+                self.bandwidth_mbps = 0.3 * raw_bw + 0.7 * self.bandwidth_mbps
 
-            # Jitter = stddev of inter-arrival times in ms
+            # Jitter = stddev of inter-arrival times in ms with EMA
             if len(self._inter_arrivals) >= 3:
-                self.jitter_ms = statistics.stdev(self._inter_arrivals) * 1000.0
+                raw_jitter = statistics.stdev(self._inter_arrivals) * 1000.0
+                self.jitter_ms = 0.25 * raw_jitter + 0.75 * self.jitter_ms
 
     def update_latency(self, ip: str) -> None:
         """Ping the Pico IP to measure round-trip latency (blocking — run in thread)."""

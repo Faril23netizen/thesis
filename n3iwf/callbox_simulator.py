@@ -62,7 +62,7 @@ stats = {
     "active_tunnels": 0,
     "avg_latency_ms": 0,
     "jitter_ms": 0,
-    "current_bandwidth_mbps": BANDWIDTH_MBPS,
+    "current_bandwidth_mbps": 0,
     "ipsec_status": "DOWN",
     "amf_status": "RUNNING",
     "smf_status": "RUNNING",
@@ -70,12 +70,29 @@ stats = {
     "nodes": {}
 }
 
-node_latency_history = {
-    "Pico_1_Main": [],
-    "Pico_2_Dummy": [],
-    "Pico_3_Dummy": []
+# Per-node smooth state (Ornstein-Uhlenbeck random walk)
+# Each entry: {"latency_ms", "jitter_ms", "bandwidth_mbps"}
+_node_smooth = {
+    "Pico_1_Main":  {"latency_ms": 8.0,  "jitter_ms": 1.2, "bandwidth_mbps": 0.024},
+    "Pico_2_Dummy": {"latency_ms": 10.0, "jitter_ms": 1.5, "bandwidth_mbps": 0.020},
+    "Pico_3_Dummy": {"latency_ms": 12.0, "jitter_ms": 1.8, "bandwidth_mbps": 0.018},
+}
+# Target (mean) values each node naturally drifts toward
+_node_target = {
+    "Pico_1_Main":  {"latency_ms": 8.0,  "jitter_ms": 1.2, "bandwidth_mbps": 0.024},
+    "Pico_2_Dummy": {"latency_ms": 10.0, "jitter_ms": 1.5, "bandwidth_mbps": 0.020},
+    "Pico_3_Dummy": {"latency_ms": 12.0, "jitter_ms": 1.8, "bandwidth_mbps": 0.018},
 }
 stats_lock = threading.Lock()
+
+
+def _ou_step(current, mean, theta=0.25, sigma=0.08):
+    """
+    Ornstein-Uhlenbeck step: smooth mean-reverting random walk.
+    theta = reversion speed (0 = no reversion, 1 = instant)
+    sigma = noise level
+    """
+    return current + theta * (mean - current) + sigma * mean * random.gauss(0, 1)
 
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -375,62 +392,52 @@ class CallboxSimulator:
 
                 # Simulate network traffic if IPsec is established
                 if stats["ipsec_status"] == "ESTABLISHED":
-                    # Simulate latency (10-15ms with jitter)
-                    current_lat = BASE_LATENCY_MS + random.uniform(-JITTER_MS, JITTER_MS)
-                    
-                    # Simulate packet traffic (increase over time)
-                    packets_per_second = 10  # Simulate 10 packets/sec
-                    stats["packets_sent"] += packets_per_second
-                    stats["packets_received"] += packets_per_second
-                    self.upf.packet_count += packets_per_second
-                    
-                    # Simulate packet loss (1%)
+                    # Packet counters (realistic IoT: ~1 packet/node/2s)
+                    packets_per_tick = max(1, connected_picos)
+                    stats["packets_sent"] += packets_per_tick
+                    stats["packets_received"] += packets_per_tick
+                    self.upf.packet_count += packets_per_tick
                     if random.random() < PACKET_LOSS_RATE:
                         stats["packets_dropped"] += 1
-                    
-                    # Update per-node latency and jitter based on real connections
-                    total_bw = 0.0
-                    node_configs = {}
-                    if connected_picos >= 1:
-                        node_configs["Pico_1_Main"] = {"base_lat": 12, "bw_base": 0.024} # 24 Kbps
-                    if connected_picos >= 2:
-                        node_configs["Pico_2_Dummy"] = {"base_lat": 15, "bw_base": 0.028} # 28 Kbps
-                    if connected_picos >= 3:
-                        node_configs["Pico_3_Dummy"] = {"base_lat": 18, "bw_base": 0.022} # 22 Kbps
-                    
-                    # Reset stats nodes so old disconnected ones don't linger
-                    stats["nodes"] = {}
 
-                    for node_id, cfg in node_configs.items():
-                        # Generate node-specific metrics
-                        n_lat = cfg["base_lat"] + random.uniform(-JITTER_MS, JITTER_MS)
-                        n_bw = cfg["bw_base"] + random.uniform(-0.005, 0.005)
-                        total_bw += n_bw
-                        
-                        history = node_latency_history[node_id]
-                        history.append(n_lat)
-                        if len(history) > 20:
-                            history.pop(0)
-                            
-                        avg_lat = sum(history) / len(history) if len(history) > 0 else 0
-                        
-                        if len(history) > 1:
-                            diffs = [abs(history[i] - history[i-1]) for i in range(1, len(history))]
-                            avg_jit = sum(diffs) / len(diffs)
-                        else:
-                            avg_jit = 0.0
-                            
+                    # Active node list
+                    active_nodes = []
+                    if connected_picos >= 1: active_nodes.append("Pico_1_Main")
+                    if connected_picos >= 2: active_nodes.append("Pico_2_Dummy")
+                    if connected_picos >= 3: active_nodes.append("Pico_3_Dummy")
+
+                    # Smooth random walk (Ornstein-Uhlenbeck) per node
+                    total_bw = 0.0
+                    stats["nodes"] = {}
+                    for node_id in active_nodes:
+                        s = _node_smooth[node_id]
+                        t = _node_target[node_id]
+
+                        # Step each metric smoothly toward its target with noise
+                        s["latency_ms"]   = max(2.0,  min(80.0,  _ou_step(s["latency_ms"],   t["latency_ms"],   theta=0.20, sigma=0.10)))
+                        s["jitter_ms"]    = max(0.1,  min(10.0,  _ou_step(s["jitter_ms"],    t["jitter_ms"],    theta=0.25, sigma=0.12)))
+                        s["bandwidth_mbps"] = max(0.005, min(0.15, _ou_step(s["bandwidth_mbps"], t["bandwidth_mbps"], theta=0.18, sigma=0.08)))
+
+                        total_bw += s["bandwidth_mbps"]
                         stats["nodes"][node_id] = {
-                            "latency_ms": round(avg_lat, 1),
-                            "jitter_ms": round(avg_jit, 2),
-                            "bandwidth_mbps": round(n_bw, 3)
+                            "latency_ms":    round(s["latency_ms"],    2),
+                            "jitter_ms":     round(s["jitter_ms"],     3),
+                            "bandwidth_mbps": round(s["bandwidth_mbps"], 4),
                         }
-                    
-                    # Update global averages for fallback
-                    if len(node_configs) > 0:
-                        stats["avg_latency_ms"] = round(sum([stats["nodes"][n]["latency_ms"] for n in node_configs]) / len(node_configs), 1)
-                        stats["jitter_ms"] = round(sum([stats["nodes"][n]["jitter_ms"] for n in node_configs]) / len(node_configs), 2)
-                        stats["current_bandwidth_mbps"] = round(total_bw, 3)
+
+                    # Global averages (shown in status cards)
+                    if active_nodes:
+                        stats["avg_latency_ms"] = round(
+                            sum(stats["nodes"][n]["latency_ms"] for n in active_nodes) / len(active_nodes), 2)
+                        stats["jitter_ms"] = round(
+                            sum(stats["nodes"][n]["jitter_ms"] for n in active_nodes) / len(active_nodes), 3)
+                        stats["current_bandwidth_mbps"] = round(total_bw, 4)
+                else:
+                    # No nodes connected — zero out metrics cleanly
+                    stats["nodes"] = {}
+                    stats["avg_latency_ms"] = 0
+                    stats["jitter_ms"] = 0
+                    stats["current_bandwidth_mbps"] = 0
             
             time.sleep(1)
     
