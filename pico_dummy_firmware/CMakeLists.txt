@@ -12,7 +12,7 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico_w CACHE STRING "Board type")
+set(PICO_BOARD pico_2w CACHE STRING "Board type")
 
 cmake_minimum_required(VERSION 3.13)
 
@@ -36,6 +36,9 @@ target_link_libraries(dummy_node
     pico_stdlib
     pico_cyw43_arch_lwip_threadsafe_background
 )
+
+# Add include directory so lwipopts.h can be found
+target_include_directories(dummy_node PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 # Enable usb output, disable uart output
 pico_enable_stdio_usb(dummy_node 1)
