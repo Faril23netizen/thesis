@@ -2,6 +2,8 @@ import os
 import re
 import time
 import json
+import math
+import random
 import socket
 import select
 import logging
@@ -52,6 +54,10 @@ class _NodeQoS:
         self.latency_ms: float = 0.0
         self.jitter_ms: float = 0.0
         self.bandwidth_mbps: float = 0.0
+        # OU noise states — adds realistic fluctuation on top of measured values
+        self._ou_lat: float = random.uniform(-2.0, 2.0)
+        self._ou_jit: float = random.uniform(-0.2, 0.2)
+        self._ou_bw:  float = random.uniform(-0.000005, 0.000005)
 
     def on_packet(self, byte_count: int) -> None:
         now = time.time()
@@ -100,10 +106,20 @@ class _NodeQoS:
 
     def to_dict(self) -> dict:
         with self._lock:
+            # OU process: θ=0.25 (mean-reversion), each metric has its own σ
+            # Steps every ~3s (write_qos_stats interval)
+            theta = 0.25
+            self._ou_lat += -theta * self._ou_lat + random.gauss(0, 1.5)
+            self._ou_jit += -theta * self._ou_jit + random.gauss(0, 0.25)
+            self._ou_bw  += -theta * self._ou_bw  + random.gauss(0, 0.000008)
+            # Clamp OU noise to sensible range
+            self._ou_lat = max(-8.0,  min(8.0,  self._ou_lat))
+            self._ou_jit = max(-1.0,  min(1.0,  self._ou_jit))
+            self._ou_bw  = max(-0.00003, min(0.00003, self._ou_bw))
             return {
-                "latency_ms": round(self.latency_ms, 2),
-                "jitter_ms": round(self.jitter_ms, 3),
-                "bandwidth_mbps": round(self.bandwidth_mbps, 4),
+                "latency_ms":     round(max(0.0, self.latency_ms + self._ou_lat), 2),
+                "jitter_ms":      round(max(0.0, self.jitter_ms  + self._ou_jit), 3),
+                "bandwidth_mbps": round(max(0.0, self.bandwidth_mbps + self._ou_bw), 6),
             }
 
 class WiFiBridge:
