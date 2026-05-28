@@ -147,23 +147,51 @@ static bool tcp_client_open() {
     return true;
 }
 
+static void led_blink(int times, int on_ms, int off_ms) {
+    for (int i = 0; i < times; i++) {
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+        sleep_ms(on_ms);
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+        sleep_ms(off_ms);
+    }
+}
+
 int main() {
     stdio_init_all();
-    
+    sleep_ms(2000); // wait for USB serial to settle
+
     printf("\n=== DUMMY NODE (QoS Traffic Generator) ===\n");
-    
+    printf("Board: Pico 2W (RP2350)\n");
+
     if (cyw43_arch_init()) {
-        printf("Wi-Fi init failed\n");
-        return -1;
+        printf("Wi-Fi init FAILED - check firmware target is pico2_w\n");
+        while (true) { led_blink(5, 100, 100); sleep_ms(500); }
     }
-    
+
     cyw43_arch_enable_sta_mode();
-    printf("Connecting to Wi-Fi...\n");
-    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000)) {
-        printf("Failed to connect.\n");
-        return -1;
+
+    // Retry WiFi connect indefinitely (slow blink while trying)
+    int attempt = 0;
+    while (true) {
+        attempt++;
+        printf("[%d] Connecting to '%s'...\n", attempt, WIFI_SSID);
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+
+        int rc = cyw43_arch_wifi_connect_timeout_ms(
+            WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 15000);
+
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+
+        if (rc == 0) {
+            break; // connected
+        }
+        printf("[%d] Failed (rc=%d), retry in 5s...\n", attempt, rc);
+        led_blink(3, 200, 200); // 3 quick blinks = failed, retrying
+        sleep_ms(5000);
     }
+
     printf("Connected! IP: %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
+    led_blink(5, 100, 100); // 5 quick blinks = success!
     
     uint32_t last_sample_time = to_ms_since_boot(get_absolute_time());
     
