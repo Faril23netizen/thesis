@@ -334,7 +334,7 @@ class CallboxSimulator:
         self.smf.create_session("n3iwf-client", "session-001")
         
         # Start monitoring threads
-        threading.Thread(target=self._monitor_ipsec, daemon=True).start()
+        # NOTE: _monitor_ipsec dihapus — status IPsec ditentukan dari connected_picos (state.json)
         threading.Thread(target=self._update_stats, daemon=True).start()
         threading.Thread(target=self._save_stats, daemon=True).start()
         
