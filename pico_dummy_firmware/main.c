@@ -178,7 +178,7 @@ int main() {
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
 
         int rc = cyw43_arch_wifi_connect_timeout_ms(
-            WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_MIXED_PSK, 20000);
+            WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 15000);
 
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
 
