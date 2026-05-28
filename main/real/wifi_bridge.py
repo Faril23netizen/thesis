@@ -40,8 +40,9 @@ class WiFiBridge:
         self.port = port
         self.server_socket = None
         self.clients = {}  # socket -> buffer string
-        self.node_ids = {} # socket -> "Pico_1_Main", etc.
-        self.node_counter = 0
+        self.node_ids = {} # socket -> node_name
+        self.ip_to_name = {} # IP -> node_name for reconnect stability
+        self.dummy_counter = 2 # Starts at 2
 
     # ── Connection ───────────────────────────────────────────────────────── #
 
@@ -68,10 +69,8 @@ class WiFiBridge:
                     client, addr = self.server_socket.accept()
                     client.setblocking(False)
                     self.clients[client] = ""
-                    self.node_counter += 1
-                    node_name = "Pico_1_Main" if self.node_counter == 1 else f"Pico_{self.node_counter}_Dummy"
-                    self.node_ids[client] = node_name
-                    logger.info(f"Connected to {node_name} at {addr}")
+                    self.node_ids[client] = "Pending"
+                    logger.info(f"Connected to {addr[0]}, waiting for payload to identify...")
                     return True
         except KeyboardInterrupt:
             logger.info("Connection wait interrupted by user.")
@@ -83,7 +82,8 @@ class WiFiBridge:
             client.close()
         self.clients.clear()
         self.node_ids.clear()
-        self.node_counter = 0
+        self.ip_to_name.clear()
+        self.dummy_counter = 2
         
         if self.server_socket:
             self.server_socket.close()
@@ -126,10 +126,8 @@ class WiFiBridge:
                 client, addr = self.server_socket.accept()
                 client.setblocking(False)
                 self.clients[client] = ""
-                self.node_counter += 1
-                node_name = "Pico_1_Main" if self.node_counter == 1 else f"Pico_{self.node_counter}_Dummy"
-                self.node_ids[client] = node_name
-                logger.info(f"New Multi-Node connection established: {node_name} from {addr}")
+                self.node_ids[client] = "Pending"
+                logger.info(f"New connection from {addr[0]}, waiting for payload to identify...")
             else:
                 # Existing client sending data
                 try:
@@ -137,8 +135,8 @@ class WiFiBridge:
                     if not data:
                         # Client disconnected
                         addr = sock.getpeername()
-                        node_name = self.node_ids.get(sock, "Unknown")
-                        logger.warning(f"Client {node_name} ({addr}) disconnected.")
+                        node_name = self.node_ids.get(sock, "Pending")
+                        logger.warning(f"Client {node_name} ({addr[0]}) disconnected.")
                         del self.clients[sock]
                         del self.node_ids[sock]
                         sock.close()
@@ -147,7 +145,7 @@ class WiFiBridge:
                 except (socket.timeout, BlockingIOError):
                     continue
                 except OSError as e:
-                    node_name = self.node_ids.get(sock, "Unknown")
+                    node_name = self.node_ids.get(sock, "Pending")
                     logger.warning(f"OS Error on {node_name}: {e}")
                     del self.clients[sock]
                     del self.node_ids[sock]
@@ -157,7 +155,9 @@ class WiFiBridge:
         # Process buffered lines for all clients
         parsed_results = {}
         for sock in list(self.clients.keys()):
-            node_name = self.node_ids.get(sock, "Unknown")
+            ip = sock.getpeername()[0]
+            node_name = self.node_ids.get(sock, "Pending")
+            
             while "\n" in self.clients[sock]:
                 line, self.clients[sock] = self.clients[sock].split("\n", 1)
                 line = line.strip()
@@ -165,6 +165,25 @@ class WiFiBridge:
                 if line.startswith(">") or line.startswith("#") or line.startswith("ACK:"):
                     _pico_log.debug(line)
                     continue
+
+                if node_name == "Pending":
+                    if line.startswith("DATA:"):
+                        node_name = "Pico_1_Main"
+                        self.ip_to_name[ip] = node_name
+                        self.node_ids[sock] = node_name
+                        logger.info(f"Identified {ip} as {node_name}")
+                    elif line.startswith("DUMMY:"):
+                        if ip in self.ip_to_name:
+                            node_name = self.ip_to_name[ip]
+                        else:
+                            node_name = f"Pico_{self.dummy_counter}_Dummy"
+                            self.dummy_counter += 1
+                            self.ip_to_name[ip] = node_name
+                        self.node_ids[sock] = node_name
+                        logger.info(f"Identified {ip} as {node_name}")
+
+                if node_name == "Pending":
+                    continue # Ignore garbled lines before identification
 
                 # Parse both DATA and DUMMY payloads identically for AI/Storage
                 m = None
