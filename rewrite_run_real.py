@@ -1,12 +1,21 @@
+import os
+import re
 
-"""
+with open("main/real/run_real.py.bak", "r", encoding="utf-8") as f:
+    code = f.read()
+
+# We will just write a completely new run_real.py that incorporates the NodeState architecture.
+# This is safer than regex replacing a 750 line file.
+
+new_code = """
+\"\"\"
 Main FQL — Raspberry Pi 4 (Multi-Node Monitoring System)
 =================================================
 NH3 Risk Monitoring System - NO AERATOR CONTROL
 
 Progressive Learning: Rule-Based -> FQL -> DQN
 Multi-Node Support: Dynamically creates separate Agent & Session for each Pico
-"""
+\"\"\"
 
 import csv
 import json
@@ -354,3 +363,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
+
+with open("main/real/run_real.py", "w", encoding="utf-8") as f:
+    f.write(new_code)
+
+print("Berhasil membuat run_real.py baru yang multi-node!")

@@ -40,7 +40,8 @@ class WiFiBridge:
         self.port = port
         self.server_socket = None
         self.clients = {}  # socket -> buffer string
-        self.main_client = None  # The node sending real DATA
+        self.node_ids = {} # socket -> "Pico_1_Main", etc.
+        self.node_counter = 0
 
     # ── Connection ───────────────────────────────────────────────────────── #
 
@@ -67,7 +68,10 @@ class WiFiBridge:
                     client, addr = self.server_socket.accept()
                     client.setblocking(False)
                     self.clients[client] = ""
-                    logger.info(f"Connected to Pico WH at {addr}")
+                    self.node_counter += 1
+                    node_name = "Pico_1_Main" if self.node_counter == 1 else f"Pico_{self.node_counter}_Dummy"
+                    self.node_ids[client] = node_name
+                    logger.info(f"Connected to {node_name} at {addr}")
                     return True
         except KeyboardInterrupt:
             logger.info("Connection wait interrupted by user.")
@@ -78,7 +82,8 @@ class WiFiBridge:
         for client in list(self.clients.keys()):
             client.close()
         self.clients.clear()
-        self.main_client = None
+        self.node_ids.clear()
+        self.node_counter = 0
         
         if self.server_socket:
             self.server_socket.close()
@@ -98,23 +103,22 @@ class WiFiBridge:
 
     # ── Read data ────────────────────────────────────────────────────────── #
 
-    def read_data_line(self) -> dict | None:
+    def read_data_line(self) -> dict:
         """
         Polls all connected sockets.
         Accepts new clients seamlessly (Node 2+).
         Reads lines from all clients.
-        If DATA: comes from main_client, parses and returns it to RL Agent.
-        If DUMMY: comes from dummy clients, logs it to prove QoS traffic.
+        Returns a dict mapping node_id to their parsed data.
         """
         if not self.server_socket:
-            return None
+            return {}
 
         # Prepare sockets to read
         sockets_to_monitor = [self.server_socket] + list(self.clients.keys())
         try:
             read_sockets, _, _ = select.select(sockets_to_monitor, [], [], 0.05)
         except OSError:
-            return None
+            return {}
 
         for sock in read_sockets:
             if sock == self.server_socket:
@@ -122,7 +126,10 @@ class WiFiBridge:
                 client, addr = self.server_socket.accept()
                 client.setblocking(False)
                 self.clients[client] = ""
-                logger.info(f"New Multi-Node connection established from {addr}")
+                self.node_counter += 1
+                node_name = "Pico_1_Main" if self.node_counter == 1 else f"Pico_{self.node_counter}_Dummy"
+                self.node_ids[client] = node_name
+                logger.info(f"New Multi-Node connection established: {node_name} from {addr}")
             else:
                 # Existing client sending data
                 try:
@@ -130,25 +137,27 @@ class WiFiBridge:
                     if not data:
                         # Client disconnected
                         addr = sock.getpeername()
-                        logger.warning(f"Client {addr} disconnected.")
-                        if sock == self.main_client:
-                            self.main_client = None
+                        node_name = self.node_ids.get(sock, "Unknown")
+                        logger.warning(f"Client {node_name} ({addr}) disconnected.")
                         del self.clients[sock]
+                        del self.node_ids[sock]
                         sock.close()
                         continue
                     self.clients[sock] += data
                 except (socket.timeout, BlockingIOError):
                     continue
                 except OSError as e:
-                    if sock == self.main_client:
-                        self.main_client = None
+                    node_name = self.node_ids.get(sock, "Unknown")
+                    logger.warning(f"OS Error on {node_name}: {e}")
                     del self.clients[sock]
+                    del self.node_ids[sock]
                     sock.close()
                     continue
 
         # Process buffered lines for all clients
-        parsed_data = None
+        parsed_results = {}
         for sock in list(self.clients.keys()):
+            node_name = self.node_ids.get(sock, "Unknown")
             while "\n" in self.clients[sock]:
                 line, self.clients[sock] = self.clients[sock].split("\n", 1)
                 line = line.strip()
@@ -157,27 +166,24 @@ class WiFiBridge:
                     _pico_log.debug(line)
                     continue
 
+                # Parse both DATA and DUMMY payloads identically for AI/Storage
+                m = None
                 if line.startswith("DATA:"):
-                    # Assign the first node that sends DATA as the main_client (sensor node)
-                    if self.main_client is None:
-                        self.main_client = sock
-                        logger.info("Main Sensor Node registered.")
-                    
-                    if sock == self.main_client:
-                        m = _DATA_RE.match(line)
-                        if m:
-                            parsed_data = {
-                                "pH": int(m.group(1)) / 1000.0,
-                                "T": int(m.group(2)) / 100.0,
-                                "risk": int(m.group(3)),
-                                "latency_ms": 0.0
-                            }
-                
+                    m = _DATA_RE.match(line)
                 elif line.startswith("DUMMY:"):
-                    # Dummy payload from Node 2+ (Purely for QoS traffic testing)
-                    _pico_log.debug(f"[QoS Traffic] Node {sock.getpeername()}: {line}")
+                    m = _DUMMY_RE.match(line)
+                    
+                if m:
+                    parsed_results[node_name] = {
+                        "pH": int(m.group(1)) / 1000.0,
+                        "T": int(m.group(2)) / 100.0,
+                        "risk": int(m.group(3)),
+                        "latency_ms": 0.0,
+                        "jitter_ms": 0.0,
+                        "bandwidth_mbps": 0.0
+                    }
 
-        return parsed_data
+        return parsed_results
 
     # ── Send Q-table ─────────────────────────────────────────────────────── #
 
