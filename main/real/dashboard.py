@@ -450,7 +450,7 @@ HTML_TEMPLATE = """
             </div>
 
             <!-- 5G Core Status -->
-            <div class="grid">
+            <div class="grid" style="margin-top: 40px;">
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">📡 5G Core Components</div>
@@ -548,21 +548,16 @@ HTML_TEMPLATE = """
                 data: {
                     labels: [],
                     datasets: [
-                        { label: 'Pico 1 (Main)', data: [], borderColor: '#ef4444', backgroundColor: '#ef444420', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
-                        { label: 'Pico 2 (Dummy)', data: [], borderColor: '#3b82f6', backgroundColor: '#3b82f620', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
-                        { label: 'Pico 3 (Dummy)', data: [], borderColor: '#10b981', backgroundColor: '#10b98120', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 }
+                        { label: 'Pico 1', data: [], borderColor: '#ef4444', backgroundColor: '#ef444420', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
+                        { label: 'Pico 2', data: [], borderColor: '#3b82f6', backgroundColor: '#3b82f620', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
+                        { label: 'Pico 3', data: [], borderColor: '#10b981', backgroundColor: '#10b98120', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: { color: '#e2e8f0', boxWidth: 12, font: { size: 11 } }
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
                         x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 }, grid: { color: '#334155', drawBorder: false } },
                         y: { type: 'linear', display: true, position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' } }
@@ -594,10 +589,10 @@ HTML_TEMPLATE = """
                 }
             });
 
-            // Network charts show all Picos simultaneously (legend shows colors)
+            // Network charts: show only the selected Pico's line
             [latencyChart, jitterChart, bandwidthChart].forEach(chart => {
                 chart.data.datasets.forEach(ds => {
-                    ds.hidden = false;
+                    ds.hidden = (ds.label !== picoName);
                 });
                 chart.update();
             });

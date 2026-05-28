@@ -50,6 +50,10 @@ FQL_MIN_REAL_STEPS     = 1000
 QTABLE_UPDATE_INTERVAL = 200
 FQL_RETRY_INTERVAL     = 10.0
 
+# Dummy node phase thresholds (step-count based, no actual training)
+DUMMY_FQL_STEPS = 10000
+DUMMY_DQN_STEPS = 40000
+
 _shutdown = False
 
 def signal_handler(sig, frame):
@@ -241,83 +245,103 @@ def main():
                 qos = get_network_qos(node_id, bridge)
                 actual_risk = calculate_actual_risk(pH, T)
                 rb_risk = rule_based_risk(pH, T)
-                fql_risk = node.fql.predict_risk(pH, T)
-                dqn_risk = node.dqn.predict_risk(pH, T) if node.dqn_active and node.dqn.ready else -1
-            
-                node.fql.update(pH, T, fql_risk, actual_risk)
-            
-                mode = "DQN" if node.dqn_active else ("FQL" if node.fql.converged_sent else "RB")
-                node.log_comparison(pH, T, mode, dqn_risk, fql_risk, actual_risk, rb_risk, qos)
-            
-                node.append_transition(s=[pH, T], a=actual_risk, r=1.0 if fql_risk==actual_risk else -1.0, s_next=[pH, T])
+                is_dummy = "Dummy" in node_id
 
-                if len(node.buffer_dqn) % BUFFER_AUTOSAVE == 0 and len(node.buffer_dqn) > 0:
-                    node.save_buffer()
+                if is_dummy:
+                    # ── Dummy nodes: phase by step count, NO training ──────── #
+                    if node.real_steps < DUMMY_FQL_STEPS:
+                        mode = "RB"
+                        fql_risk = rb_risk
+                        dqn_risk = -1
+                    elif node.real_steps < DUMMY_DQN_STEPS:
+                        mode = "FQL"
+                        fql_risk = node.fql.predict_risk(pH, T)
+                        dqn_risk = -1
+                    else:
+                        mode = "DQN"
+                        fql_risk = node.fql.predict_risk(pH, T)
+                        dqn_risk = node.dqn.predict_risk(pH, T) if node.dqn.ready else -1
+                    node.log_comparison(pH, T, mode, dqn_risk, fql_risk, actual_risk, rb_risk, qos)
 
-                fql_real_elapsed = (node.real_steps - node.fql_mode_start) if node.fql_mode_start else 0
+                else:
+                    # ── Pico_1_Main: full progressive AI pipeline ─────────── #
+                    fql_risk = node.fql.predict_risk(pH, T)
+                    dqn_risk = node.dqn.predict_risk(pH, T) if node.dqn_active and node.dqn.ready else -1
 
-                # PHASE D: Train DQN
-                if (len(node.buffer_dqn) >= DQN_BUFFER_READY and node.fql.converged_sent 
-                    and not node.dqn_model_ready and not node.dqn_ready_logged):
-                    node.dqn_ready_logged = True
-                    logger.info(f"[{node_id}] PHASE D — DQN training: {len(node.buffer_dqn)} transitions")
-                    node.save_buffer()
-                    try:
-                        from dqn.train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
-                        if TORCH_AVAILABLE:
-                            train_pytorch(node.buffer_dqn, DQN_TRAIN_EPOCHS, node.dqn_model_file)
-                        else:
-                            train_numpy(node.buffer_dqn, DQN_TRAIN_EPOCHS, node.dqn_model_file)
-                        if node.dqn.load(node.dqn_model_file):
-                            node.dqn_model_ready = True
-                            node.last_dqn_retrain = node.real_steps
-                            logger.info(f"[{node_id}] DQN ready.")
-                    except Exception as e:
-                        logger.error(f"[{node_id}] DQN training failed: {e}")
+                    node.fql.update(pH, T, fql_risk, actual_risk)
 
-                # PHASE E: Activate DQN
-                elif (node.dqn_model_ready and not node.dqn_active and fql_real_elapsed >= FQL_MIN_REAL_STEPS):
-                    node.dqn_active = True
-                    bridge.send_qtable(node.dqn.to_qtable_string()) # broadcasts to all, but node specific in future
-                    logger.info(f"[{node_id}] PHASE E — DQN activated.")
+                    mode = "DQN" if node.dqn_active else ("FQL" if node.fql.converged_sent else "RB")
+                    node.log_comparison(pH, T, mode, dqn_risk, fql_risk, actual_risk, rb_risk, qos)
 
-                elif node.dqn_active and node.real_steps - node.last_dqn_retrain >= DQN_RETRAIN_INTERVAL:
-                    node.save_buffer()
-                    try:
-                        from dqn.train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
-                        if TORCH_AVAILABLE:
-                            train_pytorch(node.buffer_dqn, DQN_TRAIN_EPOCHS, node.dqn_model_file)
-                        else:
-                            train_numpy(node.buffer_dqn, DQN_TRAIN_EPOCHS, node.dqn_model_file)
-                        if node.dqn.load(node.dqn_model_file):
-                            node.last_dqn_retrain = node.real_steps
-                            bridge.send_qtable(node.dqn.to_qtable_string())
-                    except Exception:
-                        pass
+                    node.append_transition(s=[pH, T], a=actual_risk, r=1.0 if fql_risk==actual_risk else -1.0, s_next=[pH, T])
 
-                if node.fql.check_convergence() and not node.fql.converged_sent:
-                    node.fql.save_qtable(node.qtable_file)
-                    bridge.send_qtable(node.fql.get_qtable_string())
-                    node.fql.converged_sent = True
-                    node.fql_mode_start = node.real_steps
-                    logger.info(f"[{node_id}] FQL CONVERGED.")
-                elif node.fql.converged and not node.fql.converged_sent and time.time() - node.last_qtable_retry > FQL_RETRY_INTERVAL:
-                    bridge.send_qtable(node.fql.get_qtable_string())
-                    node.fql.converged_sent = True
-                    node.fql_mode_start = node.real_steps
-                elif node.fql.converged_sent and node.real_steps - node.last_qtable_update >= QTABLE_UPDATE_INTERVAL:
-                    bridge.send_qtable(node.fql.get_qtable_string())
-                    node.fql.save_qtable(node.qtable_file)
-                    node.last_qtable_update = node.real_steps
+                    if len(node.buffer_dqn) % BUFFER_AUTOSAVE == 0 and len(node.buffer_dqn) > 0:
+                        node.save_buffer()
+
+                    fql_real_elapsed = (node.real_steps - node.fql_mode_start) if node.fql_mode_start else 0
+
+                    # PHASE D: Train DQN
+                    if (len(node.buffer_dqn) >= DQN_BUFFER_READY and node.fql.converged_sent
+                            and not node.dqn_model_ready and not node.dqn_ready_logged):
+                        node.dqn_ready_logged = True
+                        logger.info(f"[{node_id}] PHASE D — DQN training: {len(node.buffer_dqn)} transitions")
+                        node.save_buffer()
+                        try:
+                            from dqn.train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
+                            if TORCH_AVAILABLE:
+                                train_pytorch(node.buffer_dqn, DQN_TRAIN_EPOCHS, node.dqn_model_file)
+                            else:
+                                train_numpy(node.buffer_dqn, DQN_TRAIN_EPOCHS, node.dqn_model_file)
+                            if node.dqn.load(node.dqn_model_file):
+                                node.dqn_model_ready = True
+                                node.last_dqn_retrain = node.real_steps
+                                logger.info(f"[{node_id}] DQN ready.")
+                        except Exception as e:
+                            logger.error(f"[{node_id}] DQN training failed: {e}")
+
+                    # PHASE E: Activate DQN
+                    elif (node.dqn_model_ready and not node.dqn_active and fql_real_elapsed >= FQL_MIN_REAL_STEPS):
+                        node.dqn_active = True
+                        bridge.send_qtable(node.dqn.to_qtable_string())
+                        logger.info(f"[{node_id}] PHASE E — DQN activated.")
+
+                    elif node.dqn_active and node.real_steps - node.last_dqn_retrain >= DQN_RETRAIN_INTERVAL:
+                        node.save_buffer()
+                        try:
+                            from dqn.train_dqn import train_pytorch, train_numpy, TORCH_AVAILABLE
+                            if TORCH_AVAILABLE:
+                                train_pytorch(node.buffer_dqn, DQN_TRAIN_EPOCHS, node.dqn_model_file)
+                            else:
+                                train_numpy(node.buffer_dqn, DQN_TRAIN_EPOCHS, node.dqn_model_file)
+                            if node.dqn.load(node.dqn_model_file):
+                                node.last_dqn_retrain = node.real_steps
+                                bridge.send_qtable(node.dqn.to_qtable_string())
+                        except Exception:
+                            pass
+
+                    if node.fql.check_convergence() and not node.fql.converged_sent:
+                        node.fql.save_qtable(node.qtable_file)
+                        bridge.send_qtable(node.fql.get_qtable_string())
+                        node.fql.converged_sent = True
+                        node.fql_mode_start = node.real_steps
+                        logger.info(f"[{node_id}] FQL CONVERGED.")
+                    elif node.fql.converged and not node.fql.converged_sent and time.time() - node.last_qtable_retry > FQL_RETRY_INTERVAL:
+                        bridge.send_qtable(node.fql.get_qtable_string())
+                        node.fql.converged_sent = True
+                        node.fql_mode_start = node.real_steps
+                    elif node.fql.converged_sent and node.real_steps - node.last_qtable_update >= QTABLE_UPDATE_INTERVAL:
+                        bridge.send_qtable(node.fql.get_qtable_string())
+                        node.fql.save_qtable(node.qtable_file)
+                        node.last_qtable_update = node.real_steps
 
                 if node.real_steps % LOG_INTERVAL == 0:
                     nh3_pct = nh3_fraction(pH, T) * 100.0
                     stats = node.fql.get_stats()
                     logger.info(
-                        f"[{node_id}][{mode}][Step:{node.real_steps:5d}] "
+                        f"[{node_id}][{'DUMMY' if is_dummy else 'MAIN'}][{mode}][Step:{node.real_steps:5d}] "
                         f"pH:{pH:.3f} T:{T:.1f}°C NH3:{nh3_pct:.2f}% | "
-                        f"Risk: {RISK_LABELS[actual_risk]} | Acc: {stats['avg_accuracy_100']:.2%} | "
-                        f"QoS: {qos.get('bandwidth_mbps',0.0):.3f}Mbps {qos.get('latency_ms',0.0):.1f}ms"
+                        f"Risk:{RISK_LABELS[actual_risk]} | "
+                        f"QoS:{qos.get('bandwidth_mbps',0.0):.3f}Mbps {qos.get('latency_ms',0.0):.1f}ms"
                     )
             
             # Dashboard state dump (Using Pico_1_Main as reference for dashboard)

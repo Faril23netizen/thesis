@@ -193,27 +193,40 @@ int main() {
     printf("Connected! IP: %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
     led_blink(5, 100, 100); // 5 quick blinks = success!
     
+    // Seed with boot time so each power-cycle gives unique random sequence
+    srand((unsigned int)to_ms_since_boot(get_absolute_time()));
+
+    // Initial walk position — randomized so Pico 2 and Pico 3 start differently
+    float ph_walk   = 6.5f + (float)(rand() % 301) * 0.01f;  // 6.5 - 9.5
+    float temp_walk = 20.0f + (float)(rand() % 1801) * 0.01f; // 20.0 - 38.0
+
     uint32_t last_sample_time = to_ms_since_boot(get_absolute_time());
-    
+
     while (true) {
         cyw43_arch_poll();
-        
+
         if (!g_client || !g_client->connected) {
             tcp_client_open();
             sleep_ms(2000);
             continue;
         }
-        
+
         uint32_t now = to_ms_since_boot(get_absolute_time());
         if (now - last_sample_time >= SAMPLE_INTERVAL_MS) {
             last_sample_time = now;
-            
-            // Generate dummy payload: DUMMY:ph_x1000,temp_x100,risk
-            // e.g. DUMMY:7200,2500,0
+
+            // Random walk: small drift each step → values slowly vary over time
+            ph_walk   += ((float)(rand() % 101) - 50) * 0.001f; // ±0.05 per step
+            temp_walk += ((float)(rand() % 101) - 50) * 0.006f; // ±0.30 per step
+            if (ph_walk   < 6.5f)  ph_walk   = 6.5f;
+            if (ph_walk   > 9.5f)  ph_walk   = 9.5f;
+            if (temp_walk < 20.0f) temp_walk = 20.0f;
+            if (temp_walk > 38.0f) temp_walk = 38.0f;
+
             char msg[128];
-            int ph_sim = 7000 + (rand() % 500); // 7.0 - 7.5
-            int temp_sim = 2400 + (rand() % 200); // 24.0 - 26.0
-            
+            int ph_sim   = (int)(ph_walk   * 1000.0f);
+            int temp_sim = (int)(temp_walk * 100.0f);
+
             snprintf(msg, sizeof(msg), "DUMMY:%d,%d,0\n", ph_sim, temp_sim);
             
             cyw43_arch_lwip_begin();
