@@ -196,9 +196,10 @@ int main() {
     // Seed with boot time so each power-cycle gives unique random sequence
     srand((unsigned int)to_ms_since_boot(get_absolute_time()));
 
-    // Initial walk position — randomized so Pico 2 and Pico 3 start differently
-    float ph_walk   = 6.5f + (float)(rand() % 301) * 0.01f;  // 6.5 - 9.5
-    float temp_walk = 20.0f + (float)(rand() % 1801) * 0.01f; // 20.0 - 38.0
+    // Dummy scenario: elevated-risk zone (high pH + high temp → more NH3 toxicity)
+    // Deliberately different from Pico 1 real sensor range
+    float ph_walk   = 7.8f + (float)(rand() % 141) * 0.01f;  // 7.8 - 9.2
+    float temp_walk = 27.0f + (float)(rand() % 1101) * 0.01f; // 27.0 - 38.0
 
     uint32_t last_sample_time = to_ms_since_boot(get_absolute_time());
     bool identified = false;
@@ -228,12 +229,12 @@ int main() {
         if (now - last_sample_time >= SAMPLE_INTERVAL_MS) {
             last_sample_time = now;
 
-            // Random walk: small drift each step → values slowly vary over time
-            ph_walk   += ((float)(rand() % 101) - 50) * 0.001f; // ±0.05 per step
-            temp_walk += ((float)(rand() % 101) - 50) * 0.006f; // ±0.30 per step
-            if (ph_walk   < 6.5f)  ph_walk   = 6.5f;
-            if (ph_walk   > 9.5f)  ph_walk   = 9.5f;
-            if (temp_walk < 20.0f) temp_walk = 20.0f;
+            // Random walk: faster drift for more dynamic scenario
+            ph_walk   += ((float)(rand() % 101) - 50) * 0.002f; // ±0.10 per step
+            temp_walk += ((float)(rand() % 101) - 50) * 0.010f; // ±0.50 per step
+            if (ph_walk   < 7.8f)  ph_walk   = 7.8f;
+            if (ph_walk   > 9.2f)  ph_walk   = 9.2f;
+            if (temp_walk < 27.0f) temp_walk = 27.0f;
             if (temp_walk > 38.0f) temp_walk = 38.0f;
 
             char msg[128];
