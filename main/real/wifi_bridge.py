@@ -58,37 +58,52 @@ class WiFiBridge:
                 logger.info(f"N3IWF WiFi Bridge listening on {self.host}:{self.port}")
             except OSError as e:
                 logger.error(f"Failed to bind WiFi server: {e}")
+                # Clean up partially-created socket so next call retries cleanly
+                if self.server_socket:
+                    try:
+                        self.server_socket.close()
+                    except Exception:
+                        pass
+                    self.server_socket = None
                 return False
 
-        logger.info("Waiting for Pico WH to connect over Wi-Fi...")
+        logger.info("Waiting for Pico to connect over Wi-Fi...")
         try:
             # Block until the first client connects
             while True:
-                read_sockets, _, _ = select.select([self.server_socket], [], [], 1.0)
+                try:
+                    read_sockets, _, _ = select.select([self.server_socket], [], [], 1.0)
+                except OSError:
+                    # Server socket went bad — force recreate next time
+                    self.server_socket = None
+                    return False
                 if read_sockets:
-                    client, addr = self.server_socket.accept()
-                    client.setblocking(False)
-                    self.clients[client] = ""
-                    self.node_ids[client] = "Pending"
-                    logger.info(f"Connected to {addr[0]}, waiting for payload to identify...")
-                    return True
+                    try:
+                        client, addr = self.server_socket.accept()
+                        client.setblocking(False)
+                        self.clients[client] = ""
+                        self.node_ids[client] = "Pending"
+                        logger.info(f"Connected to {addr[0]}, waiting for payload to identify...")
+                        return True
+                    except OSError as e:
+                        logger.warning(f"accept() failed: {e} — retrying...")
+                        continue
         except KeyboardInterrupt:
             logger.info("Connection wait interrupted by user.")
             return False
 
     def disconnect(self) -> None:
-        """Close all client connections and server socket."""
+        """Close all client connections but keep server socket alive for next reconnect."""
         for client in list(self.clients.keys()):
-            client.close()
+            try:
+                client.close()
+            except Exception:
+                pass
         self.clients.clear()
         self.node_ids.clear()
-        self.ip_to_name.clear()
-        self.dummy_counter = 2
-        
-        if self.server_socket:
-            self.server_socket.close()
-            self.server_socket = None
-        logger.info("WiFi bridge disconnected.")
+        # NOTE: Do NOT clear ip_to_name — preserve node identity on reconnect
+        # NOTE: Do NOT close server_socket — it stays open to accept new connections
+        logger.info("WiFi bridge: all clients disconnected. Server still listening.")
 
     def is_connected(self) -> bool:
         """Check whether at least one real client is connected."""

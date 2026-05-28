@@ -28,10 +28,10 @@
 #include "ph_sensor.h"
 
 /* ── Configuration ───────────────────────────────────────────────────────── */
-#define WIFI_SSID "N3IWF_AQUA"
-#define WIFI_PASSWORD "skripsi2026"
+#define WIFI_SSID       "N3IWF_AQUA"
+#define WIFI_PASSWORD   "skripsi2026"
 #define N3IWF_SERVER_IP "10.42.0.1"
-#define N3IWF_PORT 5000
+#define N3IWF_PORT      5000
 
 #define TEMP_GPIO_PIN 15
 #define SAMPLE_INTERVAL_MS 2000
