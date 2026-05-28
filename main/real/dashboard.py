@@ -811,17 +811,20 @@ def index():
         else:
             action_str = '--'
         
-        # Prepare data for template
+        # Prepare data for template — None dari JSON null harus dikonversi ke 'null'
+        def _safe(v, default='null'):
+            return v if v is not None else default
+
         template_data = {
-            'pH': state.get('pH', 'null'),
-            'T': state.get('T', 'null'),
-            'nh3': state.get('nh3_pct', 'null'),
+            'pH': _safe(state.get('pH')),
+            'T': _safe(state.get('T')),
+            'nh3': _safe(state.get('nh3_pct')),
             'action': action_str,
             'phase': phase_val,
-            'reward': state.get('reward', 'null'),
-            'real_steps': state.get('real_steps', '--'),
-            'buffer_size': state.get('buffer_size', '--'),
-            'fql_eps': state.get('fql_eps', 'null'),
+            'reward': _safe(state.get('reward')),
+            'real_steps': _safe(state.get('real_steps'), '--'),
+            'buffer_size': _safe(state.get('buffer_size'), '--'),
+            'fql_eps': _safe(state.get('fql_eps')),
             'ipsec_status': network.get('ipsec_status', 'UNKNOWN'),
             'avg_latency_ms': network.get('avg_latency_ms', 0),
             'jitter_ms': network.get('jitter_ms', 0),
