@@ -221,15 +221,9 @@ def main():
         last_qos_write = 0.0
         QOS_WRITE_INTERVAL = 3.0  # write node_qos.json every 3 seconds
 
-        # QoS time-series CSV — one file per session for Python/Excel analysis
+        # QoS time-series CSV — per-node folder, one file per session
         session_ts = time.strftime("%Y%m%d_%H%M%S")
-        os.makedirs(NODE_QOS_DIR, exist_ok=True)
-        qos_csv_path = os.path.join(NODE_QOS_DIR, f"qos_log_{session_ts}.csv")
-        qos_csv_file = open(qos_csv_path, "w", newline="")
-        qos_csv_writer = csv.writer(qos_csv_file)
-        qos_csv_writer.writerow(["timestamp", "node_id", "latency_ms", "jitter_ms", "bandwidth_mbps"])
-        qos_csv_file.flush()
-        logger.info(f"QoS CSV log: {qos_csv_path}")
+        qos_node_writers = {}  # node_id -> {"file": f, "writer": csv.writer}
 
         logger.info("PHASE B — FQL learning risk prediction from real Pico data...")
 
@@ -400,21 +394,30 @@ def main():
             now_t = time.time()
             if now_t - last_qos_write >= QOS_WRITE_INTERVAL:
                 bridge.write_qos_stats(NODE_QOS_FILE)
-                # Append snapshot to time-series CSV
                 ts = time.strftime("%Y-%m-%d %H:%M:%S")
                 for nid in list(bridge._qos.keys()):
+                    if nid not in qos_node_writers:
+                        node_dir = os.path.join(NODE_QOS_DIR, nid)
+                        os.makedirs(node_dir, exist_ok=True)
+                        fpath = os.path.join(node_dir, f"qos_log_{session_ts}.csv")
+                        f = open(fpath, "w", newline="")
+                        w = csv.writer(f)
+                        w.writerow(["timestamp", "latency_ms", "jitter_ms", "bandwidth_mbps"])
+                        qos_node_writers[nid] = {"file": f, "writer": w}
+                        logger.info(f"QoS CSV: {fpath}")
                     q = bridge.get_node_qos(nid)
-                    qos_csv_writer.writerow([ts, nid,
+                    qos_node_writers[nid]["writer"].writerow([ts,
                         round(q["latency_ms"], 3),
                         round(q["jitter_ms"], 3),
                         round(q["bandwidth_mbps"], 6)])
-                qos_csv_file.flush()
+                    qos_node_writers[nid]["file"].flush()
                 last_qos_write = now_t
 
             time.sleep(0.01)
 
         # Cleanup inner loop
-        qos_csv_file.close()
+        for entry in qos_node_writers.values():
+            entry["file"].close()
         for node in nodes.values():
             node.close()
 
