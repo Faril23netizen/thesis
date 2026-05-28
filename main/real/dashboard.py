@@ -187,9 +187,10 @@ HTML_TEMPLATE = """
         }
         .chart-container {
             position: relative;
-            height: 250px;
+            height: 285px;
             background: #1e293b;
             border-radius: 8px;
+            overflow: visible;
             padding: 12px;
             border: 1px solid #334155;
         }
@@ -521,19 +522,20 @@ HTML_TEMPLATE = """
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
+                    layout: { padding: { left: 8, right: 12, top: 4, bottom: 4 } },
                     plugins: {
                         legend: { labels: { color: '#e2e8f0' } }
                     },
                     scales: {
                         x: {
-                            ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 },
+                            ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45, maxTicksLimit: 8 },
                             grid: { color: '#334155', drawBorder: false }
                         },
                         y: {
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            ticks: { color: color },
+                            ticks: { color: color, maxTicksLimit: 6 },
                             grid: { color: '#334155', drawBorder: false },
                             title: { display: true, text: yAxisTitle, color: color }
                         }
@@ -557,10 +559,11 @@ HTML_TEMPLATE = """
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
+                    layout: { padding: { left: 8, right: 12, top: 4, bottom: 4 } },
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 }, grid: { color: '#334155', drawBorder: false } },
-                        y: { type: 'linear', display: true, position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' } }
+                        x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45, maxTicksLimit: 8 }, grid: { color: '#334155', drawBorder: false } },
+                        y: { type: 'linear', display: true, position: 'left', ticks: { color: '#94a3b8', maxTicksLimit: 6 }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' } }
                     }
                 }
             };
