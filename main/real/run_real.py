@@ -352,10 +352,10 @@ def main():
                             f"QoS:{qos.get('bandwidth_mbps',0.0):.3f}Mbps {qos.get('latency_ms',0.0):.1f}ms"
                         )
             
-            # Dashboard state dump — always write connected_picos so callbox_simulator
-            # knows picos are connected even before Pico_1_Main joins
+            # Dashboard state dump
             main_node = nodes.get("Pico_1_Main")
             if main_node and main_pH is not None:
+                # Pico 1 kirim data iterasi ini — tulis state lengkap
                 stats = main_node.fql.get_stats()
                 state_dump = {
                     "pH": round(main_pH, 3), "T": round(main_T, 2),
@@ -374,8 +374,10 @@ def main():
                     "dqn_active": main_node.dqn_active,
                     "connected_picos": len(bridge.clients)
                 }
-            else:
-                # Pico_1_Main belum konek — tulis minimal agar callbox tahu ada pico
+                with open(STATE_JSON_FILE, "w") as f:
+                    json.dump(state_dump, f)
+            elif not main_node:
+                # Pico 1 belum pernah konek — tulis minimal agar callbox tahu ada pico
                 state_dump = {
                     "connected_picos": len(bridge.clients),
                     "phase": "Waiting for Pico 1",
@@ -386,8 +388,10 @@ def main():
                     "real_steps": 0, "fql_eps": 0,
                     "dqn_ready": False, "dqn_active": False
                 }
-            with open(STATE_JSON_FILE, "w") as f:
-                json.dump(state_dump, f)
+                with open(STATE_JSON_FILE, "w") as f:
+                    json.dump(state_dump, f)
+            # else: main_node ada tapi Pico 1 tidak kirim data iterasi ini
+            #       → jangan timpa state.json, biarkan nilai lama tetap valid
 
             # Write real per-node QoS (separate from callbox_simulator's file)
             now_t = time.time()
