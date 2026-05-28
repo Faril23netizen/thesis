@@ -50,6 +50,7 @@ BANDWIDTH_MBPS = 100  # Simulated bandwidth
 STATS_FILE = "results/network/callbox_stats.json"
 TIMELINE_FILE = "results/network/network_timeline.csv"
 LOG_FILE = "results/network/callbox.log"
+STATE_JSON_FILE = "results/hasil_real/state.json"
 
 os.makedirs("results/network", exist_ok=True)
 
@@ -374,7 +375,7 @@ class CallboxSimulator:
                 # Read actual connected picos from state.json
                 connected_picos = 0
                 try:
-                    with open(os.path.join(os.path.dirname(STATS_FILE), "hasil_real", "state.json"), "r") as f:
+                    with open(STATE_JSON_FILE, "r") as f:
                         st = json.load(f)
                         connected_picos = st.get("connected_picos", 0)
                 except Exception:

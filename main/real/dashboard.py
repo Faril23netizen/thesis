@@ -434,12 +434,15 @@ HTML_TEMPLATE = """
                     </div>
                     <div class="charts-grid" style="margin-top: 24px;">
                         <div class="chart-container">
+                            <div style="color:#94a3b8;font-size:0.82em;font-weight:600;text-align:center;padding:6px 0 2px;">Latency (ms)</div>
                             <canvas id="latencyChart"></canvas>
                         </div>
                         <div class="chart-container">
+                            <div style="color:#94a3b8;font-size:0.82em;font-weight:600;text-align:center;padding:6px 0 2px;">Jitter (ms)</div>
                             <canvas id="jitterChart"></canvas>
                         </div>
                         <div class="chart-container">
+                            <div style="color:#94a3b8;font-size:0.82em;font-weight:600;text-align:center;padding:6px 0 2px;">Bandwidth (Kbps)</div>
                             <canvas id="bandwidthChart"></canvas>
                         </div>
                     </div>
@@ -545,16 +548,21 @@ HTML_TEMPLATE = """
                 data: {
                     labels: [],
                     datasets: [
-                        { label: 'Pico 1', data: [], borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
-                        { label: 'Pico 2', data: [], borderColor: '#3b82f6', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
-                        { label: 'Pico 3', data: [], borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 }
+                        { label: 'Pico 1 (Main)', data: [], borderColor: '#ef4444', backgroundColor: '#ef444420', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
+                        { label: 'Pico 2 (Dummy)', data: [], borderColor: '#3b82f6', backgroundColor: '#3b82f620', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 },
+                        { label: 'Pico 3 (Dummy)', data: [], borderColor: '#10b981', backgroundColor: '#10b98120', borderWidth: 2, tension: 0.4, pointRadius: 1, pointHoverRadius: 4 }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: '#e2e8f0', boxWidth: 12, font: { size: 11 } }
+                        }
+                    },
                     scales: {
                         x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 }, grid: { color: '#334155', drawBorder: false } },
                         y: { type: 'linear', display: true, position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155', drawBorder: false }, title: { display: true, text: yAxisTitle, color: '#94a3b8' } }
@@ -586,10 +594,10 @@ HTML_TEMPLATE = """
                 }
             });
 
-            // Filter network charts to show only selected Pico
+            // Network charts show all Picos simultaneously (legend shows colors)
             [latencyChart, jitterChart, bandwidthChart].forEach(chart => {
                 chart.data.datasets.forEach(ds => {
-                    ds.hidden = (ds.label !== picoName);
+                    ds.hidden = false;
                 });
                 chart.update();
             });
