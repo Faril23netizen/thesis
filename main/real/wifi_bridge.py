@@ -267,7 +267,18 @@ class WiFiBridge:
                     continue
 
                 if node_name == "Pending":
-                    if line.startswith("DATA:"):
+                    if line.startswith("ID:DUMMY"):
+                        # Pesan identifikasi langsung dari Pico 2W/3W saat baru konek
+                        if ip in self.ip_to_name:
+                            node_name = self.ip_to_name[ip]
+                        else:
+                            node_name = f"Pico_{self.dummy_counter}_Dummy"
+                            self.dummy_counter += 1
+                            self.ip_to_name[ip] = node_name
+                        self.node_ids[sock] = node_name
+                        self._sock_ip[sock] = ip
+                        logger.info(f"Identified {ip} as {node_name} (via ID:DUMMY)")
+                    elif line.startswith("DATA:"):
                         node_name = "Pico_1_Main"
                         self.ip_to_name[ip] = node_name
                         self.node_ids[sock] = node_name

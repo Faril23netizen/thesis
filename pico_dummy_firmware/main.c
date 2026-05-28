@@ -201,14 +201,27 @@ int main() {
     float temp_walk = 20.0f + (float)(rand() % 1801) * 0.01f; // 20.0 - 38.0
 
     uint32_t last_sample_time = to_ms_since_boot(get_absolute_time());
+    bool identified = false;
 
     while (true) {
         cyw43_arch_poll();
 
         if (!g_client || !g_client->connected) {
+            identified = false; // reset saat disconnect, kirim ulang saat reconnect
             tcp_client_open();
             sleep_ms(2000);
             continue;
+        }
+
+        // Kirim identifikasi segera setelah konek — server langsung tahu ini dummy
+        if (!identified) {
+            const char *id_msg = "ID:DUMMY\n";
+            cyw43_arch_lwip_begin();
+            err_t err = tcp_write(g_client->tcp_pcb, id_msg, strlen(id_msg), TCP_WRITE_FLAG_COPY);
+            if (err == ERR_OK) tcp_output(g_client->tcp_pcb);
+            cyw43_arch_lwip_end();
+            identified = true;
+            printf("> Sent identification: ID:DUMMY\n");
         }
 
         uint32_t now = to_ms_since_boot(get_absolute_time());
