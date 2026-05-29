@@ -2,11 +2,12 @@
   [N3IWF QoS Monitor] Memulai Perekaman Wireshark (tshark)
 ==========================================================
 Menangkap paket TCP port 5000 (N3IWF) dari semua Pico...
+Menggunakan tool: tshark
 Tekan Ctrl+C untuk berhenti merekam.
 Menyimpan ke: results/network/qos_real.pcap
 Running as user "root" and group "root". This could be dangerous.
 Capturing on 'any'
- ** (tshark:7866) 22:32:11.305704 [Main MESSAGE] -- Capture started.
- ** (tshark:7866) 22:32:11.305752 [Main MESSAGE] -- File: "results/network/qos_real.pcap"
+tshark: The file to which the capture would be saved ("results/network/qos_real.pcap") could not be opened: Permission denied.
+
 tshark: 
-87985 packets captured
+0 packets captured

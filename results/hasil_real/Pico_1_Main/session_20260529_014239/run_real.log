@@ -1,0 +1,6 @@
+[2026-05-29 01:42:41][INFO] QoS CSV: /home/ubuntu/thesis/results/network/Pico_1_Main/qos_log_20260529_014238.csv
+[2026-05-29 01:42:57][INFO] [Pico_1_Main][RB][Step:   10] pH:7.547 T:25.0°C NH3:1.96% | Risk:CAUTION | Acc:0.00% | QoS:0.000Mbps 8.7ms
+[2026-05-29 01:43:17][INFO] [Pico_1_Main][RB][Step:   20] pH:7.547 T:25.0°C NH3:1.96% | Risk:CAUTION | Acc:0.00% | QoS:0.000Mbps 9.0ms
+[2026-05-29 01:43:37][INFO] [Pico_1_Main][RB][Step:   30] pH:7.496 T:25.0°C NH3:1.75% | Risk:CAUTION | Acc:0.00% | QoS:0.000Mbps 10.0ms
+[2026-05-29 01:43:57][INFO] [Pico_1_Main][RB][Step:   40] pH:7.541 T:25.0°C NH3:1.93% | Risk:CAUTION | Acc:0.00% | QoS:0.000Mbps 10.2ms
+[2026-05-29 01:43:58][INFO] System stopped.

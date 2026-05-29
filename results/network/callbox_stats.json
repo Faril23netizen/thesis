@@ -1,17 +1,34 @@
 {
-  "uptime": 49587,
-  "packets_received": 97530,
-  "packets_sent": 97530,
-  "packets_dropped": 98,
-  "active_tunnels": 0,
-  "avg_latency_ms": 9.727760334699505,
-  "current_bandwidth_mbps": 100,
-  "ipsec_status": "DOWN",
+  "uptime": 82192,
+  "packets_received": 140260,
+  "packets_sent": 140260,
+  "packets_dropped": 776,
+  "active_tunnels": 3,
+  "avg_latency_ms": 10.29,
+  "jitter_ms": 1.375,
+  "current_bandwidth_mbps": 0.0592,
+  "ipsec_status": "ESTABLISHED",
   "amf_status": "RUNNING",
   "smf_status": "RUNNING",
   "upf_status": "RUNNING",
-  "amf_ues": 1,
+  "nodes": {
+    "Pico_1_Main": {
+      "latency_ms": 8.36,
+      "jitter_ms": 1.191,
+      "bandwidth_mbps": 0.0241
+    },
+    "Pico_2_Dummy": {
+      "latency_ms": 7.84,
+      "jitter_ms": 1.153,
+      "bandwidth_mbps": 0.0187
+    },
+    "Pico_3_Dummy": {
+      "latency_ms": 14.66,
+      "jitter_ms": 1.781,
+      "bandwidth_mbps": 0.0164
+    }
+  },
+  "amf_ues": 3,
   "smf_sessions": 1,
-  "upf_packets": 97530,
-  "jitter_ms": 3.244136211335236
+  "upf_packets": 140257
 }

@@ -1,0 +1,21 @@
+{
+  "nodes": {
+    "Pico_2_Dummy": {
+      "latency_ms": 66.29,
+      "jitter_ms": 864.545,
+      "bandwidth_mbps": 0.0001
+    },
+    "Pico_3_Dummy": {
+      "latency_ms": 10.64,
+      "jitter_ms": 3.798,
+      "bandwidth_mbps": 0.000111
+    },
+    "Pico_1_Main": {
+      "latency_ms": 0.23,
+      "jitter_ms": 5.748,
+      "bandwidth_mbps": 0.000114
+    }
+  },
+  "ipsec_status": "ESTABLISHED",
+  "connected_picos": 3
+}
