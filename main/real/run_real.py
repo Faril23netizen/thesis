@@ -352,7 +352,7 @@ def main():
             # Dashboard state dump
             main_node = nodes.get("Pico_1_Main")
             if main_node and main_pH is not None:
-                # Pico 1 kirim data iterasi ini — tulis state lengkap
+                # Pico 1 sent data this iteration — write full state
                 stats = main_node.fql.get_stats()
                 state_dump = {
                     "pH": round(main_pH, 3), "T": round(main_T, 2),
@@ -374,7 +374,7 @@ def main():
                 with open(STATE_JSON_FILE, "w") as f:
                     json.dump(state_dump, f)
             elif not main_node:
-                # Pico 1 belum pernah konek — tulis minimal agar callbox tahu ada pico
+                # Pico 1 has never connected — write minimal state so callbox knows a pico is present
                 state_dump = {
                     "connected_picos": len(bridge.clients),
                     "phase": "Waiting for Pico 1",
@@ -387,8 +387,8 @@ def main():
                 }
                 with open(STATE_JSON_FILE, "w") as f:
                     json.dump(state_dump, f)
-            # else: main_node ada tapi Pico 1 tidak kirim data iterasi ini
-            #       → jangan timpa state.json, biarkan nilai lama tetap valid
+            # else: main_node exists but Pico 1 sent no data this iteration
+            #       → do not overwrite state.json, keep the previous values valid
 
             # Write real per-node QoS (separate from callbox_simulator's file)
             now_t = time.time()

@@ -812,7 +812,7 @@ def index():
         else:
             action_str = '--'
         
-        # Prepare data for template — None dari JSON null harus dikonversi ke 'null'
+        # Prepare data for template — None from JSON null must be converted to 'null'
         def _safe(v, default='null'):
             return v if v is not None else default
 

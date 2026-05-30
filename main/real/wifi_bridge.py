@@ -3,10 +3,10 @@ import re
 import time
 import json
 import math
-import random
 import socket
 import select
 import logging
+import platform
 import statistics
 import subprocess
 import threading
@@ -46,6 +46,8 @@ QOS_WINDOW_SEC = 5.0   # rolling window for bandwidth calculation
 class _NodeQoS:
     """Measures real per-node QoS from TCP packet timing."""
 
+    PACKET_INTERVAL_S = 2.0   # expected interval between Pico packets
+
     def __init__(self):
         self._lock = threading.Lock()
         self._recv_times: collections.deque = collections.deque(maxlen=200)
@@ -54,10 +56,8 @@ class _NodeQoS:
         self.latency_ms: float = 0.0
         self.jitter_ms: float = 0.0
         self.bandwidth_mbps: float = 0.0
-        # OU noise states — adds realistic fluctuation on top of measured values
-        self._ou_lat: float = random.uniform(-2.0, 2.0)
-        self._ou_jit: float = random.uniform(-0.2, 0.2)
-        self._ou_bw:  float = random.uniform(-0.000005, 0.000005)
+        self._total_received: int = 0
+        self._lost_packets: int = 0
 
     def on_packet(self, byte_count: int) -> None:
         now = time.time()
@@ -66,7 +66,11 @@ class _NodeQoS:
                 interval = now - self._recv_times[-1]
                 if 0 < interval < 30.0:   # ignore absurdly long gaps (reconnects)
                     self._inter_arrivals.append(interval)
+                    # Estimate lost packets: gaps > 3x expected interval indicate drops
+                    if interval > self.PACKET_INTERVAL_S * 3:
+                        self._lost_packets += max(0, int(interval / self.PACKET_INTERVAL_S) - 1)
             self._recv_times.append(now)
+            self._total_received += 1
             self._bytes_window.append((now, byte_count))
 
             # Evict entries outside the rolling window
@@ -106,21 +110,94 @@ class _NodeQoS:
 
     def to_dict(self) -> dict:
         with self._lock:
-            # OU process: θ=0.25 (mean-reversion), each metric has its own σ
-            # Steps every ~3s (write_qos_stats interval)
-            theta = 0.25
-            self._ou_lat += -theta * self._ou_lat + random.gauss(0, 1.5)
-            self._ou_jit += -theta * self._ou_jit + random.gauss(0, 0.25)
-            self._ou_bw  += -theta * self._ou_bw  + random.gauss(0, 0.000008)
-            # Clamp OU noise to sensible range
-            self._ou_lat = max(-8.0,  min(8.0,  self._ou_lat))
-            self._ou_jit = max(-1.0,  min(1.0,  self._ou_jit))
-            self._ou_bw  = max(-0.00003, min(0.00003, self._ou_bw))
+            total = self._total_received + self._lost_packets
+            loss_pct = round(self._lost_packets / total * 100, 2) if total > 0 else 0.0
             return {
-                "latency_ms":     round(max(0.0, self.latency_ms + self._ou_lat), 2),
-                "jitter_ms":      round(max(0.0, self.jitter_ms  + self._ou_jit), 3),
-                "bandwidth_mbps": round(max(0.0, self.bandwidth_mbps + self._ou_bw), 6),
+                "latency_ms":      round(max(0.0, self.latency_ms), 2),
+                "jitter_ms":       round(max(0.0, self.jitter_ms), 3),
+                "bandwidth_mbps":  round(max(0.0, self.bandwidth_mbps), 6),
+                "packet_loss_pct": loss_pct,
             }
+
+class _TcNetem:
+    """
+    Apply tc netem rules per node IP on Linux (Raspberry Pi).
+    Pico_1_Main  : baseline, no added delay
+    Pico_2_Dummy : +20 ms delay, ±5 ms jitter
+    Pico_3_Dummy : +40 ms delay, ±10 ms jitter, 3% packet loss
+    """
+
+    _NODE_CFG = {
+        'Pico_2_Dummy': {'band': '1:2', 'handle': '20:', 'args': ['delay', '20ms', '5ms']},
+        'Pico_3_Dummy': {'band': '1:3', 'handle': '30:', 'args': ['delay', '40ms', '10ms', 'loss', '3%']},
+    }
+
+    def __init__(self):
+        self._ready = False
+        self._iface = None
+        self._applied: set = set()
+        if platform.system() != 'Linux':
+            logger.info("tc netem: skipped (not Linux)")
+            return
+        self._iface = self._detect_iface()
+        self._setup()
+
+    def _detect_iface(self) -> str:
+        try:
+            r = subprocess.run(['ip', '-o', 'addr', 'show'], capture_output=True, text=True, timeout=3)
+            for line in r.stdout.splitlines():
+                if '10.42.0.1' in line:
+                    return line.split()[1]
+        except Exception:
+            pass
+        return 'wlan0'
+
+    def _run(self, cmd: list) -> bool:
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+            return r.returncode == 0
+        except Exception as e:
+            logger.warning(f"tc: {e}")
+            return False
+
+    def _setup(self):
+        iface = self._iface
+        # Clear any existing root qdisc
+        self._run(['tc', 'qdisc', 'del', 'dev', iface, 'root'])
+        # Root prio with 4 bands
+        if not self._run(['tc', 'qdisc', 'add', 'dev', iface, 'root',
+                          'handle', '1:', 'prio', 'bands', '4']):
+            logger.warning("tc netem: failed to set up root qdisc (need sudo?)")
+            return
+        # Band 2: Pico 2 netem
+        self._run(['tc', 'qdisc', 'add', 'dev', iface, 'parent', '1:2',
+                   'handle', '20:', 'netem', 'delay', '20ms', '5ms'])
+        # Band 3: Pico 3 netem
+        self._run(['tc', 'qdisc', 'add', 'dev', iface, 'parent', '1:3',
+                   'handle', '30:', 'netem', 'delay', '40ms', '10ms', 'loss', '3%'])
+        self._ready = True
+        logger.info(f"tc netem ready on {iface} (Pico2=20ms±5ms, Pico3=40ms±10ms+3%loss)")
+
+    def apply(self, ip: str, node_name: str):
+        if not self._ready or ip in self._applied:
+            return
+        cfg = self._NODE_CFG.get(node_name)
+        if cfg is None:
+            return
+        ok = self._run(['tc', 'filter', 'add', 'dev', self._iface, 'parent', '1:',
+                        'protocol', 'ip', 'u32', 'match', 'ip', 'dst', f'{ip}/32',
+                        'flowid', cfg['band']])
+        if ok:
+            self._applied.add(ip)
+            logger.info(f"tc netem applied: {node_name} ({ip}) -> {cfg['band']}")
+        else:
+            logger.warning(f"tc netem filter failed for {node_name} ({ip})")
+
+    def cleanup(self):
+        if self._ready and self._iface:
+            self._run(['tc', 'qdisc', 'del', 'dev', self._iface, 'root'])
+            logger.info("tc netem rules removed")
+
 
 class WiFiBridge:
     """WiFi communication bridge (TCP Server) supporting multiple Pico WH nodes."""
@@ -138,6 +215,7 @@ class WiFiBridge:
         self._ping_threads: dict[str, threading.Thread] = {}
         self._ping_interval = 10.0  # re-ping every 10 s
         self._last_ping: dict[str, float] = {}
+        self._netem = _TcNetem()
 
     # ── Connection ───────────────────────────────────────────────────────── #
 
@@ -284,7 +362,7 @@ class WiFiBridge:
 
                 if node_name == "Pending":
                     if line.startswith("ID:DUMMY"):
-                        # Pesan identifikasi langsung dari Pico 2W/3W saat baru konek
+                        # Direct identification message from Pico 2W/3W upon first connection
                         if ip in self.ip_to_name:
                             node_name = self.ip_to_name[ip]
                         else:
@@ -315,6 +393,7 @@ class WiFiBridge:
                         self._qos[node_name] = _NodeQoS()
                         self._last_ping[node_name] = 0.0
                         logger.info(f"QoS tracker created for {node_name} ({ip})")
+                        self._netem.apply(ip, node_name)
                     # Schedule ping for latency measurement
                     if node_name != "Pending":
                         now = time.time()
@@ -392,6 +471,11 @@ class WiFiBridge:
                 raise
         except Exception as e:
             logger.warning(f"write_qos_stats failed: {e}")
+
+    def cleanup(self) -> None:
+        """Remove tc netem rules and close all connections."""
+        self._netem.cleanup()
+        self.disconnect()
 
     # ── Send Q-table ─────────────────────────────────────────────────────── #
 
